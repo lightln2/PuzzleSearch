@@ -54,7 +54,7 @@ TEST(TestPuzzle, Hashing4x4) {
 	TestHashing<4, 4>("0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15",
 					  "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 b=0",
 					  "0 0 2 3 4 5 6 7 8 9 10 11 12 13 14 b=0",
-					  0xEDC, 16U*(12*11*10*9*8*7*6*5*4*3-1));
+					  Puzzle<4, 4>::MaxSegments() - 1, Puzzle<4, 4>::MaxIndexesPerSegment() - 16);
 	TestHashing<4, 4>("15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0",
 					  "14 13 12 11 10 9 8 7 6 5 4 3 2 1 0 b=15",
 					  "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 b=15",
@@ -69,7 +69,7 @@ TEST(TestPuzzle, Hashing5x3) {
 	TestHashing<5, 3>("0 1 2 3 4 5 6 7 8 9 10 11 12 13 14",
 					  "0 1 2 3 4 5 6 7 8 9 10 11 12 13 0 b=0",
 					  "0 0 2 3 4 5 6 7 8 9 10 11 12 13 0 b=0",
-					  0xDC, 16U*(12*11*10*9*8*7*6*5*4*3-1));
+					  Puzzle<5, 3>::MaxSegments() - 1, Puzzle<5, 3>::MaxIndexesPerSegment() - 16);
 	TestHashing<5, 3>("13 14 12 11 10 9 8 7 6 5 4 3 2 1 0",
 					  "12 13 11 10 9 8 7 6 5 4 3 2 1 0 0 b=14",
 					  "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 b=14",
@@ -84,7 +84,7 @@ TEST(TestPuzzle, Hashing7x2) {
 	TestHashing<7, 2>("0 1 2 3 4 5 6 7 8 9 10 11 12 13",
 					  "0 1 2 3 4 5 6 7 8 9 10 11 12 0 0 b=0",
 					  "0 0 2 3 4 5 6 7 8 9 10 11 12 0 0 b=0",
-					  0xC, 16U*(12*11*10*9*8*7*6*5*4*3-1));
+					  Puzzle<7, 2>::MaxSegments() - 1, Puzzle<7, 2>::MaxIndexesPerSegment() - 16);
 	TestHashing<7, 2>("13 12 11 10 9 8 7 6 5 4 3 2 1 0",
 					  "12 11 10 9 8 7 6 5 4 3 2 1 0 0 0 b=13",
 					  "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 b=13",
@@ -99,7 +99,7 @@ TEST(TestPuzzle, Hashing4x3) {
 	TestHashing<4, 3>("0 1 2 3 4 5 6 7 8 9 10 11",
 					  "0 1 2 3 4 5 6 7 8 9 10 0 0 0 0 b=0",
 					  "0 0 2 3 4 5 6 7 8 9 10 0 0 0 0 b=0",
-					  0, 16U*(11*10*9*8*7*6*5*4*3-1));
+					  Puzzle<4, 3>::MaxSegments() - 1, Puzzle<4, 3>::MaxIndexesPerSegment() - 16);
 	TestHashing<4, 3>("10 11 9 8 7 6 5 4 3 2 1 0",
 					  "9 10 8 7 6 5 4 3 2 1 0 0 0 0 0 b=11",
 					  "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 b=11",
@@ -211,12 +211,12 @@ TEST(TestPuzzle , TestPerformance4x4) {
 		if (puzzle.CanMoveUp(i)) {
 			auto res = puzzle.MoveUp(SEGMENT, i);
 			hashUp = hashUp * 31 + (uint64_t(res.first) << 32) + res.second;
-			ENSURE_EQ(SEGMENT != res.first, blank == 13 || blank == 14 || blank == 15);
+			ENSURE_EQ(SEGMENT != res.first, puzzle.UpChangesSegment(blank));
 		}
 		if (puzzle.CanMoveDown(i)) {
 			auto res = puzzle.MoveDown(SEGMENT, i);
 			hashDown = hashDown * 31 + (uint64_t(res.first) << 32) + res.second;
-			ENSURE_EQ(SEGMENT != res.first, blank == 9 || blank == 10 || blank == 11);
+			ENSURE_EQ(SEGMENT != res.first, puzzle.DownChangesSegment(blank));
 		}
 	}
 

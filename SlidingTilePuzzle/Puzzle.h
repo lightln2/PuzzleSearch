@@ -18,12 +18,27 @@ public:
     static constexpr int BLANK_POS = 15;
 
 public:
-    static constexpr uint32_t TOTAL_INDEX_PER_SEGMENT() {
-        uint32_t result = 16;
-        for (int i = 3; i < std::min(13, size - 3); i++) {
-            result *= i;
-        }
-        return result;
+    /* segment number is always less than this */
+    static constexpr int MaxSegments() {
+        if (size == 16) return 0xEDC + 1;
+        if (size == 15) return 0xDC + 1;
+        if (size == 14) return 0xC + 1;
+        return 1;
+    }
+
+    static constexpr uint32_t MaxIndexesPerSegment() {
+        if (size >= 14) return 16U*3*4*5*6*7*8*9*10*11*12;
+        uint32_t max = 16;
+        for (int i = 3; i < size; i++) max *= i;
+        return max;
+    }
+
+    static bool UpChangesSegment(int blank) {
+        return blank == 13 || blank == 14 || blank == 15;
+    }
+
+    static bool DownChangesSegment(int blank) {
+        return blank == 13 - width || blank == 14 - width || blank == 15 - width;
     }
 
     static bool CanMoveUp(uint32_t index) { return (index % 16) >= width; }
