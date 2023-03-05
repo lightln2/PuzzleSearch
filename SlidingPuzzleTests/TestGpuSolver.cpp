@@ -16,7 +16,7 @@ void TestMove(std::string puzzleStr) {
 		auto expected = puzzle.MoveUp(stateHash);
 		segments.Buffer[0] = stateHash.first;
 		indexes.Buffer[0] = stateHash.second;
-		gpuSolver.GpuUp(indexes.Buffer, segments.Buffer, 1);
+		gpuSolver.GpuUp(stateHash.first, indexes.Buffer, segments.Buffer, 1);
 		EXPECT_EQ(segments.Buffer[0], expected.first);
 		EXPECT_EQ(indexes.Buffer[0], expected.second);
 	}
@@ -25,7 +25,7 @@ void TestMove(std::string puzzleStr) {
 		auto expected = puzzle.MoveDown(stateHash);
 		segments.Buffer[0] = stateHash.first;
 		indexes.Buffer[0] = stateHash.second;
-		gpuSolver.GpuDown(indexes.Buffer, segments.Buffer, 1);
+		gpuSolver.GpuDown(stateHash.first, indexes.Buffer, segments.Buffer, 1);
 		EXPECT_EQ(segments.Buffer[0], expected.first);
 		EXPECT_EQ(indexes.Buffer[0], expected.second);
 	}
@@ -50,7 +50,7 @@ TEST(TestGpuSolverPerformance, TestPerformance4x4) {
 	constexpr int SEGMENT = 0x5a2;
 
 	auto consumeUp = [&]() {
-		gpuSolver.GpuUp(indexesUp.Buffer, segmentsUp.Buffer, posUp);
+		gpuSolver.GpuUp(SEGMENT, indexesUp.Buffer, segmentsUp.Buffer, posUp);
 		for (int i = 0; i < posUp; i++) {
 			auto segment = segmentsUp.Buffer[i];
 			auto index = indexesUp.Buffer[i];
@@ -62,7 +62,7 @@ TEST(TestGpuSolverPerformance, TestPerformance4x4) {
 	};
 
 	auto consumeDown = [&]() {
-		gpuSolver.GpuDown(indexesDown.Buffer, segmentsDown.Buffer, posDown);
+		gpuSolver.GpuDown(SEGMENT, indexesDown.Buffer, segmentsDown.Buffer, posDown);
 		for (int i = 0; i < posDown; i++) {
 			auto segment = segmentsDown.Buffer[i];
 			auto index = indexesDown.Buffer[i];
@@ -95,33 +95,33 @@ TEST(TestGpuSolverPerformance, TestPerformance4x4) {
 
 TEST(TestGpuSolverPerformance, TestMoves4x4) {
 	GpuSolver<4, 4> gpuSolver;
+	constexpr uint32_t SEGMENT = 0;
 	auto getVal = [&](int i) { return i * 16 + 5; };
 
 	HostBuffer segments, indexes;
 	for (int i = 0; i < indexes.SIZE; i++) {
-		segments.Buffer[i] = 0;
 		indexes.Buffer[i] = getVal(i);
 	}
-	gpuSolver.GpuUp(indexes.Buffer, segments.Buffer, indexes.SIZE);
-	gpuSolver.GpuDown(indexes.Buffer, segments.Buffer, indexes.SIZE);
+	gpuSolver.GpuUp(SEGMENT, indexes.Buffer, segments.Buffer, indexes.SIZE);
+	gpuSolver.GpuDown(segments.Buffer[0], indexes.Buffer, segments.Buffer, indexes.SIZE);
 	for (int i = 0; i < indexes.SIZE; i++) {
-		ENSURE_EQ(segments.Buffer[i], 0);
+		ENSURE_EQ(segments.Buffer[i], SEGMENT);
 		ENSURE_EQ(indexes.Buffer[i], getVal(i));
 	}
 }
 
 TEST(TestGpuSolverPerformance, TestMoves8x2) {
 	GpuSolver<8, 2> gpuSolver;
+	constexpr uint32_t SEGMENT = 0;
 	auto getVal = [&](int i) { return i * 16 + 5; };
 	HostBuffer segments, indexes;
 	for (int i = 0; i < indexes.SIZE; i++) {
-		segments.Buffer[i] = 0;
 		indexes.Buffer[i] = getVal(i);
 	}
-	gpuSolver.GpuDown(indexes.Buffer, segments.Buffer, indexes.SIZE);
-	gpuSolver.GpuUp(indexes.Buffer, segments.Buffer, indexes.SIZE);
+	gpuSolver.GpuDown(SEGMENT, indexes.Buffer, segments.Buffer, indexes.SIZE);
+	gpuSolver.GpuUp(segments.Buffer[0], indexes.Buffer, segments.Buffer, indexes.SIZE);
 	for (int i = 0; i < indexes.SIZE; i++) {
-		ENSURE_EQ(segments.Buffer[i], 0);
+		ENSURE_EQ(segments.Buffer[i], SEGMENT);
 		ENSURE_EQ(indexes.Buffer[i], getVal(i));
 	}
 }

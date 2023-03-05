@@ -14,45 +14,52 @@ int main() {
 	GpuSolver<4, 4> gpuSolver;
 	HostBuffer segmentsUp, segmentsDown, indexesUp, indexesDown;
 	int posUp = 0, posDown = 0;
+	uint64_t totalUpMoves = 0, totalDownMoves = 0;
+	uint64_t upMoves[4096]{ 0 };
+	uint64_t downMoves[4096]{ 0 };
 
-	constexpr int MAX = 100 * 1000 * 1000;
+	//constexpr uint32_t MAX = 3000 * 1000 * 1000;
+	constexpr uint32_t MAX = 16U*12*11*10*9*8*7*6*5*4*3;
+	std::cerr << "MAX=" << MAX << std::endl;
 	uint64_t hashUp = 0, hashDown = 0;
 
 	constexpr int SEGMENT = 0x5a2;
 
 	auto consumeUp = [&]() {
-		gpuSolver.GpuUp(indexesUp.Buffer, segmentsUp.Buffer, posUp);
+		gpuSolver.GpuUp(SEGMENT, indexesUp.Buffer, segmentsUp.Buffer, posUp);
 		for (int i = 0; i < posUp; i++) {
 			auto segment = segmentsUp.Buffer[i];
 			auto index = indexesUp.Buffer[i];
 			auto blank = index % 16;
+			upMoves[segment]++;
 			hashUp = hashUp * 31 + (uint64_t(segment) << 32) + index;
 			ENSURE_EQ(SEGMENT != segment, blank == 9 || blank == 10 || blank == 11);
 		}
+		totalUpMoves += posUp;
 		posUp = 0;
 	};
 
 	auto consumeDown = [&]() {
-		gpuSolver.GpuDown(indexesDown.Buffer, segmentsDown.Buffer, posDown);
+		gpuSolver.GpuDown(SEGMENT, indexesDown.Buffer, segmentsDown.Buffer, posDown);
 		for (int i = 0; i < posDown; i++) {
 			auto segment = segmentsDown.Buffer[i];
 			auto index = indexesDown.Buffer[i];
 			auto blank = index % 16;
+			downMoves[segment]++;
 			hashDown = hashDown * 31 + (uint64_t(segment) << 32) + index;
 			ENSURE_EQ(SEGMENT != segment, blank == 13 || blank == 14 || blank == 15);
 		}
+		totalDownMoves += posDown;
 		posDown = 0;
 	};
 
 	for (uint32_t i = 0; i < MAX; i++) {
 		int blank = i % 16;
 		if (puzzle.CanMoveUp(i)) {
-			segmentsUp.Buffer[posUp] = SEGMENT;
 			indexesUp.Buffer[posUp++] = i;
 			if (posUp == indexesUp.SIZE) consumeUp();
 		}
 		if (puzzle.CanMoveDown(i)) {
-			segmentsDown.Buffer[posDown] = SEGMENT;
 			indexesDown.Buffer[posDown++] = i;
 			if (posDown == indexesDown.SIZE) consumeDown();
 		}
@@ -64,8 +71,25 @@ int main() {
 	//ENSURE_EQ(hashDown, 8254655271410123088);
 
 	auto END = clock();
+	std::cerr << "Total moves: up=" << totalUpMoves << "; down=" << totalDownMoves << std::endl;
 	std::cerr << "Hash up: " << hashUp << "; down: " << hashDown << std::endl;
 	std::cerr << "Time: " << END - START << std::endl;
+
+	for (int i = 0; i < 4096; i++) {
+		if (upMoves[i] > 0) {
+			uint64_t percent = upMoves[i] * 100ULL / totalUpMoves;
+			std::cerr << "up[" << std::setw(3) << std::hex << i << std::dec << "]: "
+					  << upMoves[i] << " " << percent << "%" << std::endl;
+
+		}
+	}
+	for (int i = 0; i < 4096; i++) {
+		if (downMoves[i] > 0) {
+			uint64_t percent = downMoves[i] * 100ULL / totalDownMoves;
+			std::cerr << "down[" << std::setw(3) << std::hex << i << std::dec << "]: "
+				<< downMoves[i] << " " << percent << "%" << std::endl;
+		}
+	}
 
 	/*
 	auto START = clock();

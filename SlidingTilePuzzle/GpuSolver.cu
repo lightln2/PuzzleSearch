@@ -50,6 +50,7 @@ template <int size>
 __device__ __forceinline__ void pack(int* arr) {
     arr[0] = 0;
     arr[1] = 0;
+    /*
     #pragma unroll
     for (int i = 2; i < size - 2; i++) {
         int x = arr[i];
@@ -59,6 +60,15 @@ __device__ __forceinline__ void pack(int* arr) {
         }
         arr[i] = x;
     }
+    */
+    #pragma unroll
+    for (int i = size - 2; i > 2; i--) {
+        #pragma unroll
+        for (int j = 2; j < i; j++) {
+            arr[j] -= (int)(arr[j] >= arr[i]);
+        }
+    }
+
 }
 
 template <int size, int width, bool widthIsEven>
@@ -116,73 +126,48 @@ __device__ __forceinline__ void RotateDn(int* arr) {
 }
 
 template<int width, int height>
-__global__ void kernel_up(uint32_t* indexes, uint32_t* segments, size_t count) {
+__global__ void kernel_up(uint32_t segment, uint32_t* indexes, uint32_t* out_segments, size_t count) {
     constexpr int size = width * height;
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= count) return;
     int arr[16];
-    from_segment(arr, segments[i]);
+    from_segment(arr, segment);
     from_index<size>(arr, indexes[i]);
     unpack<size, width, width % 2 == 0>(arr);
 #ifdef _DEBUG
     if (!CanRotateUp<width>(arr)) {
         indexes[i] = (uint32_t)-1;
-        segments[i] = (uint32_t)-1;
+        out_segments[i] = (uint32_t)-1;
         return;
     }
 #endif
     RotateUp<width>(arr);
     pack<size>(arr);
-    segments[i] = to_segment(arr);
+    out_segments[i] = to_segment(arr);
     indexes[i] = to_index<size>(arr);
 }
 
 template<int width, int height>
-__global__ void kernel_dn(uint32_t* indexes, uint32_t* segments, size_t count) {
+__global__ void kernel_dn(uint32_t segment, uint32_t* indexes, uint32_t* out_segments, size_t count) {
     constexpr int size = width * height;
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= count) return;
     int arr[16];
-    from_segment(arr, segments[i]);
+    from_segment(arr, segment);
     from_index<size>(arr, indexes[i]);
     unpack<size, width, width % 2 == 0>(arr);
 #ifdef _DEBUG
     if (!CanRotateDn<size, width>(arr)) {
         indexes[i] = (uint32_t)-1;
-        segments[i] = (uint32_t)-1;
+        out_segments[i] = (uint32_t)-1;
         return;
     }
 #endif
     RotateDn<width>(arr);
     pack<size>(arr);
-    segments[i] = to_segment(arr);
+    out_segments[i] = to_segment(arr);
     indexes[i] = to_index<size>(arr);
 }
-
-template<int width, int height>
-__global__ void kernel_rank(uint32_t* input, uint32_t* output) {
-    constexpr int size = width * height;
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i > 0) return;
-    int arr[16];
-    for (int i = 0; i < 16; i++) arr[i] = input[i];
-    pack<size>(arr);
-    output[0] = to_segment(arr);
-    output[1] = to_index<size>(arr);
-}
-
-template<int width, int height>
-__global__ void kernel_unrank(uint32_t segment, uint32_t index, uint32_t* output) {
-    constexpr int size = width * height;
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i > 0) return;
-    int arr[16];
-    from_segment(arr, segment);
-    from_index<size>(arr, index);
-    unpack<size, width, width % 2 == 0>(arr);
-    for (int i = 0; i < 16; i++) output[i] = arr[i];
-}
-
 
 HostBuffer::HostBuffer() {
     ERR(cudaHostAlloc(&Buffer, GPU_BUFFER_SIZE * sizeof(int32_t), cudaHostAllocDefault));
@@ -210,27 +195,25 @@ GpuSolver<width, height>::~GpuSolver() {
 }
 
 template<int width, int height>
-void GpuSolver<width, height>::GpuUp(uint32_t* indexes, uint32_t* segments, size_t count) {
+void GpuSolver<width, height>::GpuUp(uint32_t segment, uint32_t* indexes, uint32_t* out_segments, size_t count) {
     int threadsPerBlock = 256;
     int blocksPerGrid = ((int)count + threadsPerBlock - 1) / threadsPerBlock;
     ERR(cudaMemcpy(GpuIndexesBuffer, indexes, count * sizeof(int32_t), cudaMemcpyHostToDevice));
-    ERR(cudaMemcpy(GpuSegmentsBuffer, segments, count * sizeof(int32_t), cudaMemcpyHostToDevice));
-    kernel_up<width, height> << <blocksPerGrid, threadsPerBlock >> > (GpuIndexesBuffer, GpuSegmentsBuffer, count);
+    kernel_up<width, height> << <blocksPerGrid, threadsPerBlock >> > (segment, GpuIndexesBuffer, GpuSegmentsBuffer, count);
     ERR(cudaGetLastError());
     ERR(cudaMemcpy(indexes, GpuIndexesBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost));
-    ERR(cudaMemcpy(segments, GpuSegmentsBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost));
+    ERR(cudaMemcpy(out_segments, GpuSegmentsBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost));
 }
 
 template<int width, int height>
-void GpuSolver<width, height>::GpuDown(uint32_t* indexes, uint32_t* segments, size_t count) {
+void GpuSolver<width, height>::GpuDown(uint32_t segment, uint32_t* indexes, uint32_t* out_segments, size_t count) {
     int threadsPerBlock = 256;
     int blocksPerGrid = ((int)count + threadsPerBlock - 1) / threadsPerBlock;
     ERR(cudaMemcpy(GpuIndexesBuffer, indexes, count * sizeof(int32_t), cudaMemcpyHostToDevice));
-    ERR(cudaMemcpy(GpuSegmentsBuffer, segments, count * sizeof(int32_t), cudaMemcpyHostToDevice));
-    kernel_dn<width, height> << <blocksPerGrid, threadsPerBlock >> > (GpuIndexesBuffer, GpuSegmentsBuffer, count);
+    kernel_dn<width, height> << <blocksPerGrid, threadsPerBlock >> > (segment, GpuIndexesBuffer, GpuSegmentsBuffer, count);
     ERR(cudaGetLastError());
     ERR(cudaMemcpy(indexes, GpuIndexesBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost));
-    ERR(cudaMemcpy(segments, GpuSegmentsBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost));
+    ERR(cudaMemcpy(out_segments, GpuSegmentsBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost));
 }
 
 

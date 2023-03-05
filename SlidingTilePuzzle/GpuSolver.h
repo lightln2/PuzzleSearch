@@ -22,8 +22,8 @@ public:
     GpuSolver();
     ~GpuSolver();
 
-    void GpuUp(uint32_t* indexes, uint32_t* segments, size_t count);
-    void GpuDown(uint32_t* indexes, uint32_t* segments, size_t count);
+    void GpuUp(uint32_t segment, uint32_t* indexes, uint32_t* out_segments, size_t count);
+    void GpuDown(uint32_t segment, uint32_t* indexes, uint32_t* out_segments, size_t count);
 private:
 
     uint32_t* GpuIndexesBuffer;
