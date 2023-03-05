@@ -2,51 +2,63 @@
 #include "gpu.h"
 
 #include <sstream>
+#include <stdio.h>
 
 constexpr size_t OFFSET_ZERO = 15;
 
-template <int size>
-__device__ __forceinline__ void from_index(int* arr, uint64_t index) {
-    arr[OFFSET_ZERO] = index & 15;
-    index /= 16;
+__device__ __forceinline__ void from_segment(int* arr, uint32_t segment) {
+    arr[12] = segment & 15;
+    arr[13] = (segment >> 4) & 15;
+    arr[14] = segment >> 8;
+}
 
-    int div = size;
-    #pragma unroll
-    for (int i = 0; i < size - 3; i++) {
-        div--;
-        int64_t newIndex = index / div;
-        arr[i] = index - newIndex * div;
-        index = newIndex;
-    }
-    arr[size - 3] = 0;
-    arr[size - 2] = 0;
+__device__ __forceinline__ uint32_t to_segment(int* arr) {
+    return arr[12] | (arr[13] << 4) | (arr[14] << 8);
 }
 
 template <int size>
-__device__ __forceinline__ int64_t to_index(int* arr) {
-    char zeroPos = arr[OFFSET_ZERO];
-    int64_t index = 0;
-    int div = 1;
+__device__ __forceinline__ void from_index(int* arr, uint32_t index) {
+    arr[OFFSET_ZERO] = index % 16;
+    index /= 16;
+
+    arr[0] = 0;
+    arr[1] = 0;
+
     #pragma unroll
-    for (int i = size - 3; i >= 0; i--)
+    for (uint32_t i = 2; i < 12; i++) {
+        uint32_t div = i + 1;
+        uint32_t newIndex = index / div;
+        arr[i] = index - newIndex * div;
+        index = newIndex;
+    }
+}
+
+template <int size>
+__device__ __forceinline__ int32_t to_index(int* arr) {
+    auto blank = arr[OFFSET_ZERO];
+    uint32_t index = 0;
+    #pragma unroll
+    for (uint32_t i = 11; i >= 2; i--)
     {
-        div++;
+        uint32_t div = i + 1;
         index = index * div + arr[i];
     }
-    return index * 16 + zeroPos;
+    return index * 16 + blank;
 }
 
 template <int size>
 __device__ __forceinline__ void pack(int* arr) {
+    arr[0] = 0;
+    arr[1] = 0;
     #pragma unroll
-    for (int i = 0; i < size - 4; i++) {
+    for (int i = 2; i < size - 2; i++) {
+        int x = arr[i];
         #pragma unroll
-        for (int j = i + 1; j < size - 3; j++) {
-            arr[j] -= (int)(arr[j] >= arr[i]);
+        for (int j = i + 1; j < size - 1; j++) {
+            x -= (int)(arr[i] >= arr[j]);
         }
+        arr[i] = x;
     }
-    arr[size - 2] = 0;
-    arr[size - 3] = 0;
 }
 
 template <int size, int width, bool widthIsEven>
@@ -54,23 +66,22 @@ __device__ __forceinline__ void unpack(int* arr) {
     bool invEven = true;
 
     #pragma unroll
-    for (int i = size - 2; i >= 0; i--) {
+    for (int i = 1; i < size - 1; i++) {
         #pragma unroll
-        for (int j = i + 1; j < size - 1; j++) {
+        for (int j = 0; j < i; j++) {
             bool inv = (arr[j] >= arr[i]);
             arr[j] += (int)inv;
-            invEven ^= inv;
+            invEven ^= !inv;
         }
     }
 
-    // restore by inversion count
-    auto& zeroPos = arr[OFFSET_ZERO];
-    bool rowEven = ((zeroPos / width) & 1) == 0;
-    bool swapLast = (widthIsEven && invEven == rowEven) || (!widthIsEven && invEven);
-    if (swapLast) {
-        auto tmp = arr[size - 2];
-        arr[size - 2] = arr[size - 3];
-        arr[size - 3] = tmp;
+    // restore parity
+    bool rowEven = ((arr[OFFSET_ZERO] / width) & 1) == 0;
+    bool restoreParity = (widthIsEven && invEven == rowEven) || (!widthIsEven && invEven);
+    if (restoreParity) {
+        auto tmp = arr[0];
+        arr[0] = arr[1];
+        arr[1] = tmp;
     }
 }
 
@@ -110,7 +121,8 @@ __global__ void kernel_up(uint32_t* indexes, uint32_t* segments, size_t count) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= count) return;
     int arr[16];
-    from_index<size>(arr, ((uint64_t)segments[i] << 32) | indexes[i]);
+    from_segment(arr, segments[i]);
+    from_index<size>(arr, indexes[i]);
     unpack<size, width, width % 2 == 0>(arr);
 #ifdef _DEBUG
     if (!CanRotateUp<width>(arr)) {
@@ -121,9 +133,8 @@ __global__ void kernel_up(uint32_t* indexes, uint32_t* segments, size_t count) {
 #endif
     RotateUp<width>(arr);
     pack<size>(arr);
-    uint64_t new_index = to_index<size>(arr);
-    indexes[i] = new_index;
-    segments[i] = new_index >> 32;
+    segments[i] = to_segment(arr);
+    indexes[i] = to_index<size>(arr);
 }
 
 template<int width, int height>
@@ -132,7 +143,8 @@ __global__ void kernel_dn(uint32_t* indexes, uint32_t* segments, size_t count) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= count) return;
     int arr[16];
-    from_index<size>(arr, ((uint64_t)segments[i] << 32) | indexes[i]);
+    from_segment(arr, segments[i]);
+    from_index<size>(arr, indexes[i]);
     unpack<size, width, width % 2 == 0>(arr);
 #ifdef _DEBUG
     if (!CanRotateDn<size, width>(arr)) {
@@ -143,9 +155,8 @@ __global__ void kernel_dn(uint32_t* indexes, uint32_t* segments, size_t count) {
 #endif
     RotateDn<width>(arr);
     pack<size>(arr);
-    uint64_t new_index = to_index<size>(arr);
-    indexes[i] = new_index;
-    segments[i] = new_index >> 32;
+    segments[i] = to_segment(arr);
+    indexes[i] = to_index<size>(arr);
 }
 
 template<int width, int height>
@@ -156,9 +167,8 @@ __global__ void kernel_rank(uint32_t* input, uint32_t* output) {
     int arr[16];
     for (int i = 0; i < 16; i++) arr[i] = input[i];
     pack<size>(arr);
-    uint64_t new_index = to_index<size>(arr);
-    output[0] = new_index >> 32;
-    output[1] = new_index;
+    output[0] = to_segment(arr);
+    output[1] = to_index<size>(arr);
 }
 
 template<int width, int height>
@@ -167,7 +177,8 @@ __global__ void kernel_unrank(uint32_t segment, uint32_t index, uint32_t* output
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i > 0) return;
     int arr[16];
-    from_index<size>(arr, ((uint64_t)segment << 32) | index);
+    from_segment(arr, segment);
+    from_index<size>(arr, index);
     unpack<size, width, width % 2 == 0>(arr);
     for (int i = 0; i < 16; i++) output[i] = arr[i];
 }
@@ -220,48 +231,6 @@ void GpuSolver<width, height>::GpuDown(uint32_t* indexes, uint32_t* segments, si
     ERR(cudaGetLastError());
     ERR(cudaMemcpy(indexes, GpuIndexesBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost));
     ERR(cudaMemcpy(segments, GpuSegmentsBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost));
-}
-
-template<int width, int height>
-std::pair<uint32_t, uint32_t> GpuSolver<width, height>::Rank(std::string puzzle) {
-    constexpr int size = width * height;
-    int arr[16];
-    std::istringstream stream(puzzle);
-    int tile;
-    int pos = 0;
-    for (int i = 0; i < size; i++) {
-        stream >> tile;
-        if (tile == 0) arr[OFFSET_ZERO] = i;
-        else arr[pos++] = tile - 1;
-    }
-
-    ERR(cudaMemcpy(GpuIndexesBuffer, arr, 16 * sizeof(int32_t), cudaMemcpyHostToDevice));
-    kernel_rank<width, height> << <1, 1>> > (GpuIndexesBuffer, GpuSegmentsBuffer);
-    ERR(cudaGetLastError());
-    uint32_t outp[2];
-    ERR(cudaMemcpy(outp, GpuSegmentsBuffer, 2 * sizeof(int32_t), cudaMemcpyDeviceToHost));
-
-    return { outp[0], outp[1] };
-}
-
-template<int width, int height>
-std::string GpuSolver<width, height>::Unrank(uint32_t segment, uint32_t index) {
-    constexpr int size = width * height;
-    kernel_unrank<width, height> << <1, 1>> > (segment, index, GpuIndexesBuffer);
-    ERR(cudaGetLastError());
-    int arr[16];
-    ERR(cudaMemcpy(arr, GpuIndexesBuffer, 16 * sizeof(int32_t), cudaMemcpyDeviceToHost));
-
-    std::ostringstream stream;
-    int blank = arr[OFFSET_ZERO];
-    for (int i = 0; i < size - 1; i++) {
-        if (i > 0) stream << ' ';
-        if (blank == i) stream << 0 << ' ';
-        int tile = arr[i];
-        stream << tile + 1;
-    }
-    if (blank == size - 1) stream << ' ' << 0;
-    return stream.str();
 }
 
 

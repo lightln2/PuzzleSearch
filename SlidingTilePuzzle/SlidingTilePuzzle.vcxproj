@@ -80,6 +80,7 @@
     <ClInclude Include="gpu.h" />
     <ClInclude Include="GpuSolver.h" />
     <ClInclude Include="Puzzle.h" />
+    <ClInclude Include="Util.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="GpuSolver.cu" />

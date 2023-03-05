@@ -24,9 +24,6 @@ public:
 
     void GpuUp(uint32_t* indexes, uint32_t* segments, size_t count);
     void GpuDown(uint32_t* indexes, uint32_t* segments, size_t count);
-
-    std::pair<uint32_t, uint32_t> Rank(std::string puzzle);
-    std::string Unrank(uint32_t segment, uint32_t index);
 private:
 
     uint32_t* GpuIndexesBuffer;
