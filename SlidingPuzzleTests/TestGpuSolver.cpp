@@ -113,7 +113,7 @@ TEST(TestGpuSolverPerformance, TestMoves4x4) {
 TEST(TestGpuSolverPerformance, TestMoves8x2) {
 	GpuSolver<8, 2> gpuSolver;
 	constexpr uint32_t SEGMENT = 0;
-	auto getVal = [&](int i) { return i * 16 + 5; };
+	auto getVal = [&](uint32_t i) { return i * 16 + 5; };
 	HostBuffer segments, indexes;
 	for (int i = 0; i < indexes.SIZE; i++) {
 		indexes.Buffer[i] = getVal(i);
