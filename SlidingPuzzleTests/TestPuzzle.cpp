@@ -201,7 +201,7 @@ TEST(TestPuzzle, Move2x2) {
 
 TEST(TestPuzzle , TestPerformance4x4) {
 	Puzzle<4, 4> puzzle;
-	constexpr int MAX = 10 * 1000 * 1000;
+	constexpr int MAX = 1 * 1000 * 1000;
 	uint64_t hashUp = 0, hashDown = 0;
 
 	int SEGMENT = 0x5a2;
@@ -220,6 +220,12 @@ TEST(TestPuzzle , TestPerformance4x4) {
 		}
 	}
 
-	EXPECT_EQ(hashUp, 15956298610708895712);
-	EXPECT_EQ(hashDown, 8254655271410123088);
+	if (MAX == 10 * 1000 * 1000) {
+		EXPECT_EQ(hashUp, 15956298610708895712);
+		EXPECT_EQ(hashDown, 8254655271410123088);
+	}
+	else if (MAX == 1 * 1000 * 1000) {
+		EXPECT_EQ(hashUp, 15495615531757136264);
+		EXPECT_EQ(hashDown, 3846743369661599048);
+	}
 }

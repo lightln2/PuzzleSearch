@@ -7,7 +7,7 @@
 
 static void ERR(cudaError_t err) {
     if (err != cudaSuccess) {
-        std::cout << cudaGetErrorString(err) << std::endl;
+        std::cerr << cudaGetErrorString(err) << std::endl;
         throw std::runtime_error(cudaGetErrorString(err));
     }
 }

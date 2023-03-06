@@ -5,12 +5,12 @@
 #include <sstream>
 
 #define ensure(expression) do if(!(expression)) { \
-            std::cerr << __FILE__ << ":"<< __LINE__ << " " << #expression << std::endl; \
+            std::cerr << "ensure failed: " << __FILE__ << ":"<< __LINE__ << " " << #expression << std::endl; \
             exit(-1); } while(0)
 
 #define ENSURE_EQ(x, y) ensure((x)==(y))
 
-std::string WithDecSep(uint64_t value) {
+static std::string WithDecSep(uint64_t value) {
     char str[32];
     int pos = 0;
     if (value == 0) return "0";

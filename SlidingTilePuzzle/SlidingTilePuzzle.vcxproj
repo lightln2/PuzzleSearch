@@ -77,16 +77,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="File.h" />
+    <ClInclude Include="FrontierSearch.h" />
     <ClInclude Include="gpu.h" />
     <ClInclude Include="GpuSolver.h" />
     <ClInclude Include="Puzzle.h" />
+    <ClInclude Include="SegmentedFile.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="GpuSolver.cu" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BFS.cpp" />
+    <ClCompile Include="File.cpp" />
+    <ClCompile Include="FrontierSearch.cpp" />
     <ClCompile Include="Puzzle.cpp" />
-    <ClCompile Include="test.cpp" />
+    <ClCompile Include="SegmentedFile.cpp" />
   </ItemGroup>
 </Project>
