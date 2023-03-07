@@ -10,10 +10,11 @@ FHANDLE OpenFile(const std::string& fileName) {
     HANDLE fd = CreateFileA(
         fileName.c_str(),
         GENERIC_WRITE | GENERIC_READ,
-        0,
+        FILE_SHARE_READ,
         NULL,
         CREATE_ALWAYS,
-        FILE_ATTRIBUTE_NORMAL,
+        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_DELETE_ON_CLOSE,
+        //FILE_ATTRIBUTE_NORMAL,
         NULL);
     ensure(fd != INVALID_HANDLE_VALUE);
     return fd;
@@ -48,6 +49,10 @@ void SeekBeginning(FHANDLE fd) {
 #undef CreateDirectory
 void CreateDirectory(const std::string& directory) {
     CreateDirectoryA(directory.c_str(), NULL);
+}
+
+void DeleteDirectory(const std::string& directory) {
+    RemoveDirectoryA(directory.c_str());
 }
 
 } // namespace file

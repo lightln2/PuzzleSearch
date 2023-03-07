@@ -10,38 +10,42 @@
 #include <fstream>
 
 #include "FrontierSearch.h"
-#include "File.h"
+#include "SegmentedFile.h"
 
 void ClassicFrontierSearch() {
 	auto START = clock();
-	file::DeleteFile("d:/temp/file1");
-	auto fd = file::OpenFile("d:/temp/file1");
+	int MAX_SEGMENTS = 1000;
+	int REAL_SEGMENTS = 2;
+	file::DeleteDirectory("d:/temp/frontier1");
+	SegmentedFile file(MAX_SEGMENTS, "d:/temp/frontier1");
 	constexpr size_t SIZE = 1024 * 1024;
 	std::vector<uint8_t> buffer(SIZE);
-
 	uint8_t* buf = &buffer[0];
+	memset(buf, 7, SIZE);
 
-	for (int i = 0; i < 100; i++) {
-		memset(buf, i & 256, SIZE);
-		file::Write(fd, buf, SIZE);
+	for (int i = 0; i < MAX_SEGMENTS; i++) {
+		file.Write(i % REAL_SEGMENTS, buf, SIZE);
 	}
 
 	auto FINISH = clock();
 	std::cerr << "Written in " << WithDecSep(FINISH - START) << std::endl;
+	std::cerr << "Total size: " << file.TotalLength() << std::endl;
 
-	file::SeekBeginning(fd);
-	for (int i = 0; i < 100; i++) {
-		size_t read = file::Read(fd, buf, SIZE);
+	for (int i = 0; i < MAX_SEGMENTS; i++) {
+		size_t read = file.Read(i % REAL_SEGMENTS, buf, SIZE);
 		ensure(read == SIZE);
+		//file.Delete(i);
 	}
-	size_t read = file::Read(fd, buf, SIZE);
+	size_t read = file.Read(7, buf, SIZE);
 	ensure(read == 0);
 
 	auto FINISH2 = clock();
 	std::cerr << "Read in " << WithDecSep(FINISH2 - FINISH) << std::endl;
 
-	file::CloseFile(fd);
+	file.DeleteAll();
 
+	auto FINISH3 = clock();
+	std::cerr << "Deleted in " << WithDecSep(FINISH3 - FINISH2) << std::endl;
 
 }
 

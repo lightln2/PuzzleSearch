@@ -14,6 +14,7 @@ namespace file {
     void Write(FHANDLE fd, void* buffer, uint32_t size);
     void SeekBeginning(FHANDLE fd);
     void CreateDirectory(const std::string& directory);
+    void DeleteDirectory(const std::string& directory);
 }
 
 class RWFile {
@@ -28,7 +29,7 @@ public:
 
     ~RWFile() {
         file::CloseFile(m_Handle);
-        file::DeleteFile(m_FileName);
+        //file::DeleteFile(m_FileName);
     }
 
     void Write(void* buffer, uint32_t size) {
