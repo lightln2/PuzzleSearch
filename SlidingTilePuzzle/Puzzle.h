@@ -17,6 +17,11 @@ public:
     static constexpr int size = width * height;
     static constexpr int BLANK_POS = 15;
 
+    static constexpr int B_UP = 1;
+    static constexpr int B_DOWN = 1;
+    static constexpr int B_LEFT = 1;
+    static constexpr int B_RIGHT = 1;
+
 public:
     /* segment number is always less than this */
     static constexpr int MaxSegments() {
@@ -31,6 +36,15 @@ public:
         uint32_t max = 16;
         for (int i = 3; i < size; i++) max *= i;
         return max;
+    }
+
+    static uint8_t GetBounds(int blank) {
+        uint8_t bound = 0;
+        if (!CanMoveUp(blank)) bound |= B_UP;
+        if (!CanMoveDown(blank)) bound |= B_DOWN;
+        if (!CanMoveLeft(blank)) bound |= B_LEFT;
+        if (!CanMoveRight(blank)) bound |= B_RIGHT;
+        return bound;
     }
 
     static bool UpChangesSegment(int blank) {

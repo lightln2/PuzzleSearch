@@ -29,15 +29,17 @@ void DeleteFile(const std::string& fileName) {
     DeleteFileA(fileName.c_str());
 }
 
-uint32_t Read(FHANDLE fd, void* buffer, uint32_t size) {
+size_t Read(FHANDLE fd, void* buffer, size_t size) {
     DWORD actualSize = 0;
-    ensure(ReadFile(fd, buffer, size, &actualSize, NULL));
+    ensure(size < 2ULL * 1024 * 1024 * 1024);
+    ensure(ReadFile(fd, buffer, (DWORD)size, &actualSize, NULL));
     return actualSize;
 }
 
-void Write(FHANDLE fd, void* buffer, uint32_t size) {
+void Write(FHANDLE fd, void* buffer, size_t size) {
     DWORD actualSize = 0;
-    ensure(WriteFile(fd, buffer, size, &actualSize, NULL));
+    ensure(size < 2ULL * 1024 * 1024 * 1024);
+    ensure(WriteFile(fd, buffer, (DWORD)size, &actualSize, NULL));
     ensure(actualSize == size);
 }
 

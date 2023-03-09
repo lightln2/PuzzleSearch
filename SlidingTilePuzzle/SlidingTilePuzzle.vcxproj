@@ -77,10 +77,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Collector.h" />
     <ClInclude Include="File.h" />
+    <ClInclude Include="FrontierFile.h" />
     <ClInclude Include="FrontierSearch.h" />
     <ClInclude Include="gpu.h" />
     <ClInclude Include="GpuSolver.h" />
+    <ClInclude Include="Multiplexor.h" />
     <ClInclude Include="Puzzle.h" />
     <ClInclude Include="SegmentedFile.h" />
     <ClInclude Include="Util.h" />
@@ -90,8 +93,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BFS.cpp" />
+    <ClCompile Include="Collector.cpp" />
     <ClCompile Include="File.cpp" />
+    <ClCompile Include="FrontierFile.cpp" />
     <ClCompile Include="FrontierSearch.cpp" />
+    <ClCompile Include="Multiplexor.cpp" />
     <ClCompile Include="Puzzle.cpp" />
     <ClCompile Include="SegmentedFile.cpp" />
   </ItemGroup>
