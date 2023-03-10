@@ -16,15 +16,10 @@
 #include "Multiplexor.h"
 #include "Puzzle.h"
 
-void ClassicFrontierSearch() {
-	constexpr size_t BUFFER_SIZE = 4 * 1024 * 1024;
-	constexpr int B_UP = 1;
-	constexpr int B_DOWN = 2;
-	constexpr int B_LEFT = 4;
-	constexpr int B_RIGHT = 8;
-
+template<int width, int height>
+std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 	auto START = clock();
-	Puzzle<4, 4> puzzle;
+	Puzzle<width, height> puzzle;
 	SegmentedFile file_frontier1(puzzle.MaxSegments(), "d:/temp/frontier1");
 	SegmentedFile file_frontier2(puzzle.MaxSegments(), "d:/temp/frontier2");
 	SegmentedFile e_up(puzzle.MaxSegments(), "d:/temp/expanded_up");
@@ -43,19 +38,14 @@ void ClassicFrontierSearch() {
 	Multiplexor m_lt(puzzle.MaxSegments(), &e_lt, w_lt);
 	Multiplexor m_rt(puzzle.MaxSegments(), &e_rt, w_rt);
 
-	Buffer<uint32_t> buffer(BUFFER_SIZE);
-	Buffer<uint32_t> buffer2(BUFFER_SIZE);
-
-	//auto initialIndex = puzzle.Rank("0 1 2 3 4 5 6 7 8 9 10 11");
-	auto initialIndex = puzzle.Rank("0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15");
+	auto initialIndex = puzzle.Rank(options.InitialValue);
 	frontierWriter.SetSegment(frontier, initialIndex.first);
 	frontierWriter.Add(initialIndex.second, puzzle.GetBounds(initialIndex.second));
 	frontierWriter.FinishSegment();
 
 	std::vector<uint64_t> widths;
 	widths.push_back(1);
-
-	while (true) {
+	while (widths.size() <= options.MaxDepth) {
 
 		std::cerr << "Depth: " << widths.size() - 1 << "; width: " << widths.back() << std::endl;
 
@@ -153,6 +143,20 @@ void ClassicFrontierSearch() {
 	
 	auto FINISH = clock();
 	std::cerr << "Finished in " << WithDecSep(FINISH - START) << std::endl;
-
+	return widths;
 }
+
+template std::vector<uint64_t> FrontierSearch<2, 2>(SearchOptions options);
+template std::vector<uint64_t> FrontierSearch<3, 2>(SearchOptions options);
+template std::vector<uint64_t> FrontierSearch<4, 2>(SearchOptions options);
+template std::vector<uint64_t> FrontierSearch<5, 2>(SearchOptions options);
+template std::vector<uint64_t> FrontierSearch<6, 2>(SearchOptions options);
+template std::vector<uint64_t> FrontierSearch<7, 2>(SearchOptions options);
+template std::vector<uint64_t> FrontierSearch<8, 2>(SearchOptions options);
+
+template std::vector<uint64_t> FrontierSearch<3, 3>(SearchOptions options);
+template std::vector<uint64_t> FrontierSearch<4, 3>(SearchOptions options);
+template std::vector<uint64_t> FrontierSearch<5, 3>(SearchOptions options);
+
+template std::vector<uint64_t> FrontierSearch<4, 4>(SearchOptions options);
 

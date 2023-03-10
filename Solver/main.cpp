@@ -10,5 +10,5 @@
 #include <vector>
 
 int main() {
-    ClassicFrontierSearch();
+    FrontierSearch<3, 2>();
 }

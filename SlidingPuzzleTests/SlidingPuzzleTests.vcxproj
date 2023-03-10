@@ -30,6 +30,7 @@
   <ItemGroup>
     <ClCompile Include="TestFile.cpp" />
     <ClCompile Include="TestFrontierFile.cpp" />
+    <ClCompile Include="TestFrontierSearch.cpp" />
     <ClCompile Include="TestGpuSolver.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
