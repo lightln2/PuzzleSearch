@@ -25,14 +25,14 @@ public:
     Buffer(size_t capacity)
         : m_Size(0)
         , m_Capacity(capacity)
-        , m_Buffer(new T[capacity])
+        , m_Buffer((T*)malloc(capacity * sizeof(T)))
     {}
 
     Buffer(const Buffer&) = delete;
     Buffer& operator =(const Buffer&) = delete;
 
     ~Buffer() {
-        delete[] m_Buffer;
+        free(m_Buffer);
     }
 
     void Add(T value) { m_Buffer[m_Size++] = value; }

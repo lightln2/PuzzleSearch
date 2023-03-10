@@ -24,7 +24,7 @@ void ClassicFrontierSearch() {
 	constexpr int B_RIGHT = 8;
 
 	auto START = clock();
-	Puzzle<4, 3> puzzle;
+	Puzzle<4, 4> puzzle;
 	SegmentedFile file_frontier1(puzzle.MaxSegments(), "d:/temp/frontier1");
 	SegmentedFile file_frontier2(puzzle.MaxSegments(), "d:/temp/frontier2");
 	SegmentedFile e_up(puzzle.MaxSegments(), "d:/temp/expanded_up");
@@ -46,7 +46,8 @@ void ClassicFrontierSearch() {
 	Buffer<uint32_t> buffer(BUFFER_SIZE);
 	Buffer<uint32_t> buffer2(BUFFER_SIZE);
 
-	auto initialIndex = puzzle.Rank("0 1 2 3 4 5 6 7 8 9 10 11");
+	//auto initialIndex = puzzle.Rank("0 1 2 3 4 5 6 7 8 9 10 11");
+	auto initialIndex = puzzle.Rank("0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15");
 	frontierWriter.SetSegment(frontier, initialIndex.first);
 	frontierWriter.Add(initialIndex.second, puzzle.GetBounds(initialIndex.second));
 	frontierWriter.FinishSegment();
@@ -59,6 +60,7 @@ void ClassicFrontierSearch() {
 		std::cerr << "Depth: " << widths.size() - 1 << "; width: " << widths.back() << std::endl;
 
 		// stage 1
+
 		for (int segment = 0; segment < puzzle.MaxSegments(); segment++) {
 			frontierReader.SetSegment(frontier, segment);
 			while (true) {
@@ -103,9 +105,11 @@ void ClassicFrontierSearch() {
 			frontierWriter.SetSegment(new_frontier, segment);
 			collector.SetSegment(segment);
 
+			bool empty = true;
 			while (true) {
 				auto& buf = r_up.Read();
 				if (buf.Size() == 0) break;
+				empty = false;
 				for (size_t i = 0; i < buf.Size(); i++) {
 					collector.Add(buf[i], puzzle.GetBounds(buf[i]) | puzzle.B_DOWN);
 				}
@@ -113,6 +117,7 @@ void ClassicFrontierSearch() {
 			while (true) {
 				auto& buf = r_dn.Read();
 				if (buf.Size() == 0) break;
+				empty = false;
 				for (size_t i = 0; i < buf.Size(); i++) {
 					collector.Add(buf[i], puzzle.GetBounds(buf[i]) | puzzle.B_UP);
 				}
@@ -120,6 +125,7 @@ void ClassicFrontierSearch() {
 			while (true) {
 				auto& buf = r_lt.Read();
 				if (buf.Size() == 0) break;
+				empty = false;
 				for (size_t i = 0; i < buf.Size(); i++) {
 					collector.Add(buf[i], puzzle.GetBounds(buf[i]) | puzzle.B_RIGHT);
 				}
@@ -127,10 +133,12 @@ void ClassicFrontierSearch() {
 			while (true) {
 				auto& buf = r_rt.Read();
 				if (buf.Size() == 0) break;
+				empty = false;
 				for (size_t i = 0; i < buf.Size(); i++) {
 					collector.Add(buf[i], puzzle.GetBounds(buf[i]) | puzzle.B_LEFT);
 				}
 			}
+			if (empty) continue;
 			total += collector.SaveSegment();
 		}
 		if (total == 0) break;
