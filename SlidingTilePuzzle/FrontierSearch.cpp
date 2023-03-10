@@ -11,6 +11,9 @@
 
 #include "FrontierSearch.h"
 #include "SegmentedFile.h"
+#include "FrontierFile.h"
+#include "Collector.h"
+#include "Multiplexor.h"
 #include "Puzzle.h"
 
 void ClassicFrontierSearch() {
@@ -22,38 +25,34 @@ void ClassicFrontierSearch() {
 
 	auto START = clock();
 	Puzzle<4, 3> puzzle;
-	SegmentedFile frontier1(puzzle.MaxSegments(), "d:/temp/frontier1");
-	SegmentedFile frontier2(puzzle.MaxSegments(), "d:/temp/frontier2");
-	auto& frontier = frontier1;
-	auto& new_frontier = frontier2;
+	SegmentedFile file_frontier1(puzzle.MaxSegments(), "d:/temp/frontier1");
+	SegmentedFile file_frontier2(puzzle.MaxSegments(), "d:/temp/frontier2");
+	SegmentedFile e_up(puzzle.MaxSegments(), "d:/temp/expanded_up");
+	SegmentedFile e_dn(puzzle.MaxSegments(), "d:/temp/expanded_dn");
+	SegmentedFile e_lt(puzzle.MaxSegments(), "d:/temp/expanded_lt");
+	SegmentedFile e_rt(puzzle.MaxSegments(), "d:/temp/expanded_rt");
+	FrontierFileReader frontierReader;
+	FrontierFileWriter frontierWriter;
+	ExpandedFrontierWriter w_up, w_dn, w_lt, w_rt;
+	ExpandedFrontierReader r_up, r_dn, r_lt, r_rt;
+	SegmentedFile* frontier = &file_frontier1;
+	SegmentedFile* new_frontier = &file_frontier2;
+	Collector collector(puzzle.MaxIndexesPerSegment(), frontierWriter);
+	Multiplexor m_up(puzzle.MaxSegments(), &e_up, w_up);
+	Multiplexor m_dn(puzzle.MaxSegments(), &e_dn, w_dn);
+	Multiplexor m_lt(puzzle.MaxSegments(), &e_lt, w_lt);
+	Multiplexor m_rt(puzzle.MaxSegments(), &e_rt, w_rt);
 
-	auto getBounds = [&](uint32_t index) {
-		uint32_t bounds = 0;
-		if (puzzle.CanMoveUp(index)) bounds |= B_UP;
-		if (puzzle.CanMoveDown(index)) bounds |= B_DOWN;
-		if (puzzle.CanMoveLeft(index)) bounds |= B_LEFT;
-		if (puzzle.CanMoveRight(index)) bounds |= B_RIGHT;
-		return bounds;
-	};
-
-	std::vector<uint32_t> buffer(BUFFER_SIZE);
-	uint32_t* buf = &buffer[0];
-	size_t pos = 0;
-
-	std::vector<uint32_t> buffer2(BUFFER_SIZE);
-	uint32_t* buf2 = &buffer2[0];
-	size_t pos2 = 0;
+	Buffer<uint32_t> buffer(BUFFER_SIZE);
+	Buffer<uint32_t> buffer2(BUFFER_SIZE);
 
 	auto initialIndex = puzzle.Rank("0 1 2 3 4 5 6 7 8 9 10 11");
-	buf[pos++] = initialIndex.second;
-	buf[pos++] = getBounds(initialIndex.second);
-	frontier.Write(initialIndex.first, buf, pos * 4);
-	pos = 0;
+	frontierWriter.SetSegment(frontier, initialIndex.first);
+	frontierWriter.Add(initialIndex.second, puzzle.GetBounds(initialIndex.second));
+	frontierWriter.FinishSegment();
 
 	std::vector<uint64_t> widths;
 	widths.push_back(1);
-
-	std::vector<uint8_t> collector(puzzle.MaxSegments());
 
 	while (true) {
 
@@ -61,35 +60,91 @@ void ClassicFrontierSearch() {
 
 		// stage 1
 		for (int segment = 0; segment < puzzle.MaxSegments(); segment++) {
-			memset(&collector[0], 0, collector.size());
+			frontierReader.SetSegment(frontier, segment);
 			while (true) {
-				auto read = frontier.Read(segment, buf, BUFFER_SIZE) / 8;
-				if (read == 0) break;
-				pos = 0;
-				pos2 = 0;
-				for (int i = 0; i < read; i++) {
-					uint32_t index = buf[pos++];
-					uint32_t bounds = buf[pos++];
-					if (!(bounds & B_UP)) {
-						if (puzzle.CanMoveUp(index)) {
-							auto newindex = puzzle.MoveUp(segment, index);
-							ensure(newindex.first == segment);
-							buf2[pos2++] = newindex.second;
-							buf2[pos2++] = getBounds(newindex.second) | B_DOWN;
-						}
+				auto read = frontierReader.Read();
+				if (read.Count == 0) break;
+				for (size_t i = 0; i < read.Count; i++) {
+					uint32_t index = read.Indexes[i];
+					uint8_t bound = read.Bounds[i];
+					if (!(bound & puzzle.B_UP)) {
+						auto new_index = puzzle.MoveUp(segment, index);
+						m_up.Add(new_index.first, new_index.second);
+					}
+					if (!(bound & puzzle.B_DOWN)) {
+						auto new_index = puzzle.MoveDown(segment, index);
+						m_dn.Add(new_index.first, new_index.second);
+					}
+					if (!(bound & puzzle.B_LEFT)) {
+						auto new_index = puzzle.MoveLeft(index);
+						m_lt.Add(segment, new_index);
+					}
+					if (!(bound & puzzle.B_RIGHT)) {
+						auto new_index = puzzle.MoveRight(index);
+						m_rt.Add(segment, new_index);
 					}
 				}
 			}
-
 		}
+		m_up.Close();
+		m_dn.Close();
+		m_lt.Close();
+		m_rt.Close();
 
+		//stage 2
+
+		size_t total = 0;
+
+		for (int segment = 0; segment < puzzle.MaxSegments(); segment++) {
+			r_up.SetSegment(&e_up, segment);
+			r_dn.SetSegment(&e_dn, segment);
+			r_lt.SetSegment(&e_lt, segment);
+			r_rt.SetSegment(&e_rt, segment);
+			frontierWriter.SetSegment(new_frontier, segment);
+			collector.SetSegment(segment);
+
+			while (true) {
+				auto& buf = r_up.Read();
+				if (buf.Size() == 0) break;
+				for (size_t i = 0; i < buf.Size(); i++) {
+					collector.Add(buf[i], puzzle.GetBounds(buf[i]) | puzzle.B_DOWN);
+				}
+			}
+			while (true) {
+				auto& buf = r_dn.Read();
+				if (buf.Size() == 0) break;
+				for (size_t i = 0; i < buf.Size(); i++) {
+					collector.Add(buf[i], puzzle.GetBounds(buf[i]) | puzzle.B_UP);
+				}
+			}
+			while (true) {
+				auto& buf = r_lt.Read();
+				if (buf.Size() == 0) break;
+				for (size_t i = 0; i < buf.Size(); i++) {
+					collector.Add(buf[i], puzzle.GetBounds(buf[i]) | puzzle.B_RIGHT);
+				}
+			}
+			while (true) {
+				auto& buf = r_rt.Read();
+				if (buf.Size() == 0) break;
+				for (size_t i = 0; i < buf.Size(); i++) {
+					collector.Add(buf[i], puzzle.GetBounds(buf[i]) | puzzle.B_LEFT);
+				}
+			}
+			total += collector.SaveSegment();
+		}
+		if (total == 0) break;
+		widths.push_back(total);
+		std::swap(frontier, new_frontier);
+		new_frontier->DeleteAll();
+		e_up.DeleteAll();
+		e_dn.DeleteAll();
+		e_lt.DeleteAll();
+		e_rt.DeleteAll();
 	}
 	
-
-	int depth = 0;
-
 	auto FINISH = clock();
-	std::cerr << "Finished in " << WithDecSep(START - FINISH) << std::endl;
+	std::cerr << "Finished in " << WithDecSep(FINISH - START) << std::endl;
 
 }
 

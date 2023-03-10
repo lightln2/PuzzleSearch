@@ -21,6 +21,8 @@ TEST(TestPuzzle, CanMove) {
 	EXPECT_EQ((Puzzle<5, 3>::CanMoveDown(base + 13)), false);
 	EXPECT_EQ((Puzzle<8, 2>::CanMoveLeft(base + 8)), false);
 	EXPECT_EQ((Puzzle<8, 2>::CanMoveRight(base + 8)), true);
+
+	EXPECT_EQ((Puzzle<8, 2>::GetBounds(base + 0)), 5);
 }
 
 template<int width, int height>

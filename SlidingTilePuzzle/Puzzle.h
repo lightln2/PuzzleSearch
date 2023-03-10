@@ -18,9 +18,9 @@ public:
     static constexpr int BLANK_POS = 15;
 
     static constexpr int B_UP = 1;
-    static constexpr int B_DOWN = 1;
-    static constexpr int B_LEFT = 1;
-    static constexpr int B_RIGHT = 1;
+    static constexpr int B_DOWN = 2;
+    static constexpr int B_LEFT = 4;
+    static constexpr int B_RIGHT = 8;
 
 public:
     /* segment number is always less than this */
@@ -38,12 +38,12 @@ public:
         return max;
     }
 
-    static uint8_t GetBounds(int blank) {
+    static uint8_t GetBounds(int index) {
         uint8_t bound = 0;
-        if (!CanMoveUp(blank)) bound |= B_UP;
-        if (!CanMoveDown(blank)) bound |= B_DOWN;
-        if (!CanMoveLeft(blank)) bound |= B_LEFT;
-        if (!CanMoveRight(blank)) bound |= B_RIGHT;
+        if (!CanMoveUp(index)) bound |= B_UP;
+        if (!CanMoveDown(index)) bound |= B_DOWN;
+        if (!CanMoveLeft(index)) bound |= B_LEFT;
+        if (!CanMoveRight(index)) bound |= B_RIGHT;
         return bound;
     }
 

@@ -93,7 +93,6 @@ TEST(TestCollector, TestCollector) {
 	constexpr int SEGMENTS = 3;
 	constexpr int COUNTS = 1 * 1000 * 1000;
 
-	Puzzle<4, 4> puzzle;
 	SegmentedFile file(SEGMENTS, "./testcollector");
 	FrontierFileWriter fwriter;
 	Collector collector(Puzzle<4, 3>::MaxIndexesPerSegment(), fwriter);
