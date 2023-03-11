@@ -2,6 +2,8 @@
 
 #include "FrontierFile.h"
 
+#include <atomic>
+
 class Collector {
 public:
     Collector(size_t count, SegmentedFile& file);
@@ -11,8 +13,14 @@ public:
 
     size_t SaveSegment();
 
+    void PrintStats();
+
 private:
     SegmentedFile& m_File;
     FrontierFileWriter m_FrontierWriter;
     Buffer<uint8_t> m_Bounds;
+
+private:
+    //static std::atomic<uint64_t> m_NanosSaveSegment;
+    static uint64_t m_NanosSaveSegment;
 };

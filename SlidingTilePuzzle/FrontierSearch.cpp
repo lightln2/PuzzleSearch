@@ -2,6 +2,7 @@
 #include "Puzzle.h"
 #include "Util.h"
 
+#include <chrono>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -39,13 +40,16 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 		fwriter.FinishSegment();
 	}
 
+	uint64_t timer_stage_1 = 0;
+	uint64_t timer_stage_2 = 0;
+
 	std::vector<uint64_t> widths;
 	widths.push_back(1);
 	while (widths.size() <= options.MaxDepth) {
 
-		std::cerr << "Depth: " << widths.size() - 1 << "; width: " << widths.back() << std::endl;
-
 		// stage 1
+
+		auto timerStart = std::chrono::high_resolution_clock::now();
 
 		for (int segment = 0; segment < puzzle.MaxSegments(); segment++) {
 			frontierReader.SetSegment(segment);
@@ -66,6 +70,8 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 			}
 		}
 		verticalCollector.Close();
+
+		auto timerEndStage1 = std::chrono::high_resolution_clock::now();
 
 		//stage 2
 
@@ -118,6 +124,16 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 			e_dn.Delete(segment);
 		}
 		if (total == 0) break;
+
+		auto timerEndStage2 = std::chrono::high_resolution_clock::now();
+		timer_stage_1 += (timerEndStage1 - timerStart).count();
+		timer_stage_2 += (timerEndStage2 - timerEndStage1).count();
+
+		std::cerr
+			<< widths.size() << ": " << WithDecSep(widths.back())
+			<< " time=" << WithTime((timerEndStage2 - timerStart).count())
+			<< std::endl;
+
 		widths.push_back(total);
 		frontier.DeleteAll();
 		std::swap(frontier, new_frontier);
@@ -127,6 +143,11 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 	 
 	auto FINISH = clock();
 	std::cerr << "Finished in " << WithDecSep(FINISH - START) << std::endl;
+
+	std::cerr << " stage 1: " << WithTime(timer_stage_1) << std::endl;
+	std::cerr << " stage 2: " << WithTime(timer_stage_2) << std::endl;
+	collector.PrintStats();
+
 	return widths;
 }
 

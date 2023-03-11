@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 
@@ -22,5 +23,20 @@ static std::string WithDecSep(uint64_t value) {
     }
     std::reverse(str, str + pos);
     return std::string(str, str + pos);
+}
+
+static std::string WithTime(uint64_t nanos) {
+    std::ostringstream stream;
+    auto millis = nanos / 1000000i64;
+    auto seconds = millis / 1000;
+    auto minutes = seconds / 60;
+    auto hours = minutes / 60;
+    stream 
+        << std::setfill('0') 
+        << std::setw(2) << hours << ':' 
+        << std::setw(2) << minutes % 60 << ':' 
+        << std::setw(2) << seconds % 60 << '.' 
+        << std::setw(3) << millis % 1000;
+    return stream.str();
 }
 

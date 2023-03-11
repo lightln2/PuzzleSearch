@@ -50,7 +50,7 @@ template <int size>
 __device__ __forceinline__ void pack(int* arr) {
     arr[0] = 0;
     arr[1] = 0;
-    /*
+
     #pragma unroll
     for (int i = 2; i < size - 2; i++) {
         int x = arr[i];
@@ -60,7 +60,7 @@ __device__ __forceinline__ void pack(int* arr) {
         }
         arr[i] = x;
     }
-    */
+    /*
     #pragma unroll
     for (int i = size - 2; i > 2; i--) {
         #pragma unroll
@@ -68,7 +68,7 @@ __device__ __forceinline__ void pack(int* arr) {
             arr[j] -= (int)(arr[j] >= arr[i]);
         }
     }
-
+    */
 }
 
 template <int size, int width, bool widthIsEven>
@@ -134,6 +134,7 @@ __global__ void kernel_up(uint32_t segment, uint32_t* indexes, uint32_t* out_seg
     from_segment(arr, segment);
     from_index<size>(arr, indexes[i]);
     unpack<size, width, width % 2 == 0>(arr);
+    /*
 #ifdef _DEBUG
     if (!CanRotateUp<width>(arr)) {
         indexes[i] = (uint32_t)-1;
@@ -141,6 +142,7 @@ __global__ void kernel_up(uint32_t segment, uint32_t* indexes, uint32_t* out_seg
         return;
     }
 #endif
+    */
     RotateUp<width>(arr);
     pack<size>(arr);
     out_segments[i] = to_segment(arr);
@@ -156,6 +158,7 @@ __global__ void kernel_dn(uint32_t segment, uint32_t* indexes, uint32_t* out_seg
     from_segment(arr, segment);
     from_index<size>(arr, indexes[i]);
     unpack<size, width, width % 2 == 0>(arr);
+    /*
 #ifdef _DEBUG
     if (!CanRotateDn<size, width>(arr)) {
         indexes[i] = (uint32_t)-1;
@@ -163,6 +166,7 @@ __global__ void kernel_dn(uint32_t segment, uint32_t* indexes, uint32_t* out_seg
         return;
     }
 #endif
+    */
     RotateDn<width>(arr);
     pack<size>(arr);
     out_segments[i] = to_segment(arr);
