@@ -10,5 +10,5 @@
 #include <vector>
 
 int main() {
-    FrontierSearch<3, 2>();
+    FrontierSearch<4, 3>();
 }

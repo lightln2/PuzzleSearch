@@ -87,6 +87,7 @@
     <ClInclude Include="Puzzle.h" />
     <ClInclude Include="SegmentedFile.h" />
     <ClInclude Include="Util.h" />
+    <ClInclude Include="VerticalMovesCollector.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="GpuSolver.cu" />
@@ -100,5 +101,6 @@
     <ClCompile Include="Multiplexor.cpp" />
     <ClCompile Include="Puzzle.cpp" />
     <ClCompile Include="SegmentedFile.cpp" />
+    <ClCompile Include="VerticalMovesCollector.cpp" />
   </ItemGroup>
 </Project>

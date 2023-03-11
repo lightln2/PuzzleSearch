@@ -2,19 +2,20 @@
 #include "Puzzle.h"
 #include "Util.h"
 
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <memory>
 #include <time.h>
 #include <vector>
-#include <fstream>
 
-#include "FrontierSearch.h"
-#include "SegmentedFile.h"
-#include "FrontierFile.h"
 #include "Collector.h"
+#include "FrontierFile.h"
+#include "FrontierSearch.h"
 #include "Multiplexor.h"
 #include "Puzzle.h"
+#include "SegmentedFile.h"
+#include "VerticalMovesCollector.h"
 
 template<int width, int height>
 std::vector<uint64_t> FrontierSearch(SearchOptions options) {
@@ -26,8 +27,7 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 	SegmentedFile e_up(puzzle.MaxSegments(), "d:/temp/expanded_up");
 	SegmentedFile e_dn(puzzle.MaxSegments(), "d:/temp/expanded_dn");
 	Collector collector(puzzle.MaxIndexesPerSegment(), new_frontier);
-	Multiplexor m_up(puzzle.MaxSegments(), e_up);
-	Multiplexor m_dn(puzzle.MaxSegments(), e_dn);
+	VerticalMovesCollector<width, height> verticalCollector(e_up, e_dn);
 	ExpandedFrontierReader r_up(e_up);
 	ExpandedFrontierReader r_dn(e_dn);
 
@@ -38,12 +38,6 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 		fwriter.Add(initialIndex, puzzle.GetBounds(initialIndex));
 		fwriter.FinishSegment();
 	}
-	/*
-	collector.SetSegment(initialIndex.first);
-	collector.Add(initialIndex.second, puzzle.GetBounds(initialIndex.second));
-	collector.SaveSegment();
-	std::swap(frontier, new_frontier);
-	*/
 
 	std::vector<uint64_t> widths;
 	widths.push_back(1);
@@ -55,6 +49,7 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 
 		for (int segment = 0; segment < puzzle.MaxSegments(); segment++) {
 			frontierReader.SetSegment(segment);
+			verticalCollector.SetSegment(segment);
 			while (true) {
 				auto read = frontierReader.Read();
 				if (read.Count == 0) break;
@@ -62,18 +57,15 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 					uint32_t index = read.Indexes[i];
 					uint8_t bound = read.Bounds[i];
 					if (!(bound & puzzle.B_UP)) {
-						auto new_index = puzzle.MoveUp(segment, index);
-						m_up.Add(new_index.first, new_index.second);
+						verticalCollector.AddUp(index);
 					}
 					if (!(bound & puzzle.B_DOWN)) {
-						auto new_index = puzzle.MoveDown(segment, index);
-						m_dn.Add(new_index.first, new_index.second);
+						verticalCollector.AddDown(index);
 					}
 				}
 			}
 		}
-		m_up.Close();
-		m_dn.Close();
+		verticalCollector.Close();
 
 		//stage 2
 
@@ -130,7 +122,7 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 		e_up.DeleteAll();
 		e_dn.DeleteAll();
 	}
-	
+	 
 	auto FINISH = clock();
 	std::cerr << "Finished in " << WithDecSep(FINISH - START) << std::endl;
 	return widths;
