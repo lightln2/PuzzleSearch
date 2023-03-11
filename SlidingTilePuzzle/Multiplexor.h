@@ -13,19 +13,26 @@ public:
         : m_Segments(maxSegments)
         , m_File(file)
         , m_ExpandedWriter(file)
-    {}
+    {
+        m_UsedBuffers.reserve(64);
+    }
 
     void Add(uint32_t segment, uint32_t index) {
         auto& buffer = m_Segments[segment];
-        if (!buffer.has_value()) buffer.emplace(BUFFER_SIZE);
+        if (!buffer.has_value()) {
+            buffer.emplace(BUFFER_SIZE);
+            m_UsedBuffers.push_back(segment);
+        }
         buffer->Add(index);
         if (buffer->IsFull()) FlushBuffer(segment);
     }
 
     void Close() {
-        for (int i = 0; i < m_Segments.size(); i++) {
-            if (m_Segments[i].has_value()) FlushBuffer(i);
+        for (int segment : m_UsedBuffers) {
+            FlushBuffer(segment);
+            m_Segments[segment] = std::nullopt;
         }
+        m_UsedBuffers.clear();
     }
 
 private:
@@ -41,6 +48,7 @@ private:
 
 private:
     std::vector<std::optional<Buffer<uint32_t>>> m_Segments;
+    std::vector<int> m_UsedBuffers;
     SegmentedFile& m_File;
     ExpandedFrontierWriter m_ExpandedWriter;
 };
