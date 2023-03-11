@@ -66,7 +66,7 @@ TEST(TestFrontierFile, ExpandedFrontierReadWrite) {
 
 TEST(TestFrontierFile, TestMultiplexor) {
 	constexpr int SEGMENTS = 3;
-	constexpr int COUNTS = 1 * 1000 * 1000;
+	constexpr int COUNTS = 5 * 1000 * 1000;
 
 	SegmentedFile file(SEGMENTS, "./testexpandedmultiplexor");
 	Multiplexor mult(SEGMENTS, file);
@@ -78,12 +78,16 @@ TEST(TestFrontierFile, TestMultiplexor) {
 	ExpandedFrontierReader freader(file);
 	for (int segment = 0; segment < SEGMENTS; segment++) {
 		freader.SetSegment(segment);
-		auto& buf = freader.Read();
-		EXPECT_EQ(buf.Size(), COUNTS);
-		if (buf.Size() == 0) break;
-		for (int i = 0; i < buf.Size(); i++) {
-			ENSURE_EQ(buf[i], segment + i * SEGMENTS);
+		uint64_t total = 0;
+		while (true) {
+			auto& buf = freader.Read();
+			if (buf.Size() == 0) break;
+			for (int i = 0; i < buf.Size(); i++) {
+				ENSURE_EQ(buf[i], segment + (total + i) * SEGMENTS);
+			}
+			total += buf.Size();
 		}
+		EXPECT_EQ(total, COUNTS);
 	}
 
 }

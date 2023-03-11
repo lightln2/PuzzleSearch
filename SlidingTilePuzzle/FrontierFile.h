@@ -17,10 +17,7 @@ public:
         : m_File(file)
         , m_Buffer(BUFFER_SIZE) {}
 
-    void SetSegment(int segment) { 
-        m_Segment = segment;
-        m_File.Rewind(segment);
-    }
+    void SetSegment(int segment) {  m_Segment = segment; }
 
     int GetSegment() const { return m_Segment; }
 
@@ -91,10 +88,7 @@ public:
         : m_File(file)
         , m_Buffer(BUFFER_SIZE) {}
 
-    void SetSegment(int segment) {
-        m_Segment = segment;
-        m_File.Rewind(segment);
-    }
+    void SetSegment(int segment) { m_Segment = segment; }
 
     int GetSegment() const { return m_Segment; }
 
