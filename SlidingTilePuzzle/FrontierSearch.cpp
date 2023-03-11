@@ -99,12 +99,14 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 				if (buf.Count == 0) break;
 				empty = false;
 				for (size_t i = 0; i < buf.Count; i++) {
-					if (!(buf.Bounds[i] & puzzle.B_LEFT)) {
-						auto leftMove = puzzle.MoveLeft(buf.Indexes[i]);
+					uint32_t index = buf.Indexes[i];
+					uint8_t bound = buf.Bounds[i];
+					if (!(bound & puzzle.B_LEFT)) {
+						auto leftMove = puzzle.MoveLeft(index);
 						collector.Add(leftMove, puzzle.GetBounds(leftMove) | puzzle.B_RIGHT);
 					}
-					if (!(buf.Bounds[i] & puzzle.B_RIGHT)) {
-						auto rightMove = puzzle.MoveRight(buf.Indexes[i]);
+					if (!(bound & puzzle.B_RIGHT)) {
+						auto rightMove = puzzle.MoveRight(index);
 						collector.Add(rightMove, puzzle.GetBounds(rightMove) | puzzle.B_LEFT);
 					}
 				}
