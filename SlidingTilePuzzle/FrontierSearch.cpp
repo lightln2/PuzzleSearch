@@ -30,12 +30,8 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 	Collector collector(puzzle.MaxIndexesPerSegment(), new_frontier);
 	Multiplexor m_up(puzzle.MaxSegments(), e_up);
 	Multiplexor m_dn(puzzle.MaxSegments(), e_dn);
-	Multiplexor m_lt(puzzle.MaxSegments(), e_lt);
-	Multiplexor m_rt(puzzle.MaxSegments(), e_rt);
 	ExpandedFrontierReader r_up(e_up);
 	ExpandedFrontierReader r_dn(e_dn);
-	ExpandedFrontierReader r_lt(e_lt);
-	ExpandedFrontierReader r_rt(e_rt);
 
 	auto initialIndex = puzzle.Rank(options.InitialValue);
 	collector.SetSegment(initialIndex.first);
@@ -67,21 +63,11 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 						auto new_index = puzzle.MoveDown(segment, index);
 						m_dn.Add(new_index.first, new_index.second);
 					}
-					if (!(bound & puzzle.B_LEFT)) {
-						auto new_index = puzzle.MoveLeft(index);
-						m_lt.Add(segment, new_index);
-					}
-					if (!(bound & puzzle.B_RIGHT)) {
-						auto new_index = puzzle.MoveRight(index);
-						m_rt.Add(segment, new_index);
-					}
 				}
 			}
 		}
 		m_up.Close();
 		m_dn.Close();
-		m_lt.Close();
-		m_rt.Close();
 
 		//stage 2
 
@@ -90,8 +76,7 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 		for (int segment = 0; segment < puzzle.MaxSegments(); segment++) {
 			r_up.SetSegment(segment);
 			r_dn.SetSegment(segment);
-			r_lt.SetSegment(segment);
-			r_rt.SetSegment(segment);
+			frontierReader.SetSegment(segment);
 			collector.SetSegment(segment);
 
 			bool empty = true;
@@ -112,19 +97,18 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 				}
 			}
 			while (true) {
-				auto& buf = r_lt.Read();
-				if (buf.Size() == 0) break;
+				auto buf = frontierReader.Read();
+				if (buf.Count == 0) break;
 				empty = false;
-				for (size_t i = 0; i < buf.Size(); i++) {
-					collector.Add(buf[i], puzzle.GetBounds(buf[i]) | puzzle.B_RIGHT);
-				}
-			}
-			while (true) {
-				auto& buf = r_rt.Read();
-				if (buf.Size() == 0) break;
-				empty = false;
-				for (size_t i = 0; i < buf.Size(); i++) {
-					collector.Add(buf[i], puzzle.GetBounds(buf[i]) | puzzle.B_LEFT);
+				for (size_t i = 0; i < buf.Count; i++) {
+					if (!(buf.Bounds[i] & puzzle.B_LEFT)) {
+						auto leftMove = puzzle.MoveLeft(buf.Indexes[i]);
+						collector.Add(leftMove, puzzle.GetBounds(leftMove) | puzzle.B_RIGHT);
+					}
+					if (!(buf.Bounds[i] & puzzle.B_RIGHT)) {
+						auto rightMove = puzzle.MoveRight(buf.Indexes[i]);
+						collector.Add(rightMove, puzzle.GetBounds(rightMove) | puzzle.B_LEFT);
+					}
 				}
 			}
 			if (empty) continue;

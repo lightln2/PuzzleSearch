@@ -13,6 +13,18 @@ SegmentedFile::SegmentedFile(int maxSegments, const std::string& directory)
     file::CreateDirectory(directory);
 }
 
+void SegmentedFile::RewindAll() {
+    for (int segment = 0; segment < m_Files.size(); segment++) {
+        Rewind(segment);
+    }
+}
+
+void SegmentedFile::Rewind(int segment) {
+    assert(segment >= 0 && segment < m_Files.size());
+    if (!HasData(segment)) return;
+    m_Files[segment]->Rewind();
+}
+
 void SegmentedFile::Write(int segment, void* buffer, size_t size) {
     assert(segment >= 0 && segment < m_Files.size());
     auto& file = m_Files[segment];
@@ -26,9 +38,8 @@ void SegmentedFile::Write(int segment, void* buffer, size_t size) {
 
 size_t SegmentedFile::Read(int segment, void* buffer, size_t size) {
     assert(segment >= 0 && segment < m_Files.size());
-    auto& file = m_Files[segment];
-    if (!file.has_value()) return 0;
-    return file->Read(buffer, size);
+    if (!HasData(segment)) return 0;
+    return m_Files[segment]->Read(buffer, size);
 }
 
 void SegmentedFile::Delete(int segment) {

@@ -11,15 +11,19 @@ class SegmentedFile {
 public:
     SegmentedFile(int maxSegments, const std::string& directory);
 
-    uint64_t Length(int segment) { return m_Sizes[segment]; }
+    uint64_t Length(int segment) const { return m_Sizes[segment]; }
 
-    bool HasData(int segment) { return Length(segment) > 0; }
+    bool HasData(int segment) const { return Length(segment) > 0; }
 
-    uint64_t TotalLength() {
+    uint64_t TotalLength() const {
         uint64_t totalLength = 0;
         for (auto size : m_Sizes) totalLength += size;
         return totalLength;
     }
+
+    void RewindAll();
+
+    void Rewind(int segment);
 
     void Write(int segment, void* buffer, size_t size);
 

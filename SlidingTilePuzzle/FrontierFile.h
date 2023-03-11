@@ -17,7 +17,11 @@ public:
         : m_File(file)
         , m_Buffer(BUFFER_SIZE) {}
 
-    void SetSegment(int segment) { m_Segment = segment; }
+    void SetSegment(int segment) { 
+        m_Segment = segment;
+        m_File.Rewind(segment);
+    }
+
     int GetSegment() const { return m_Segment; }
 
     void FinishSegment() {
@@ -54,7 +58,11 @@ public:
         , m_Bounds(BUFFER_SIZE)
     {}
 
-    void SetSegment(int segment) { m_Segment = segment; }
+    void SetSegment(int segment) {
+        m_Segment = segment;
+        m_File.Rewind(segment);
+    }
+
     int GetSegment() const { return m_Segment; }
 
     FrontierBuffer Read() {
@@ -83,7 +91,11 @@ public:
         : m_File(file)
         , m_Buffer(BUFFER_SIZE) {}
 
-    void SetSegment(int segment) { m_Segment = segment; }
+    void SetSegment(int segment) {
+        m_Segment = segment;
+        m_File.Rewind(segment);
+    }
+
     int GetSegment() const { return m_Segment; }
 
     void FinishSegment() { 
@@ -115,7 +127,11 @@ public:
         : m_File(file)
         , m_Buffer(BUFFER_SIZE) {}
 
-    void SetSegment(int segment) { m_Segment = segment; }
+    void SetSegment(int segment) {
+        m_Segment = segment;
+        m_File.Rewind(segment);
+    }
+
     int GetSegment() const { return m_Segment; }
 
     Buffer<uint32_t>& Read() {

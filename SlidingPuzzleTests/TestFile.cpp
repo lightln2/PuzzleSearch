@@ -55,6 +55,8 @@ TEST(TestFile, RWFile) {
 			file.Write(buf, SIZE);
 		}
 
+		file.Rewind();
+
 		for (int i = 0; i < BUFS; i++) {
 			size_t read = file.Read(buf, SIZE);
 			EXPECT_EQ(read, SIZE);
@@ -77,6 +79,8 @@ TEST(TestFile, RWFileBuffer) {
 		buffer.SetSize(buffer.Capacity());
 		file.Write(buffer);
 	}
+
+	file.Rewind();
 
 	for (int i = 0; i < BUFS; i++) {
 		file.Read(buffer);
@@ -101,6 +105,8 @@ TEST(TestFile, SegmentedFile) {
 			int segment = i % 5;
 			myfile.Write(segment, buf, SIZE);
 		}
+
+		myfile.RewindAll();
 
 		for (int i = 0; i < BUFS; i++) {
 			int segment = i % 5;
@@ -129,6 +135,8 @@ TEST(TestFile, SegmentedFileDelete) {
 		EXPECT_EQ(myfile.Length(1), SIZE * BUFS / 5);
 		EXPECT_EQ(myfile.Length(2), SIZE * BUFS / 5);
 
+		myfile.RewindAll();
+
 		myfile.Delete(2);
 		EXPECT_EQ(myfile.Length(2), 0);
 
@@ -138,6 +146,9 @@ TEST(TestFile, SegmentedFileDelete) {
 		}
 
 		myfile.Write(2, buf, SIZE);
+
+		myfile.RewindAll();
+
 		EXPECT_EQ(myfile.Length(2), SIZE);
 		{
 			auto read = myfile.Read(2, buf, SIZE);
