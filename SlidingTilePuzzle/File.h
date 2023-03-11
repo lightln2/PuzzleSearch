@@ -43,6 +43,7 @@ public:
     void SetSize(size_t size) { m_Size = size; }
     size_t Capacity() const { return m_Capacity; }
     bool IsFull() const { return m_Size == m_Capacity; }
+    bool IsEmpty() const { return m_Size == 0; }
     T* Buf() const { return m_Buffer; }
 
 private:

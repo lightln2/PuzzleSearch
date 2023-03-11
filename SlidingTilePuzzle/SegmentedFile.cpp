@@ -1,5 +1,7 @@
 #include "SegmentedFile.h"
 #include "Util.h"
+
+#include <cassert>
 #include <iomanip>
 #include <sstream>
 
@@ -12,6 +14,7 @@ SegmentedFile::SegmentedFile(int maxSegments, const std::string& directory)
 }
 
 void SegmentedFile::Write(int segment, void* buffer, size_t size) {
+    assert(segment >= 0 && segment < m_Files.size());
     auto& file = m_Files[segment];
     if (!file.has_value()) {
         auto fileName = SegmentFileName(segment);
@@ -22,6 +25,7 @@ void SegmentedFile::Write(int segment, void* buffer, size_t size) {
 }
 
 size_t SegmentedFile::Read(int segment, void* buffer, size_t size) {
+    assert(segment >= 0 && segment < m_Files.size());
     auto& file = m_Files[segment];
     if (!file.has_value()) return 0;
     return file->Read(buffer, size);

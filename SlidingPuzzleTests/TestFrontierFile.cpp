@@ -11,16 +11,16 @@ TEST(TestFrontierFile, FrontierFileReadWrite) {
 	constexpr int SEGMENTS = 3;
 	constexpr int COUNTS = 5 * 1000 * 1000;
 	SegmentedFile file(100, "./testfrontierfile");
-	FrontierFileWriter fwriter;
-	FrontierFileReader freader;
+	FrontierFileWriter fwriter(file);
+	FrontierFileReader freader(file);
 	for (int segment = 0; segment < SEGMENTS; segment++) {
-		fwriter.SetSegment(&file, segment);
+		fwriter.SetSegment(segment);
 		for (int i = 0; i < COUNTS; i++) fwriter.Add(i, i & 15);
 		fwriter.FinishSegment();
 	}
 
 	for (int segment = 0; segment < SEGMENTS; segment++) {
-		freader.SetSegment(&file, segment);
+		freader.SetSegment(segment);
 		size_t totalCount = 0;
 		while (true) {
 			auto buf = freader.Read();
@@ -40,16 +40,16 @@ TEST(TestFrontierFile, ExpandedFrontierReadWrite) {
 	constexpr int SEGMENTS = 3;
 	constexpr int COUNTS = 500;
 	SegmentedFile file(100, "./testexpanded");
-	ExpandedFrontierWriter fwriter;
-	ExpandedFrontierReader freader;
+	ExpandedFrontierWriter fwriter(file);
+	ExpandedFrontierReader freader(file);
 	for (int segment = 0; segment < SEGMENTS; segment++) {
-		fwriter.SetSegment(&file, segment);
+		fwriter.SetSegment(segment);
 		for (int i = 0; i < COUNTS; i++) fwriter.Add(i);
 		fwriter.FinishSegment();
 	}
 
 	for (int segment = 0; segment < SEGMENTS; segment++) {
-		freader.SetSegment(&file, segment);
+		freader.SetSegment(segment);
 		size_t totalCount = 0;
 		while (true) {
 			auto& buf = freader.Read();
@@ -69,16 +69,15 @@ TEST(TestFrontierFile, TestMultiplexor) {
 	constexpr int COUNTS = 1 * 1000 * 1000;
 
 	SegmentedFile file(SEGMENTS, "./testexpandedmultiplexor");
-	ExpandedFrontierWriter fwriter;
-	Multiplexor mult(SEGMENTS, &file, fwriter);
+	Multiplexor mult(SEGMENTS, file);
 	for (int i = 0; i < SEGMENTS * COUNTS; i++) {
 		mult.Add(i % SEGMENTS, i);
 	}
 	mult.Close();
 
-	ExpandedFrontierReader freader;
+	ExpandedFrontierReader freader(file);
 	for (int segment = 0; segment < SEGMENTS; segment++) {
-		freader.SetSegment(&file, segment);
+		freader.SetSegment(segment);
 		auto& buf = freader.Read();
 		EXPECT_EQ(buf.Size(), COUNTS);
 		if (buf.Size() == 0) break;
@@ -94,18 +93,16 @@ TEST(TestCollector, TestCollector) {
 	constexpr int COUNTS = 1 * 1000 * 1000;
 
 	SegmentedFile file(SEGMENTS, "./testcollector");
-	FrontierFileWriter fwriter;
-	Collector collector(Puzzle<4, 3>::MaxIndexesPerSegment(), fwriter);
+	Collector collector(Puzzle<4, 3>::MaxIndexesPerSegment(), file);
 	collector.SetSegment(1);
-	fwriter.SetSegment(&file, 1);
 	for (int i = 0; i < COUNTS; i++) {
 		collector.Add(i, i & 15);
 	}
 	auto total = collector.SaveSegment();
 	EXPECT_EQ(total, COUNTS / 16 * 15);
 
-	FrontierFileReader freader;
-	freader.SetSegment(&file, 1);
+	FrontierFileReader freader(file);
+	freader.SetSegment(1);
 	auto buf = freader.Read();
 	EXPECT_EQ(buf.Count, COUNTS / 16 * 14);
 	for (int i = 0; i < buf.Count; i++) {

@@ -20,28 +20,28 @@ template<int width, int height>
 std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 	auto START = clock();
 	Puzzle<width, height> puzzle;
-	SegmentedFile file_frontier1(puzzle.MaxSegments(), "d:/temp/frontier1");
-	SegmentedFile file_frontier2(puzzle.MaxSegments(), "d:/temp/frontier2");
+	SegmentedFile frontier(puzzle.MaxSegments(), "d:/temp/frontier1");
+	SegmentedFile new_frontier(puzzle.MaxSegments(), "d:/temp/frontier2");
+	FrontierFileReader frontierReader(frontier);
 	SegmentedFile e_up(puzzle.MaxSegments(), "d:/temp/expanded_up");
 	SegmentedFile e_dn(puzzle.MaxSegments(), "d:/temp/expanded_dn");
 	SegmentedFile e_lt(puzzle.MaxSegments(), "d:/temp/expanded_lt");
 	SegmentedFile e_rt(puzzle.MaxSegments(), "d:/temp/expanded_rt");
-	FrontierFileReader frontierReader;
-	FrontierFileWriter frontierWriter;
-	ExpandedFrontierWriter w_up, w_dn, w_lt, w_rt;
-	ExpandedFrontierReader r_up, r_dn, r_lt, r_rt;
-	SegmentedFile* frontier = &file_frontier1;
-	SegmentedFile* new_frontier = &file_frontier2;
-	Collector collector(puzzle.MaxIndexesPerSegment(), frontierWriter);
-	Multiplexor m_up(puzzle.MaxSegments(), &e_up, w_up);
-	Multiplexor m_dn(puzzle.MaxSegments(), &e_dn, w_dn);
-	Multiplexor m_lt(puzzle.MaxSegments(), &e_lt, w_lt);
-	Multiplexor m_rt(puzzle.MaxSegments(), &e_rt, w_rt);
+	Collector collector(puzzle.MaxIndexesPerSegment(), new_frontier);
+	Multiplexor m_up(puzzle.MaxSegments(), e_up);
+	Multiplexor m_dn(puzzle.MaxSegments(), e_dn);
+	Multiplexor m_lt(puzzle.MaxSegments(), e_lt);
+	Multiplexor m_rt(puzzle.MaxSegments(), e_rt);
+	ExpandedFrontierReader r_up(e_up);
+	ExpandedFrontierReader r_dn(e_dn);
+	ExpandedFrontierReader r_lt(e_lt);
+	ExpandedFrontierReader r_rt(e_rt);
 
 	auto initialIndex = puzzle.Rank(options.InitialValue);
-	frontierWriter.SetSegment(frontier, initialIndex.first);
-	frontierWriter.Add(initialIndex.second, puzzle.GetBounds(initialIndex.second));
-	frontierWriter.FinishSegment();
+	collector.SetSegment(initialIndex.first);
+	collector.Add(initialIndex.second, puzzle.GetBounds(initialIndex.second));
+	collector.SaveSegment();
+	std::swap(frontier, new_frontier);
 
 	std::vector<uint64_t> widths;
 	widths.push_back(1);
@@ -52,7 +52,7 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 		// stage 1
 
 		for (int segment = 0; segment < puzzle.MaxSegments(); segment++) {
-			frontierReader.SetSegment(frontier, segment);
+			frontierReader.SetSegment(segment);
 			while (true) {
 				auto read = frontierReader.Read();
 				if (read.Count == 0) break;
@@ -88,11 +88,10 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 		size_t total = 0;
 
 		for (int segment = 0; segment < puzzle.MaxSegments(); segment++) {
-			r_up.SetSegment(&e_up, segment);
-			r_dn.SetSegment(&e_dn, segment);
-			r_lt.SetSegment(&e_lt, segment);
-			r_rt.SetSegment(&e_rt, segment);
-			frontierWriter.SetSegment(new_frontier, segment);
+			r_up.SetSegment(segment);
+			r_dn.SetSegment(segment);
+			r_lt.SetSegment(segment);
+			r_rt.SetSegment(segment);
 			collector.SetSegment(segment);
 
 			bool empty = true;
@@ -130,11 +129,16 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 			}
 			if (empty) continue;
 			total += collector.SaveSegment();
+			frontier.Delete(segment);
+			e_up.Delete(segment);
+			e_dn.Delete(segment);
+			e_lt.Delete(segment);
+			e_rt.Delete(segment);
 		}
 		if (total == 0) break;
 		widths.push_back(total);
+		frontier.DeleteAll();
 		std::swap(frontier, new_frontier);
-		new_frontier->DeleteAll();
 		e_up.DeleteAll();
 		e_dn.DeleteAll();
 		e_lt.DeleteAll();

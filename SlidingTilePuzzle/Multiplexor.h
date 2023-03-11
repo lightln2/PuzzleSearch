@@ -9,10 +9,10 @@
 class Multiplexor {
     static const size_t BUFFER_SIZE = 4 * 1024 * 1024;
 public:
-    Multiplexor(int maxSegments, SegmentedFile* file, ExpandedFrontierWriter& expandedWriter) 
+    Multiplexor(int maxSegments, SegmentedFile& file) 
         : m_Segments(maxSegments)
         , m_File(file)
-        , m_ExpandedWriter(expandedWriter)
+        , m_ExpandedWriter(file)
     {}
 
     void Add(uint32_t segment, uint32_t index) {
@@ -31,7 +31,7 @@ public:
 private:
     void FlushBuffer(int segment) {
         auto& buffer = *m_Segments[segment];
-        m_ExpandedWriter.SetSegment(m_File, segment);
+        m_ExpandedWriter.SetSegment(segment);
         for (int i = 0; i < buffer.Size(); i++) {
             m_ExpandedWriter.Add(buffer[i]);
         }
@@ -41,6 +41,6 @@ private:
 
 private:
     std::vector<std::optional<Buffer<uint32_t>>> m_Segments;
-    SegmentedFile* m_File;
-    ExpandedFrontierWriter& m_ExpandedWriter;
+    SegmentedFile& m_File;
+    ExpandedFrontierWriter m_ExpandedWriter;
 };

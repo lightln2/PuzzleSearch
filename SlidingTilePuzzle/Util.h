@@ -1,12 +1,13 @@
 #pragma once
 
-#include <iostream>
+#include <cassert>
 #include <cstdint>
+#include <iostream>
 #include <sstream>
 
 #define ensure(expression) do if(!(expression)) { \
             std::cerr << "ensure failed: " << __FILE__ << ":"<< __LINE__ << " " << #expression << std::endl; \
-            exit(-1); } while(0)
+            assert(false); exit(-1); } while(0)
 
 #define ENSURE_EQ(x, y) ensure((x)==(y))
 

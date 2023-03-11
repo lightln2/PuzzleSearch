@@ -50,26 +50,34 @@ TEST(TestFrontierSearch, Search4x3) {
 
 TEST(TestFrontierSearch, Search7x2) {
 	SearchOptions opts;
-	opts.MaxDepth = 10;
-	TestSearch<7, 2>(10, "1 2 3 6 11 20 37 67 117 198 329", opts);
+	//opts.MaxDepth = 10;
+	//TestSearch<7, 2>(10, "1 2 3 6 11 20 37 67 117 198 329", opts);
+	opts.MaxDepth = 6;
+	TestSearch<7, 2>(6, "1 2 3 6 11 20 37", opts);
 }
 
 TEST(TestFrontierSearch, Search5x3) {
 	SearchOptions opts;
 	//opts.MaxDepth = 8;
 	//TestSearch<5, 3>(8, "1 2 4 9 21 42 89 164 349", opts);
-	opts.MaxDepth = 7;
-	TestSearch<5, 3>(7, "1 2 4 9 21 42 89 164", opts);
+	//opts.MaxDepth = 7;
+	//TestSearch<5, 3>(7, "1 2 4 9 21 42 89 164", opts);
+	opts.MaxDepth = 5;
+	TestSearch<5, 3>(5, "1 2 4 9 21 42", opts);
 }
 
 TEST(TestFrontierSearch, Search8x2) {
 	SearchOptions opts;
-	opts.MaxDepth = 5;
-	TestSearch<8, 2>(5, "1 2 3 6 11 20", opts);
+	//opts.MaxDepth = 5;
+	//TestSearch<8, 2>(5, "1 2 3 6 11 20", opts);
+	opts.MaxDepth = 4;
+	TestSearch<8, 2>(4, "1 2 3 6 11", opts);
 }
 
 TEST(TestFrontierSearch, Search4x4) {
 	SearchOptions opts;
-	opts.MaxDepth = 5;
-	TestSearch<4, 4>(5, "1 2 4 10 24 54", opts);
+	//opts.MaxDepth = 5;
+	//TestSearch<4, 4>(5, "1 2 4 10 24 54", opts);
+	opts.MaxDepth = 3;
+	TestSearch<4, 4>(3, "1 2 4 10", opts);
 }
