@@ -45,6 +45,8 @@ public:
 
     void DeleteAll();
 
+    static void PrintStats();
+
 private:
     std::string SegmentFileName(int segment);
 
@@ -52,4 +54,11 @@ private:
     std::string m_Directory;
     std::vector<std::optional<RWFile>> m_Files;
     std::vector<uint64_t> m_Sizes;
+
+private:
+    static std::atomic<uint64_t> m_StatReadNanos;
+    static std::atomic<uint64_t> m_StatReadBytes;
+    static std::atomic<uint64_t> m_StatWriteNanos;
+    static std::atomic<uint64_t> m_StatWriteBytes;
+    static std::atomic<uint64_t> m_StatDeleteNanos;
 };

@@ -8,7 +8,7 @@
 template<int width, int height>
 class Collector {
 private:
-    static constexpr size_t VALS_PER_BOUND_INDEX = 4096;
+    static constexpr size_t VALS_PER_BOUND_INDEX = 4 * 1024;
 public:
     Collector(SegmentedFile& file);
 
@@ -22,7 +22,7 @@ public:
 
     size_t SaveSegment();
 
-    void PrintStats();
+    static void PrintStats();
 
 private:
     SegmentedFile& m_File;

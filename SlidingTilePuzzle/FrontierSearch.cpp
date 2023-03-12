@@ -54,6 +54,8 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 
 		Timer timerStartStep;
 
+		auto frontierSize = frontier.TotalLength();
+
 		for (int segment = 0; segment < puzzle.MaxSegments(); segment++) {
 			frontierReader.SetSegment(segment);
 			verticalCollector.SetSegment(segment);
@@ -77,6 +79,8 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 		timer_stage_1 += timerStartStep.Elapsed();
 
 		//stage 2
+
+		auto expandedSize = e_up.TotalLength() + e_dn.TotalLength();
 
 		Timer timerStartStage2;
 
@@ -117,9 +121,14 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 
 		timer_stage_2 += timerStartStage2.Elapsed();
 
+		auto newFrontierSize = new_frontier.TotalLength();
+
 		std::cerr
 			<< widths.size() << ": " << WithDecSep(total)
 			<< " time=" << WithTime(timerStartStep.Elapsed())
+			<< " front=" << WithSize(frontierSize) 
+			<< "; exp=" << WithSize(expandedSize)
+			<< "; newfr=" << WithSize(newFrontierSize)
 			<< std::endl;
 
 		widths.push_back(total);
@@ -134,7 +143,10 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 
 	std::cerr << " stage 1: " << WithTime(timer_stage_1) << std::endl;
 	std::cerr << " stage 2: " << WithTime(timer_stage_2) << std::endl;
+
 	collector.PrintStats();
+	GpuSolver<width, height>::PrintStats();
+	SegmentedFile::PrintStats();
 
 	return widths;
 }

@@ -5,6 +5,12 @@
 #include <iomanip>
 #include <sstream>
 
+std::atomic<uint64_t> SegmentedFile::m_StatReadNanos = 0;
+std::atomic<uint64_t> SegmentedFile::m_StatReadBytes = 0;
+std::atomic<uint64_t> SegmentedFile::m_StatWriteNanos = 0;
+std::atomic<uint64_t> SegmentedFile::m_StatWriteBytes = 0;
+std::atomic<uint64_t> SegmentedFile::m_StatDeleteNanos = 0;
+
 SegmentedFile::SegmentedFile(int maxSegments, const std::string& directory)
     : m_Directory(directory)
     , m_Files(maxSegments)
@@ -26,6 +32,8 @@ void SegmentedFile::Rewind(int segment) {
 }
 
 void SegmentedFile::Write(int segment, void* buffer, size_t size) {
+    Timer timer;
+
     assert(segment >= 0 && segment < m_Files.size());
     auto& file = m_Files[segment];
     if (!file.has_value()) {
@@ -34,21 +42,40 @@ void SegmentedFile::Write(int segment, void* buffer, size_t size) {
     }
     file->Write(buffer, size);
     m_Sizes[segment] += size;
+
+    m_StatWriteBytes += size;
+    m_StatWriteNanos += timer.Elapsed();
 }
 
 size_t SegmentedFile::Read(int segment, void* buffer, size_t size) {
+    Timer timer;
+
     assert(segment >= 0 && segment < m_Files.size());
     if (!HasData(segment)) return 0;
-    return m_Files[segment]->Read(buffer, size);
+    auto read =  m_Files[segment]->Read(buffer, size);
+
+    m_StatReadBytes += read;
+    m_StatWriteNanos += timer.Elapsed();
+
+    return read;
 }
 
 void SegmentedFile::Delete(int segment) {
+    Timer timer;
     m_Files[segment] = std::nullopt;
     m_Sizes[segment] = 0;
+    m_StatDeleteNanos += timer.Elapsed();
 }
 
 void SegmentedFile::DeleteAll() {
     for (int i = 0; i < m_Files.size(); i++) Delete(i);
+}
+
+void SegmentedFile::PrintStats() {
+    std::cerr << "SegmentedFile:"
+        << " read:  " << WithDecSep(m_StatReadBytes) << " in " << WithTime(m_StatReadNanos)
+        << " write: " << WithDecSep(m_StatWriteBytes) << " in " << WithTime(m_StatWriteNanos)
+        << std::endl;
 }
 
 std::string SegmentedFile::SegmentFileName(int segment) {

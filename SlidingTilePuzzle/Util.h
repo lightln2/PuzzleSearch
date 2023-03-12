@@ -41,6 +41,24 @@ static std::string WithTime(uint64_t nanos) {
     return stream.str();
 }
 
+static std::string WithSize(uint64_t size) {
+    std::ostringstream stream;
+    if (size < 1024) {
+        stream << size << " bytes";
+    }
+    else if (size / 1024 < 1024) {
+        stream << size / 1024 << " kb";
+    }
+    else if (size / 1024 / 1024 < 1024) {
+        stream << size / 1024 / 1024 << " mb";
+    }
+    else {
+        stream << size / 1024 / 1024 / 1024 << " gb";
+    }
+    return stream.str();
+}
+
+
 struct Timer {
     std::chrono::steady_clock::time_point start;
     Timer() : start(std::chrono::high_resolution_clock::now()) {}

@@ -1,5 +1,6 @@
 #include "GpuSolver.h"
 #include "gpu.h"
+#include "Util.h"
 
 #include <sstream>
 #include <stdio.h>
@@ -182,9 +183,9 @@ HostBuffer::~HostBuffer() {
 }
 
 template<int width, int height>
-uint64_t GpuSolver<width, height>::StatProcessedStates = 0;
+std::atomic<uint64_t> GpuSolver<width, height>::StatProcessedStates = 0;
 template<int width, int height>
-uint64_t GpuSolver<width, height>::StatExecutionMillis = 0;
+std::atomic<uint64_t> GpuSolver<width, height>::StatExecutionNanos = 0;
 
 template<int width, int height>
 GpuSolver<width, height>::GpuSolver() {
@@ -200,6 +201,7 @@ GpuSolver<width, height>::~GpuSolver() {
 
 template<int width, int height>
 void GpuSolver<width, height>::GpuUp(uint32_t segment, uint32_t* indexes, uint32_t* out_segments, size_t count) {
+    Timer timer;
     int threadsPerBlock = 256;
     int blocksPerGrid = ((int)count + threadsPerBlock - 1) / threadsPerBlock;
     ERR(cudaMemcpy(GpuIndexesBuffer, indexes, count * sizeof(int32_t), cudaMemcpyHostToDevice));
@@ -207,10 +209,13 @@ void GpuSolver<width, height>::GpuUp(uint32_t segment, uint32_t* indexes, uint32
     ERR(cudaGetLastError());
     ERR(cudaMemcpy(indexes, GpuIndexesBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost));
     ERR(cudaMemcpy(out_segments, GpuSegmentsBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost));
+    StatProcessedStates += count;
+    StatExecutionNanos += timer.Elapsed();
 }
 
 template<int width, int height>
 void GpuSolver<width, height>::GpuDown(uint32_t segment, uint32_t* indexes, uint32_t* out_segments, size_t count) {
+    Timer timer;
     int threadsPerBlock = 256;
     int blocksPerGrid = ((int)count + threadsPerBlock - 1) / threadsPerBlock;
     ERR(cudaMemcpy(GpuIndexesBuffer, indexes, count * sizeof(int32_t), cudaMemcpyHostToDevice));
@@ -218,8 +223,16 @@ void GpuSolver<width, height>::GpuDown(uint32_t segment, uint32_t* indexes, uint
     ERR(cudaGetLastError());
     ERR(cudaMemcpy(indexes, GpuIndexesBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost));
     ERR(cudaMemcpy(out_segments, GpuSegmentsBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost));
+    StatProcessedStates += count;
+    StatExecutionNanos += timer.Elapsed();
 }
 
+template<int width, int height>
+void GpuSolver<width, height>::PrintStats() {
+    std::cerr 
+        << "Gpu: states=" << WithDecSep(StatProcessedStates)
+        << "; time=" << WithTime(StatExecutionNanos) << std::endl;
+}
 
 template class GpuSolver<2, 2>;
 template class GpuSolver<3, 2>;

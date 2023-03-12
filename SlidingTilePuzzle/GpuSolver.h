@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <cstdint>
 #include <string>
 
@@ -24,11 +25,13 @@ public:
 
     void GpuUp(uint32_t segment, uint32_t* indexes, uint32_t* out_segments, size_t count);
     void GpuDown(uint32_t segment, uint32_t* indexes, uint32_t* out_segments, size_t count);
+
+    static void PrintStats();
 private:
 
     uint32_t* GpuIndexesBuffer;
     uint32_t* GpuSegmentsBuffer;
 
-    static uint64_t StatProcessedStates;
-    static uint64_t StatExecutionMillis;
+    static std::atomic<uint64_t> StatProcessedStates;
+    static std::atomic<uint64_t> StatExecutionNanos;
 };
