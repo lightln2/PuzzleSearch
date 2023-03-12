@@ -73,8 +73,9 @@ void SegmentedFile::DeleteAll() {
 
 void SegmentedFile::PrintStats() {
     std::cerr << "SegmentedFile:"
-        << " read:  " << WithDecSep(m_StatReadBytes) << " in " << WithTime(m_StatReadNanos)
+        << " read: " << WithDecSep(m_StatReadBytes) << " in " << WithTime(m_StatReadNanos)
         << " write: " << WithDecSep(m_StatWriteBytes) << " in " << WithTime(m_StatWriteNanos)
+        << " delete: " << WithTime(m_StatDeleteNanos)
         << std::endl;
 }
 
