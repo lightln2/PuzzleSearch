@@ -86,25 +86,7 @@ size_t Collector<width, height>::SaveSegment() {
             buffer[i] = 0;
         }
     }
-    /*
-    for (size_t i = 0; i < buf_len; i++) {
-        auto val = buffer[i];
-        if (val == 0) continue;
-        unsigned long bitIndex = 0;
-
-        while (_BitScanForward64(&bitIndex, val)) {
-            int byteIndex = bitIndex / 8;
-            uint8_t bound = (val >> (byteIndex * 8)) & 15;
-            result++;
-            if (bound != 15) {
-                m_FrontierWriter.Add((uint32_t)(i * 8 + byteIndex), bound);
-            }
-
-            val &= ~(15ui64 << (byteIndex * 8));
-        }
-        buffer[i] = 0;
-    }
-    */
+    
     m_FrontierWriter.FinishSegment();
 
     m_NanosSaveSegment += timer.Elapsed();
