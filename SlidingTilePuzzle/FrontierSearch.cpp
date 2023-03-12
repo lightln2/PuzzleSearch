@@ -45,6 +45,9 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 
 	std::vector<uint64_t> widths;
 	widths.push_back(1);
+
+	std::cerr << "0: 1" << std::endl;
+
 	while (widths.size() <= options.MaxDepth) {
 
 		// stage 1
@@ -119,7 +122,7 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 		timer_stage_2 += timerStartStage2.Elapsed();
 
 		std::cerr
-			<< widths.size() << ": " << WithDecSep(widths.back())
+			<< widths.size() << ": " << WithDecSep(total)
 			<< " time=" << WithTime(timerStartStep.Elapsed())
 			<< std::endl;
 

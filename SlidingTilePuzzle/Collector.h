@@ -8,7 +8,7 @@
 template<int width, int height>
 class Collector {
 private:
-    static constexpr int VALS_PER_BOUND_INDEX = 4096;
+    static constexpr size_t VALS_PER_BOUND_INDEX = 4096;
 public:
     Collector(SegmentedFile& file);
 

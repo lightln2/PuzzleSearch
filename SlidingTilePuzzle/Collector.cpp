@@ -63,7 +63,7 @@ size_t Collector<width, height>::SaveSegment() {
     uint64_t* buffer = (uint64_t*)m_Bounds.Buf();
     size_t buf_len = m_Bounds.Size() / 8;
 
-    for (int s = 0; s < m_BoundIndex.Size(); s++) {
+    for (size_t s = 0; s < m_BoundIndex.Size(); s++) {
         if (m_BoundIndex[s] == 0) continue;
         m_BoundIndex[s] = 0;
         size_t start = s * VALS_PER_BOUND_INDEX;
