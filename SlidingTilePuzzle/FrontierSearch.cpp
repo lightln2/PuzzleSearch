@@ -71,8 +71,8 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 					}
 				}
 			}
+			verticalCollector.Close();
 		}
-		verticalCollector.Close();
 
 		timer_stage_1 += timerStartStep.Elapsed();
 
@@ -93,17 +93,13 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 				auto& buf = r_up.Read();
 				if (buf.Size() == 0) break;
 				empty = false;
-				for (size_t i = 0; i < buf.Size(); i++) {
-					collector.Add(buf[i], puzzle.GetBounds(buf[i]) | puzzle.B_DOWN);
-				}
+				collector.AddUpMoves(buf.Buf(), buf.Size());
 			}
 			while (true) {
 				auto& buf = r_dn.Read();
 				if (buf.Size() == 0) break;
 				empty = false;
-				for (size_t i = 0; i < buf.Size(); i++) {
-					collector.Add(buf[i], puzzle.GetBounds(buf[i]) | puzzle.B_UP);
-				}
+				collector.AddDownMoves(buf.Buf(), buf.Size());
 			}
 			while (true) {
 				auto buf = frontierReader.Read();

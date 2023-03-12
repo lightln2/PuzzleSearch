@@ -15,6 +15,8 @@ public:
     void SetSegment(uint32_t segment);
 
     void AddHorizontalMoves(uint32_t* indexes, uint8_t* bounds, size_t count);
+    void AddUpMoves(uint32_t* indexes, size_t count);
+    void AddDownMoves(uint32_t* indexes, size_t count);
 
     void Add(uint32_t index, uint8_t bounds);
 
@@ -25,12 +27,15 @@ public:
 private:
     SegmentedFile& m_File;
     FrontierFileWriter m_FrontierWriter;
-    Buffer<uint8_t> m_Bounds;
-    Buffer<uint8_t> m_BoundIndex;
+    std::vector<uint64_t> m_Bounds;
+    std::vector<uint8_t> m_BoundsIndex;
 
 private:
     static std::atomic<uint64_t> m_NanosSaveSegment;
     static std::atomic <uint64_t> m_NanosHorizontalMoves;
-    //static uint64_t m_NanosSaveSegment;
+    static std::atomic <uint64_t> m_NanosVerticalMoves;
+
+    uint8_t m_DefaultBounds[16];
+    uint64_t m_HorizontalMoves[16 * 16];
 };
 
