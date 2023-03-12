@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <string>
 
-constexpr size_t GPU_BUFFER_SIZE = 4 * 1024 * 1024;
+constexpr size_t GPU_BUFFER_SIZE = 8 * 1024 * 1024;
 
 struct HostBuffer {
     static constexpr size_t SIZE = GPU_BUFFER_SIZE;

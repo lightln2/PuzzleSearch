@@ -1,14 +1,10 @@
 #include "../SlidingTilePuzzle/FrontierSearch.h"
-#include "../SlidingTilePuzzle/GpuSolver.h"
-#include "../SlidingTilePuzzle/Puzzle.h"
-#include "../SlidingTilePuzzle/Util.h"
-
-#include <iomanip>
-#include <iostream>
-#include <memory>
-#include <time.h>
-#include <vector>
 
 int main() {
+
+    //SearchOptions opts;
+    //opts.MaxDepth = 10;
+    //FrontierSearch<4, 4>(opts);
+
     FrontierSearch<4, 3>();
 }

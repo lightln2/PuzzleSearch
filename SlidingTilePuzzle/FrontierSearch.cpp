@@ -27,7 +27,7 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 	FrontierFileReader frontierReader(frontier);
 	SegmentedFile e_up(puzzle.MaxSegments(), "d:/temp/expanded_up");
 	SegmentedFile e_dn(puzzle.MaxSegments(), "d:/temp/expanded_dn");
-	Collector collector(puzzle.MaxIndexesPerSegment(), new_frontier);
+	Collector<width, height> collector(new_frontier);
 	VerticalMovesCollector<width, height> verticalCollector(e_up, e_dn);
 	ExpandedFrontierReader r_up(e_up);
 	ExpandedFrontierReader r_dn(e_dn);
@@ -49,7 +49,7 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 
 		// stage 1
 
-		auto timerStart = std::chrono::high_resolution_clock::now();
+		Timer timerStartStep;
 
 		for (int segment = 0; segment < puzzle.MaxSegments(); segment++) {
 			frontierReader.SetSegment(segment);
@@ -71,9 +71,11 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 		}
 		verticalCollector.Close();
 
-		auto timerEndStage1 = std::chrono::high_resolution_clock::now();
+		timer_stage_1 += timerStartStep.Elapsed();
 
 		//stage 2
+
+		Timer timerStartStage2;
 
 		size_t total = 0;
 
@@ -104,18 +106,7 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 				auto buf = frontierReader.Read();
 				if (buf.Count == 0) break;
 				empty = false;
-				for (size_t i = 0; i < buf.Count; i++) {
-					uint32_t index = buf.Indexes[i];
-					uint8_t bound = buf.Bounds[i];
-					if (!(bound & puzzle.B_LEFT)) {
-						auto leftMove = puzzle.MoveLeft(index);
-						collector.Add(leftMove, puzzle.GetBounds(leftMove) | puzzle.B_RIGHT);
-					}
-					if (!(bound & puzzle.B_RIGHT)) {
-						auto rightMove = puzzle.MoveRight(index);
-						collector.Add(rightMove, puzzle.GetBounds(rightMove) | puzzle.B_LEFT);
-					}
-				}
+				collector.AddHorizontalMoves(buf.Indexes, buf.Bounds, buf.Count);
 			}
 			if (empty) continue;
 			total += collector.SaveSegment();
@@ -125,13 +116,11 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 		}
 		if (total == 0) break;
 
-		auto timerEndStage2 = std::chrono::high_resolution_clock::now();
-		timer_stage_1 += (timerEndStage1 - timerStart).count();
-		timer_stage_2 += (timerEndStage2 - timerEndStage1).count();
+		timer_stage_2 += timerStartStage2.Elapsed();
 
 		std::cerr
 			<< widths.size() << ": " << WithDecSep(widths.back())
-			<< " time=" << WithTime((timerEndStage2 - timerStart).count())
+			<< " time=" << WithTime(timerStartStep.Elapsed())
 			<< std::endl;
 
 		widths.push_back(total);

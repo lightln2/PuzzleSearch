@@ -97,7 +97,7 @@ TEST(TestCollector, TestCollector) {
 	constexpr int COUNTS = 1 * 1000 * 1000;
 
 	SegmentedFile file(SEGMENTS, "./testcollector");
-	Collector collector(Puzzle<4, 3>::MaxIndexesPerSegment(), file);
+	Collector<4, 3> collector(file);
 	collector.SetSegment(1);
 	for (int i = 0; i < COUNTS; i++) {
 		collector.Add(i, i & 15);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <chrono>
 #include <cstdint>
 #include <iomanip>
 #include <iostream>
@@ -40,3 +41,8 @@ static std::string WithTime(uint64_t nanos) {
     return stream.str();
 }
 
+struct Timer {
+    std::chrono::steady_clock::time_point start;
+    Timer() : start(std::chrono::high_resolution_clock::now()) {}
+    uint64_t Elapsed() const { return (std::chrono::high_resolution_clock::now() - start).count(); }
+};
