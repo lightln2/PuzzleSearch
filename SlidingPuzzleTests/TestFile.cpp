@@ -93,6 +93,7 @@ TEST(TestFile, RWFileBuffer) {
 
 TEST(TestFile, SegmentedFile) {
 	do {
+		file::CreateDirectory("./temp");
 		SegmentedFile myfile(2500, "./temp/frontier");
 
 		constexpr size_t SIZE = 10 * 1024;
@@ -106,19 +107,22 @@ TEST(TestFile, SegmentedFile) {
 			myfile.Write(segment, buf, SIZE);
 		}
 
-		myfile.RewindAll();
+		for (int tries = 0; tries < 3; tries++) {
+			myfile.RewindAll();
 
-		for (int i = 0; i < BUFS; i++) {
-			int segment = i % 5;
-			size_t read = myfile.Read(segment, buf, SIZE);
-			EXPECT_EQ(read, SIZE);
-			for (int j = 0; j < SIZE; j++) ensure(buf[j] == (i & 255));
+			for (int i = 0; i < BUFS; i++) {
+				int segment = i % 5;
+				size_t read = myfile.Read(segment, buf, SIZE);
+				EXPECT_EQ(read, SIZE);
+				for (int j = 0; j < SIZE; j++) ensure(buf[j] == (i & 255));
+			}
 		}
 	} while (0);
 }
 
 TEST(TestFile, SegmentedFileDelete) {
 	do {
+		file::CreateDirectory("./temp");
 		SegmentedFile myfile(2500, "./temp/frontier");
 
 		constexpr size_t SIZE = 10 * 1024;
@@ -137,29 +141,18 @@ TEST(TestFile, SegmentedFileDelete) {
 
 		myfile.RewindAll();
 
-		myfile.Delete(2);
-		EXPECT_EQ(myfile.Length(2), 0);
-
-		{
-			auto read = myfile.Read(2, buf, SIZE);
-			EXPECT_EQ(read, 0);
-		}
-
-		myfile.Write(2, buf, SIZE);
-
-		myfile.RewindAll();
-
-		EXPECT_EQ(myfile.Length(2), SIZE);
-		{
-			auto read = myfile.Read(2, buf, SIZE);
-			EXPECT_EQ(read, SIZE);
-		}
-
 		myfile.DeleteAll();
+
 		EXPECT_EQ(myfile.TotalLength(), 0);
 		{
 			auto read = myfile.Read(2, buf, SIZE);
 			EXPECT_EQ(read, 0);
 		}
+
+		myfile.Write(77, buf, 1234);
+		EXPECT_EQ(myfile.Read(77, buf, SIZE), 1234);
+
+		EXPECT_EQ(myfile.Read(99, buf, SIZE), 0);
+
 	} while (0);
 }

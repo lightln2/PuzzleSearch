@@ -108,9 +108,36 @@ TEST(TestCollector, TestCollector) {
 	FrontierFileReader freader(file);
 	freader.SetSegment(1);
 	auto buf = freader.Read();
-	EXPECT_EQ(buf.Count, COUNTS / 16 * 14);
+	EXPECT_EQ(buf.Count, COUNTS / 16 * 13);
 	for (int i = 0; i < buf.Count; i++) {
-		ENSURE_EQ(buf.Indexes[i] & 15, buf.Bounds[i]);
+		int blank = buf.Indexes[i] & 15;
+		if (blank >= 12) continue;
+		auto exp = blank | Puzzle<4, 3>::GetBounds(blank);
+		ENSURE_EQ(exp, buf.Bounds[i]);
 	}
 }
+
+TEST(TestCollector, TestCollectorWithSkips) {
+	constexpr int SEGMENTS = 3;
+	constexpr int COUNTS = 40 * 1000 * 1000;
+
+	SegmentedFile file(SEGMENTS, "./testcollector");
+	Collector<4, 3> collector(file);
+	collector.SetSegment(1);
+	for (int i = 0; i < COUNTS; i += 13) {
+		collector.Add(i, i & 15);
+	}
+	auto total = collector.SaveSegment();
+	EXPECT_EQ(total, 2884616);
+
+	FrontierFileReader freader(file);
+	freader.SetSegment(1);
+	auto buf = freader.Read();
+	EXPECT_EQ(buf.Count, 2097152);
+	buf = freader.Read();
+	EXPECT_EQ(buf.Count, 402848);
+	buf = freader.Read();
+	EXPECT_EQ(buf.Count, 0);
+}
+
 

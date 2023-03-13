@@ -8,22 +8,25 @@
 #include <vector>
 
 class SegmentedFile {
+
+    struct Chunk {
+        uint64_t offset;
+        uint32_t length;
+        int next;
+    };
+
 public:
-    SegmentedFile(int maxSegments, const std::string& directory);
+    SegmentedFile(int maxSegments, const std::string& filePath);
 
-    uint64_t Length(int segment) const { return m_Sizes[segment]; }
+    bool HasData(int segment) const { return m_Heads[segment] > 0; }
 
-    bool HasData(int segment) const { return Length(segment) > 0; }
+    uint64_t Length(int segment) const;
 
-    uint64_t TotalLength() const {
-        uint64_t totalLength = 0;
-        for (auto size : m_Sizes) totalLength += size;
-        return totalLength;
-    }
-
-    void RewindAll();
+    uint64_t TotalLength() const { return m_TotalLength; }
 
     void Rewind(int segment);
+
+    void RewindAll();
 
     void Write(int segment, void* buffer, size_t size);
 
@@ -41,25 +44,27 @@ public:
         buffer.SetSize(read / sizeof(T));
     }
 
-    void Delete(int segment);
+    // TODO: remove method
+    void Delete(int segment) {}
 
     void DeleteAll();
 
     static void PrintStats();
 
 private:
-    std::string SegmentFileName(int segment);
+    std::string m_FilePath;
+    std::unique_ptr<RWFile> m_File;
+    uint64_t m_TotalLength;
+    std::vector<Chunk> m_Chunks;
+    std::vector<int> m_Heads;
+    std::vector<int> m_Tails;
+    std::vector<int> m_ReadPointers;
 
 private:
-    std::string m_Directory;
-    std::vector<std::optional<RWFile>> m_Files;
-    std::vector<uint64_t> m_Sizes;
-
-private:
+    static std::atomic<uint64_t> m_StatReadsCount;
     static std::atomic<uint64_t> m_StatReadNanos;
     static std::atomic<uint64_t> m_StatReadBytes;
+    static std::atomic<uint64_t> m_StatWritesCount;
     static std::atomic<uint64_t> m_StatWriteNanos;
     static std::atomic<uint64_t> m_StatWriteBytes;
-    static std::atomic<uint64_t> m_StatDeleteNanos;
-    static std::atomic<uint64_t> m_StatCreateNanos;
 };

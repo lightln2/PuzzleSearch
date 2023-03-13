@@ -44,7 +44,12 @@ void Write(FHANDLE fd, void* buffer, size_t size) {
 }
 
 void SeekBeginning(FHANDLE fd) {
-    SetFilePointer(fd, 0, 0, FILE_BEGIN);
+    ensure(SetFilePointer(fd, 0, 0, FILE_BEGIN) != INVALID_SET_FILE_POINTER);
+}
+
+void Seek(FHANDLE fd, uint64_t offset) {
+    LONG offset_high = offset >> 32;
+    ensure(SetFilePointer(fd, (LONG)offset, &offset_high, FILE_BEGIN) != INVALID_SET_FILE_POINTER);
 }
 
 

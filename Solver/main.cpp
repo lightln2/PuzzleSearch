@@ -1,7 +1,10 @@
 #include "../SlidingTilePuzzle/FrontierSearch.h"
 
 int main() {
-    FrontierSearch<4, 3>();
+
+    SearchOptions opts;
+    //opts.MaxDepth = 26;
+    FrontierSearch<4, 3>(opts);
 
 
 }

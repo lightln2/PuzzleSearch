@@ -15,6 +15,7 @@ namespace file {
     size_t Read(FHANDLE fd, void* buffer, size_t size);
     void Write(FHANDLE fd, void* buffer, size_t size);
     void SeekBeginning(FHANDLE fd);
+    void Seek(FHANDLE fd, uint64_t offset);
     void CreateDirectory(const std::string& directory);
     void DeleteDirectory(const std::string& directory);
 }
@@ -70,6 +71,10 @@ public:
 
     void Rewind() {
         file::SeekBeginning(m_Handle);
+    }
+
+    void Seek(uint64_t offset) {
+        file::Seek(m_Handle, offset);
     }
 
     void Write(void* buffer, size_t size) {
