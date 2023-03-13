@@ -61,4 +61,5 @@ private:
     static std::atomic<uint64_t> m_StatWriteNanos;
     static std::atomic<uint64_t> m_StatWriteBytes;
     static std::atomic<uint64_t> m_StatDeleteNanos;
+    static std::atomic<uint64_t> m_StatCreateNanos;
 };

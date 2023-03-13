@@ -126,9 +126,9 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 		std::cerr
 			<< widths.size() << ": " << WithDecSep(total)
 			<< " time=" << WithTime(timerStartStep.Elapsed())
-			<< " front=" << WithSize(frontierSize) 
-			<< "; exp=" << WithSize(expandedSize)
-			<< "; newfr=" << WithSize(newFrontierSize)
+			<< " Files=" << WithSize(frontierSize) 
+			<< ", " << WithSize(expandedSize)
+			<< ", " << WithSize(newFrontierSize)
 			<< std::endl;
 
 		widths.push_back(total);

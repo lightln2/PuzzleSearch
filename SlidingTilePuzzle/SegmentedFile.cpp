@@ -10,6 +10,7 @@ std::atomic<uint64_t> SegmentedFile::m_StatReadBytes = 0;
 std::atomic<uint64_t> SegmentedFile::m_StatWriteNanos = 0;
 std::atomic<uint64_t> SegmentedFile::m_StatWriteBytes = 0;
 std::atomic<uint64_t> SegmentedFile::m_StatDeleteNanos = 0;
+std::atomic<uint64_t> SegmentedFile::m_StatCreateNanos = 0;
 
 SegmentedFile::SegmentedFile(int maxSegments, const std::string& directory)
     : m_Directory(directory)
@@ -37,8 +38,10 @@ void SegmentedFile::Write(int segment, void* buffer, size_t size) {
     assert(segment >= 0 && segment < m_Files.size());
     auto& file = m_Files[segment];
     if (!file.has_value()) {
+        Timer timer;
         auto fileName = SegmentFileName(segment);
         file.emplace(fileName);
+        m_StatCreateNanos += timer.Elapsed();
     }
     file->Write(buffer, size);
     m_Sizes[segment] += size;
@@ -75,6 +78,7 @@ void SegmentedFile::PrintStats() {
     std::cerr << "SegmentedFile:"
         << " read: " << WithDecSep(m_StatReadBytes) << " in " << WithTime(m_StatReadNanos)
         << " write: " << WithDecSep(m_StatWriteBytes) << " in " << WithTime(m_StatWriteNanos)
+        << " create: " << WithTime(m_StatCreateNanos)
         << " delete: " << WithTime(m_StatDeleteNanos)
         << std::endl;
 }
