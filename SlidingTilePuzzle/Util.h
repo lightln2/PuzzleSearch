@@ -32,6 +32,30 @@ static std::string WithTime(uint64_t nanos) {
     auto seconds = millis / 1000;
     auto minutes = seconds / 60;
     auto hours = minutes / 60;
+    if (minutes == 0) {
+        stream 
+            << std::setfill('0')
+            << seconds << '.' 
+            << std::setw(3) << millis % 1000;
+        return stream.str();
+    }
+    if (hours == 0) {
+        stream 
+            << std::setfill('0')
+            << minutes << ':'
+            << std::setw(2) << seconds % 60 << '.'
+            << std::setw(3) << millis % 1000;
+        return stream.str();
+    }
+    stream
+        << std::setfill('0')
+        << std::setw(2) << hours << ':'
+        << std::setw(2) << minutes % 60 << ':'
+        << std::setw(2) << seconds % 60;
+    return stream.str();
+
+
+    /*
     stream 
         << std::setfill('0') 
         << std::setw(2) << hours << ':' 
@@ -39,22 +63,28 @@ static std::string WithTime(uint64_t nanos) {
         << std::setw(2) << seconds % 60 << '.' 
         << std::setw(3) << millis % 1000;
     return stream.str();
+    */
 }
 
 static std::string WithSize(uint64_t size) {
     std::ostringstream stream;
-    if (size < 1024) {
-        stream << size << " bytes";
+
+    auto sizeBytes = size, sizeKB = sizeBytes / 1024, sizeMB = sizeKB / 1024, sizeGB = sizeMB / 1024;
+
+    if (sizeKB == 0) {
+        stream << sizeBytes << " b";
+        return stream.str();
     }
-    else if (size / 1024 < 1024) {
-        stream << size / 1024 << " kb";
+    if (sizeMB == 0) {
+        stream << sizeKB << '.' << (sizeBytes % 1024) / 100 << " kb";
+        return stream.str();
     }
-    else if (size / 1024 / 1024 < 1024) {
-        stream << size / 1024 / 1024 << " mb";
+    if (sizeGB == 0) {
+        stream << sizeMB << '.' << (sizeKB % 1024) / 100 << " mb";
+        return stream.str();
     }
-    else {
-        stream << size / 1024 / 1024 / 1024 << " gb";
-    }
+
+    stream << sizeGB << '.' << (sizeMB % 1024) / 100 << " gb";
     return stream.str();
 }
 

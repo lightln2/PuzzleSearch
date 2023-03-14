@@ -3,8 +3,8 @@
 int main() {
 
     SearchOptions opts;
-    //opts.MaxDepth = 26;
-    FrontierSearch<4, 3>(opts);
+    opts.MaxDepth = 29;
+    FrontierSearch<4, 4>(opts);
 
 
 }

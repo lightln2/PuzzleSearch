@@ -2,6 +2,7 @@
 #include "Util.h"
 
 #include <chrono>
+#include <immintrin.h>
 
 template<int width, int height>
 std::atomic<uint64_t> Collector<width, height>::m_NanosHorizontalMoves = 0;
@@ -93,6 +94,8 @@ template<int width, int height>
 size_t Collector<width, height>::SaveSegment() {
     Timer timer;
 
+    __m256i ones = _mm256_set1_epi8(-1);
+
     size_t result = 0;
 
     for (size_t s = 0; s < m_BoundsIndex.size(); s++) {
@@ -101,6 +104,13 @@ size_t Collector<width, height>::SaveSegment() {
         size_t start = s * VALS_PER_BOUND_INDEX;
         size_t finish = std::min(start + VALS_PER_BOUND_INDEX, m_Bounds.size());
         for (size_t i = start; i < finish; i++) {
+            if (i + 4 <= finish) {
+                __m256i val = *(__m256i*) & m_Bounds[i];
+                if (_mm256_testz_si256(val, ones)) {
+                    i += 3;
+                    continue;
+                }
+            }
             uint64_t val = m_Bounds[i];
             if (val == 0) continue;
             m_Bounds[i] = 0;

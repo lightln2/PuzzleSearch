@@ -20,7 +20,7 @@
 
 template<int width, int height>
 std::vector<uint64_t> FrontierSearch(SearchOptions options) {
-	auto START = clock();
+	Timer totalStart;
 	Puzzle<width, height> puzzle;
 	SegmentedFile frontier(puzzle.MaxSegments(), "d:/temp/frontier1");
 	SegmentedFile new_frontier(puzzle.MaxSegments(), "d:/temp/frontier2");
@@ -138,8 +138,7 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 		e_dn.DeleteAll();
 	}
 	 
-	auto FINISH = clock();
-	std::cerr << "Finished in " << WithDecSep(FINISH - START) << std::endl;
+	std::cerr << "Finished in " << WithTime(totalStart.Elapsed()) << std::endl;
 
 	std::cerr << " stage 1: " << WithTime(timer_stage_1) << std::endl;
 	std::cerr << " stage 2: " << WithTime(timer_stage_2) << std::endl;
