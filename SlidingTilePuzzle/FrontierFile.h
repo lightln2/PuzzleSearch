@@ -15,7 +15,7 @@ class FrontierFileWriter {
 public:
     FrontierFileWriter(SegmentedFile& file)
         : m_File(file)
-        , m_Buffer(BUFFER_SIZE) {}
+        , m_Buffer(BUFFER_SIZE * 5) {}
 
     void SetSegment(int segment) {  m_Segment = segment; }
 
@@ -26,14 +26,14 @@ public:
     }
 
     void Add(uint32_t index, uint8_t bounds) {
-        m_Buffer.Add(index);
+        *(uint32_t*)(m_Buffer.Buf() + m_Buffer.Size()) = index;
+        m_Buffer.SetSize(m_Buffer.Size() + 4);
         m_Buffer.Add(bounds);
         if (m_Buffer.IsFull()) FlushBuffer();
     }
 
 private:
     void FlushBuffer() {
-        if (m_Buffer.Size() == 0) return;
         m_File.Write(m_Segment, m_Buffer);
         m_Buffer.Clear();
     }
@@ -41,7 +41,7 @@ private:
 private:
     int m_Segment = -1;
     SegmentedFile& m_File;
-    Buffer<uint32_t> m_Buffer;
+    Buffer<uint8_t> m_Buffer;
 };
 
 class FrontierFileReader {
@@ -50,7 +50,7 @@ public:
 
     FrontierFileReader(SegmentedFile& file)
         : m_File(file)
-        , m_Buffer(BUFFER_SIZE)
+        , m_Buffer(BUFFER_SIZE * 5)
         , m_Indexes(BUFFER_SIZE)
         , m_Bounds(BUFFER_SIZE)
     {}
@@ -66,9 +66,9 @@ public:
         m_File.Read(m_Segment, m_Buffer);
         m_Indexes.Clear();
         m_Bounds.Clear();
-        for (int i = 0; i < m_Buffer.Size(); i += 2) {
-            m_Indexes.Add(m_Buffer[i]);
-            m_Bounds.Add(m_Buffer[i + 1]);
+        for (int i = 0; i < m_Buffer.Size(); i += 5) {
+            m_Indexes.Add(*(uint32_t*)&m_Buffer[i]);
+            m_Bounds.Add(m_Buffer[i + 4]);
         }
         return { m_Indexes.Size(), m_Indexes.Buf(), m_Bounds.Buf() };
     }
@@ -76,7 +76,7 @@ public:
 private:
     int m_Segment = -1;
     SegmentedFile& m_File;
-    Buffer<uint32_t> m_Buffer;
+    Buffer<uint8_t> m_Buffer;
     Buffer<uint32_t> m_Indexes;
     Buffer<uint8_t> m_Bounds;
 };
