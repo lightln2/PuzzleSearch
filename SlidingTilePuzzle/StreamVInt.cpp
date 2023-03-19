@@ -178,6 +178,20 @@ int StreamVInt::DecodeIndexes(int count, const uint8_t* buffer, uint32_t* indexe
     return pos;
 }
 
+int StreamVInt::DecodeIndexesAndDiff(int count, const uint8_t* buffer, uint32_t* indexes) {
+    int pos = 0;
+    uint32_t curIndex = 0;
+    int i = 0;
+    while (i < count) {
+        pos += _DecodeTuple(&buffer[pos], &indexes[i]);
+        curIndex = (indexes[i++] += curIndex);
+        curIndex = (indexes[i++] += curIndex);
+        curIndex = (indexes[i++] += curIndex);
+        curIndex = (indexes[i++] += curIndex);
+    }
+    return pos;
+}
+
 int StreamVInt::EncodeBounds(int count, const uint8_t* bounds, uint8_t* buffer) {
     for (int i = 0; i < count; i += 8) {
         _EncodeBoundsTuple(&bounds[i], &buffer[i / 2]);
@@ -229,11 +243,7 @@ int StreamVInt::Decode(int& size, uint8_t* buffer, uint32_t* indexes, int values
     assert(adjusted_count <= MAX_INDEXES_COUNT);
     assert(values_capacity >= adjusted_count);
 
-    srcPos += DecodeIndexes(adjusted_count, &buffer[srcPos], &indexes[0]);
-
-    for (int i = 1; i < count; i++) {
-        indexes[i] += indexes[i - 1];
-    }
+    srcPos += DecodeIndexesAndDiff(adjusted_count, &buffer[srcPos], &indexes[0]);
 
     size = srcPos;
     m_StatDecodeNanos += timer.Elapsed();
@@ -279,12 +289,8 @@ int StreamVInt::Decode(int& size, uint8_t* buffer, uint32_t* indexes, uint8_t* b
     assert(adjusted_count <= MAX_INDEXES_COUNT);
     assert(values_capacity >= adjusted_count);
 
-    srcPos += DecodeIndexes(adjusted_count, &buffer[srcPos], &indexes[0]);
+    srcPos += DecodeIndexesAndDiff(adjusted_count, &buffer[srcPos], &indexes[0]);
     srcPos += DecodeBounds(adjusted_count, &buffer[srcPos], &bounds[0]);
-
-    for (int i = 1; i < count; i++) {
-        indexes[i] += indexes[i - 1];
-    }
 
     size = srcPos;
     m_StatDecodeNanos += timer.Elapsed();

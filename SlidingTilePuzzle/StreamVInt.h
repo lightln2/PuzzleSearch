@@ -18,6 +18,7 @@ public:
 
     static int EncodeIndexes(int count, const uint32_t* indexes, uint8_t* buffer);
     static int DecodeIndexes(int count, const uint8_t* buffer, uint32_t* indexes);
+    static int DecodeIndexesAndDiff(int count, const uint8_t* buffer, uint32_t* indexes);
 
     static int EncodeBounds(int count, const uint8_t* bounds, uint8_t* buffer);
     static int DecodeBounds(int count, const uint8_t* buffer, uint8_t* bounds);
