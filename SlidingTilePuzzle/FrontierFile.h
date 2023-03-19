@@ -11,48 +11,54 @@ struct FrontierBuffer {
 };
 
 class FrontierFileWriter {
-    static constexpr size_t BUFFER_SIZE = 4 * 1024 * 1024;
+    static constexpr size_t FILE_BUFFER_SIZE = 16 * 1024 * 1024;
+    static constexpr size_t BUFFER_SIZE = 1 * 1024 * 1024;
 public:
     FrontierFileWriter(SegmentedFile& file)
         : m_File(file)
-        , m_Buffer(BUFFER_SIZE * 5) {}
+        , m_Buffer(FILE_BUFFER_SIZE)
+        , m_Indexes(BUFFER_SIZE)
+        , m_Bounds(BUFFER_SIZE)
+    {}
 
     void SetSegment(int segment) {  m_Segment = segment; }
 
     int GetSegment() const { return m_Segment; }
 
     void FinishSegment() {
-        if (!m_Buffer.IsEmpty()) FlushBuffer();
+        if (!m_Indexes.IsEmpty()) FlushData();
+        FlushBuffer();
     }
 
     void Add(uint32_t index, uint8_t bounds) {
-        *(uint32_t*)(m_Buffer.Buf() + m_Buffer.Size()) = index;
-        m_Buffer.SetSize(m_Buffer.Size() + 4);
-        m_Buffer.Add(bounds);
-        if (m_Buffer.IsFull()) FlushBuffer();
+        m_Indexes.Add(index);
+        m_Bounds.Add(bounds);
+        if (m_Indexes.IsFull()) FlushData();
     }
 
 private:
-    void FlushBuffer() {
-        m_File.Write(m_Segment, m_Buffer);
-        m_Buffer.Clear();
-    }
+    void FlushData();
+    void FlushBuffer();
 
 private:
     int m_Segment = -1;
     SegmentedFile& m_File;
     Buffer<uint8_t> m_Buffer;
+    Buffer<uint32_t> m_Indexes;
+    Buffer<uint8_t> m_Bounds;
 };
 
 class FrontierFileReader {
 public:
-    static constexpr size_t BUFFER_SIZE = 4 * 1024 * 1024;
+    static constexpr size_t FILE_BUFFER_SIZE = 16 * 1024 * 1024;
+    static constexpr size_t BUFFER_SIZE = 1 * 1024 * 1024;
 
     FrontierFileReader(SegmentedFile& file)
         : m_File(file)
-        , m_Buffer(BUFFER_SIZE * 5)
+        , m_Buffer(FILE_BUFFER_SIZE)
         , m_Indexes(BUFFER_SIZE)
         , m_Bounds(BUFFER_SIZE)
+        , m_BufferPosition(0)
     {}
 
     void SetSegment(int segment) {
@@ -62,21 +68,15 @@ public:
 
     int GetSegment() const { return m_Segment; }
 
-    FrontierBuffer Read() {
-        m_File.Read(m_Segment, m_Buffer);
-        m_Indexes.Clear();
-        m_Bounds.Clear();
-        for (int i = 0; i < m_Buffer.Size(); i += 5) {
-            m_Indexes.Add(*(uint32_t*)&m_Buffer[i]);
-            m_Bounds.Add(m_Buffer[i + 4]);
-        }
-        return { m_Indexes.Size(), m_Indexes.Buf(), m_Bounds.Buf() };
-    }
+    FrontierBuffer Read();
 
+private:
+    void ReadBuffer();
 private:
     int m_Segment = -1;
     SegmentedFile& m_File;
     Buffer<uint8_t> m_Buffer;
+    int m_BufferPosition;
     Buffer<uint32_t> m_Indexes;
     Buffer<uint8_t> m_Bounds;
 };

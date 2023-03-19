@@ -86,6 +86,7 @@
     <ClInclude Include="Multiplexor.h" />
     <ClInclude Include="Puzzle.h" />
     <ClInclude Include="SegmentedFile.h" />
+    <ClInclude Include="StreamVInt.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="VerticalMovesCollector.h" />
   </ItemGroup>
@@ -101,6 +102,7 @@
     <ClCompile Include="Multiplexor.cpp" />
     <ClCompile Include="Puzzle.cpp" />
     <ClCompile Include="SegmentedFile.cpp" />
+    <ClCompile Include="StreamVInt.cpp" />
     <ClCompile Include="VerticalMovesCollector.cpp" />
   </ItemGroup>
 </Project>

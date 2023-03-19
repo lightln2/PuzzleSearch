@@ -22,11 +22,13 @@ template<int width, int height>
 std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 	Timer totalStart;
 	Puzzle<width, height> puzzle;
+
 	SegmentedFile frontier(puzzle.MaxSegments(), "c:/PUZ/frontier1");
 	SegmentedFile new_frontier(puzzle.MaxSegments(), "d:/PUZ/frontier2");
-	FrontierFileReader frontierReader(frontier);
 	SegmentedFile e_up(puzzle.MaxSegments(), "c:/PUZ/expanded_up");
 	SegmentedFile e_dn(puzzle.MaxSegments(), "d:/PUZ/expanded_dn");
+
+	FrontierFileReader frontierReader(frontier);
 	Collector<width, height> collector(new_frontier);
 	VerticalMovesCollector<width, height> verticalCollector(e_up, e_dn);
 	ExpandedFrontierReader r_up(e_up);
