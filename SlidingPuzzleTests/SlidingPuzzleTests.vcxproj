@@ -37,6 +37,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="TestPuzzle.cpp" />
+    <ClCompile Include="TestStreamVInt.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SlidingTilePuzzle\SlidingTilePuzzle.vcxproj">

@@ -107,14 +107,19 @@ TEST(TestCollector, TestCollector) {
 
 	FrontierFileReader freader(file);
 	freader.SetSegment(1);
-	auto buf = freader.Read();
-	EXPECT_EQ(buf.Count, COUNTS / 16 * 13);
-	for (int i = 0; i < buf.Count; i++) {
-		int blank = buf.Indexes[i] & 15;
-		if (blank >= 12) continue;
-		auto exp = blank | Puzzle<4, 3>::GetBounds(blank);
-		ENSURE_EQ(exp, buf.Bounds[i]);
+	int stotal = 0;
+	while (true) {
+		auto buf = freader.Read();
+		if (buf.Count == 0) break;
+		stotal += buf.Count;
+		for (int i = 0; i < buf.Count; i++) {
+			int blank = buf.Indexes[i] & 15;
+			if (blank >= 12) continue;
+			auto exp = blank | Puzzle<4, 3>::GetBounds(blank);
+			ENSURE_EQ(exp, buf.Bounds[i]);
+		}
 	}
+	EXPECT_EQ(stotal, COUNTS / 16 * 13);
 }
 
 TEST(TestCollector, TestCollectorWithSkips) {
@@ -132,12 +137,13 @@ TEST(TestCollector, TestCollectorWithSkips) {
 
 	FrontierFileReader freader(file);
 	freader.SetSegment(1);
-	auto buf = freader.Read();
-	EXPECT_EQ(buf.Count, 2097152);
-	buf = freader.Read();
-	EXPECT_EQ(buf.Count, 402848);
-	buf = freader.Read();
-	EXPECT_EQ(buf.Count, 0);
+	int stotal = 0;
+	while (true) {
+		auto buf = freader.Read();
+		if (buf.Count == 0) break;
+		stotal += buf.Count;
+	}
+	EXPECT_EQ(stotal, 2500000);
 }
 
 

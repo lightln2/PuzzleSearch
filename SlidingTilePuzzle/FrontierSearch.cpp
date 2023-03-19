@@ -148,6 +148,7 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 	collector.PrintStats();
 	GpuSolver<width, height>::PrintStats();
 	SegmentedFile::PrintStats();
+	StreamVInt::PrintStats();
 
 	return widths;
 }
