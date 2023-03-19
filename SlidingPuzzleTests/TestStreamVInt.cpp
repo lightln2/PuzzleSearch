@@ -10,7 +10,9 @@ static void TestTuple(std::initializer_list<uint32_t> input, int expected) {
 	int pos = 0;
 	for (auto i : input) {
 		indexes[pos++] = i;
+		std::cerr << ' ' << i;
 	}
+	std::cerr << std::endl;
 	uint8_t buffer[17];
 	int encoded = StreamVInt::EncodeTuple(indexes, buffer);
 	EXPECT_EQ(encoded, expected);
@@ -193,4 +195,33 @@ TEST(TestStreamVInt, EncodeExpandedChunks) {
 			ENSURE_EQ(indexes[i], i * i);
 		}
 	}
+}
+
+TEST(TestStreamVInt, EncodeFrontier_Uneven) {
+	Buffer<uint32_t> indexes(StreamVInt::MAX_INDEXES_COUNT);
+	Buffer<uint8_t> bounds(StreamVInt::MAX_INDEXES_COUNT);
+	Buffer<uint8_t> buffer(StreamVInt::MAX_BUFFER_SIZE);
+	indexes.Add(7);
+	indexes.Add(17);
+	indexes.Add(53);
+
+	bounds.Add(13);
+	bounds.Add(14);
+	bounds.Add(9);
+
+	for (int i = 0; i < 100; i++) {
+		indexes.Add(0xCDCDCDCD);
+		bounds.Add(0xCD);
+	}
+	indexes.SetSize(3);
+	bounds.SetSize(3);
+	StreamVInt::Encode(indexes, bounds, buffer);
+	int position = 0;
+	position = StreamVInt::Decode(0, buffer, indexes, bounds);
+	ENSURE_EQ(indexes[0], 7);
+	ENSURE_EQ(indexes[1], 17);
+	ENSURE_EQ(indexes[2], 53);
+	ENSURE_EQ(bounds[0], 13);
+	ENSURE_EQ(bounds[1], 14);
+	ENSURE_EQ(bounds[2], 9);
 }
