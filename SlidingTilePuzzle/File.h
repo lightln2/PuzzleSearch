@@ -57,8 +57,8 @@ private:
 class RWFile {
 public:
     RWFile(const std::string& fileName) 
-        : /*m_FileName(fileName)
-        , */m_Handle(file::OpenFile(fileName))
+        : m_FileName(fileName)
+        , m_Handle(file::OpenFile(fileName))
     { }
 
     RWFile(const RWFile&) = delete;
@@ -66,7 +66,7 @@ public:
 
     ~RWFile() {
         file::CloseFile(m_Handle);
-        //file::DeleteFile(m_FileName);
+        file::DeleteFile(m_FileName);
     }
 
     void Rewind() {
@@ -99,5 +99,5 @@ public:
 
 private:
     file::FHANDLE m_Handle;
-    //std::string m_FileName;
+    std::string m_FileName;
 };

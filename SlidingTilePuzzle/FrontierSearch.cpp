@@ -64,16 +64,7 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 			while (true) {
 				auto read = frontierReader.Read();
 				if (read.Count == 0) break;
-				for (size_t i = 0; i < read.Count; i++) {
-					uint32_t index = read.Indexes[i];
-					uint8_t bound = read.Bounds[i];
-					if (!(bound & puzzle.B_UP)) {
-						verticalCollector.AddUp(index);
-					}
-					if (!(bound & puzzle.B_DOWN)) {
-						verticalCollector.AddDown(index);
-					}
-				}
+				verticalCollector.Add(read.Count, read.Indexes, read.Bounds);
 			}
 			verticalCollector.Close();
 		}
@@ -112,6 +103,7 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 				if (buf.Count == 0) break;
 				empty = false;
 				collector.AddHorizontalMoves(buf.Indexes, buf.Bounds, buf.Count);
+				collector.AddSameSegmentVerticalMoves(buf.Indexes, buf.Bounds, buf.Count);
 			}
 			if (empty) continue;
 			total += collector.SaveSegment();

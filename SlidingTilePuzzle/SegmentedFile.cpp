@@ -77,7 +77,7 @@ size_t SegmentedFile::Read(int segment, void* buffer, size_t size) {
 
     m_StatReadsCount++;
     m_StatReadBytes += read;
-    m_StatWriteNanos += timer.Elapsed();
+    m_StatReadNanos += timer.Elapsed();
 
     return read;
 }

@@ -13,8 +13,8 @@ FHANDLE OpenFile(const std::string& fileName) {
         FILE_SHARE_READ,
         NULL,
         CREATE_ALWAYS,
-        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_DELETE_ON_CLOSE,
-        //FILE_ATTRIBUTE_NORMAL,
+        //FILE_ATTRIBUTE_NORMAL | FILE_FLAG_DELETE_ON_CLOSE,
+        FILE_ATTRIBUTE_NORMAL,
         NULL);
     ensure(fd != INVALID_HANDLE_VALUE);
     return fd;

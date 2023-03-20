@@ -21,6 +21,19 @@ public:
         m_Segment = segment;
     }
 
+    void Add(size_t count, uint32_t* indexes, uint8_t* bounds) {
+        for (size_t i = 0; i < count; i++) {
+            uint32_t index = indexes[i];
+            uint8_t bound = bounds[i];
+            if (!(bound & Puzzle<width, height>::B_UP) && Puzzle<width, height>::UpChangesSegment(index & 15)) {
+                AddUp(index);
+            }
+            if (!(bound & Puzzle<width, height>::B_DOWN) && Puzzle<width, height>::DownChangesSegment(index & 15)) {
+                AddDown(index);
+            }
+        }
+    }
+
     void AddUp(uint32_t index) {
         m_BufferUp.Buffer[m_PositionUp++] = index;
         if (m_PositionUp == m_BufferUp.SIZE) FlushUp();
@@ -41,11 +54,6 @@ public:
 private:
     void FlushUp() {
         if (m_PositionUp == 0) return;
-        /*for (int i = 0; i < m_PositionUp; i++) {
-            auto [newsegment, newindex] = Puzzle<width, height>::MoveUp(m_Segment, m_BufferUp.Buffer[i]);
-            m_BufferUp.Buffer[i] = newindex;
-            m_BufferSegments.Buffer[i] = newsegment;
-        }*/
         m_GpuSolver.GpuUp(m_Segment, m_BufferUp.Buffer, m_BufferSegments.Buffer, m_PositionUp);
         for (int i = 0; i < m_PositionUp; i++) {
             m_MultUp.Add(m_BufferSegments.Buffer[i], m_BufferUp.Buffer[i]);
@@ -55,11 +63,6 @@ private:
 
     void FlushDown() {
         if (m_PositionDown == 0) return;
-        /*for (int i = 0; i < m_PositionDown; i++) {
-            auto [newsegment, newindex] = Puzzle<width, height>::MoveDown(m_Segment, m_BufferDown.Buffer[i]);
-            m_BufferDown.Buffer[i] = newindex;
-            m_BufferSegments.Buffer[i] = newsegment;
-        }*/
         m_GpuSolver.GpuDown(m_Segment, m_BufferDown.Buffer, m_BufferSegments.Buffer, m_PositionDown);
         for (int i = 0; i < m_PositionDown; i++) {
             m_MultDown.Add(m_BufferSegments.Buffer[i], m_BufferDown.Buffer[i]);
