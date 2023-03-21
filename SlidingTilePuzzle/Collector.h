@@ -20,7 +20,10 @@ public:
     void AddUpMoves(uint32_t* indexes, size_t count);
     void AddDownMoves(uint32_t* indexes, size_t count);
 
-    void Add(uint32_t index, uint8_t bounds);
+    void Add(uint32_t index, uint8_t bounds) {
+        m_Bounds[index / 16] |= (uint64_t(bounds) << ((index & 15) * 4));
+        m_BoundsIndex[index / VALS_PER_BOUND_INDEX / 16] = 1;
+    }
 
     size_t SaveSegment();
 
