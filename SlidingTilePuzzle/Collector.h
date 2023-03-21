@@ -16,6 +16,7 @@ public:
     void SetSegment(uint32_t segment);
 
     void AddHorizontalMoves(uint32_t* indexes, uint8_t* bounds, size_t count);
+    // TODO: tests
     void AddSameSegmentVerticalMoves(uint32_t* indexes, uint8_t* bounds, size_t count);
     void AddUpMoves(uint32_t* indexes, size_t count);
     void AddDownMoves(uint32_t* indexes, size_t count);

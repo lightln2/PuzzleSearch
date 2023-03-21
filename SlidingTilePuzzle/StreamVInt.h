@@ -18,6 +18,8 @@ public:
 
     static int EncodeIndexes(int count, const uint32_t* indexes, uint8_t* buffer);
     static int DecodeIndexes(int count, const uint8_t* buffer, uint32_t* indexes);
+    // TODO: tests
+    // TODO: investigate why decode is slower than encode
     static int DecodeIndexesAndDiff(int count, const uint8_t* buffer, uint32_t* indexes);
 
     static int EncodeBounds(int count, const uint8_t* bounds, uint8_t* buffer);
