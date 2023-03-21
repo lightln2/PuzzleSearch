@@ -26,6 +26,9 @@ public:
     void GpuUp(uint32_t segment, uint32_t* indexes, uint32_t* out_segments, size_t count);
     void GpuDown(uint32_t segment, uint32_t* indexes, uint32_t* out_segments, size_t count);
 
+    void GpuUpSameSegment(uint32_t segment, uint32_t* indexes, size_t count);
+    void GpuDownSameSegment(uint32_t segment, uint32_t* indexes, size_t count);
+
     static void PrintStats();
 private:
 

@@ -27,6 +27,10 @@ public:
     static void PrintStats();
 
 private:
+    void FlushSameSegmentUpMoves();
+    void FlushSameSegmentDownMoves();
+
+private:
     SegmentedFile& m_File;
     FrontierFileWriter m_FrontierWriter;
     std::vector<uint64_t> m_Bounds;

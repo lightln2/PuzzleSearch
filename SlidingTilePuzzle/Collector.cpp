@@ -78,27 +78,39 @@ void Collector<width, height>::AddSameSegmentVerticalMoves(uint32_t* indexes, ui
         if (!(bound & Puzzle<width, height>::B_UP) && !Puzzle<width, height>::UpChangesSegment(index & 15)) {
             m_UpBuffer.Buffer[m_UpBufferPosition++] = index;
             if (m_UpBufferPosition == m_UpBuffer.SIZE) {
-                m_GpuSolver.GpuUp(m_FrontierWriter.GetSegment(), m_UpBuffer.Buffer, m_UpDownSegments.Buffer, m_UpBufferPosition);
-                for (size_t i = 0; i < m_UpBufferPosition; i++) {
-                    assert(m_UpDownSegments.Buffer[i] == m_FrontierWriter.GetSegment());
-                    Add(m_UpBuffer.Buffer[i], Puzzle<width, height>::B_DOWN);
-                }
-                m_UpBufferPosition = 0;
+                FlushSameSegmentUpMoves();
             }
         }
         if (!(bound & Puzzle<width, height>::B_DOWN) && !Puzzle<width, height>::DownChangesSegment(index & 15)) {
             m_DownBuffer.Buffer[m_DownBufferPosition++] = index;
             if (m_DownBufferPosition == m_DownBuffer.SIZE) {
-                m_GpuSolver.GpuDown(m_FrontierWriter.GetSegment(), m_DownBuffer.Buffer, m_UpDownSegments.Buffer, m_DownBufferPosition);
-                for (size_t i = 0; i < m_DownBufferPosition; i++) {
-                    assert(m_UpDownSegments.Buffer[i] == m_FrontierWriter.GetSegment());
-                    Add(m_DownBuffer.Buffer[i], Puzzle<width, height>::B_UP);
-                }
-                m_DownBufferPosition = 0;
+                FlushSameSegmentDownMoves();
             }
         }
     }
     m_NanosSameSegmentVerticalMoves += timer.Elapsed();
+}
+
+template<int width, int height>
+void Collector<width, height>::FlushSameSegmentUpMoves() {
+    //m_GpuSolver.GpuUp(m_FrontierWriter.GetSegment(), m_UpBuffer.Buffer, m_UpDownSegments.Buffer, m_UpBufferPosition);
+    m_GpuSolver.GpuUpSameSegment(m_FrontierWriter.GetSegment(), m_UpBuffer.Buffer, m_UpBufferPosition);
+    for (size_t i = 0; i < m_UpBufferPosition; i++) {
+        assert(m_UpBuffer.Buffer[i] != (uint32_t)-1);
+        Add(m_UpBuffer.Buffer[i], Puzzle<width, height>::B_DOWN);
+    }
+    m_UpBufferPosition = 0;
+}
+
+template<int width, int height>
+void Collector<width, height>::FlushSameSegmentDownMoves() {
+    //m_GpuSolver.GpuDown(m_FrontierWriter.GetSegment(), m_DownBuffer.Buffer, m_UpDownSegments.Buffer, m_DownBufferPosition);
+    m_GpuSolver.GpuDownSameSegment(m_FrontierWriter.GetSegment(), m_DownBuffer.Buffer, m_DownBufferPosition);
+    for (size_t i = 0; i < m_DownBufferPosition; i++) {
+        assert(m_UpBuffer.Buffer[i] != (uint32_t)-1);
+        Add(m_DownBuffer.Buffer[i], Puzzle<width, height>::B_UP);
+    }
+    m_DownBufferPosition = 0;
 }
 
 template<int width, int height>
@@ -132,20 +144,10 @@ size_t Collector<width, height>::SaveSegment() {
     {
         Timer vtimer;
         if (m_UpBufferPosition > 0) {
-            m_GpuSolver.GpuUp(m_FrontierWriter.GetSegment(), m_UpBuffer.Buffer, m_UpDownSegments.Buffer, m_UpBufferPosition);
-            for (size_t i = 0; i < m_UpBufferPosition; i++) {
-                assert(m_UpDownSegments.Buffer[i] == m_FrontierWriter.GetSegment());
-                Add(m_UpBuffer.Buffer[i], Puzzle<width, height>::B_DOWN);
-            }
-            m_UpBufferPosition = 0;
+            FlushSameSegmentUpMoves();
         }
         if (m_DownBufferPosition > 0) {
-            m_GpuSolver.GpuDown(m_FrontierWriter.GetSegment(), m_DownBuffer.Buffer, m_UpDownSegments.Buffer, m_DownBufferPosition);
-            for (size_t i = 0; i < m_DownBufferPosition; i++) {
-                assert(m_UpDownSegments.Buffer[i] == m_FrontierWriter.GetSegment());
-                Add(m_DownBuffer.Buffer[i], Puzzle<width, height>::B_UP);
-            }
-            m_DownBufferPosition = 0;
+            FlushSameSegmentDownMoves();
         }
         m_NanosSameSegmentVerticalMoves += vtimer.Elapsed();
     }

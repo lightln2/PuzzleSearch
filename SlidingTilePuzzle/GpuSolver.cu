@@ -174,6 +174,62 @@ __global__ void kernel_dn(uint32_t segment, uint32_t* indexes, uint32_t* out_seg
     indexes[i] = to_index<size>(arr);
 }
 
+
+template<int width, int height>
+__global__ void kernel_up(uint32_t segment, uint32_t* indexes, size_t count) {
+    constexpr int size = width * height;
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= count) return;
+    int arr[16];
+    from_segment(arr, segment);
+    from_index<size>(arr, indexes[i]);
+    unpack<size, width, width % 2 == 0>(arr);
+    /*
+#ifdef _DEBUG
+    if (!CanRotateUp<width>(arr)) {
+        indexes[i] = (uint32_t)-1;
+        return;
+    }
+    int blank = indexes[i] & 15;
+    if (blank == 13 || blank == 14 || blank == 15) {
+        indexes[i] = (uint32_t)-1;
+        return;
+    }
+#endif
+    */
+    RotateUp<width>(arr);
+    pack<size>(arr);
+    indexes[i] = to_index<size>(arr);
+}
+
+template<int width, int height>
+__global__ void kernel_dn(uint32_t segment, uint32_t* indexes, size_t count) {
+    constexpr int size = width * height;
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= count) return;
+    int arr[16];
+    from_segment(arr, segment);
+    from_index<size>(arr, indexes[i]);
+    unpack<size, width, width % 2 == 0>(arr);
+    /*
+#ifdef _DEBUG
+    if (!CanRotateDn<size, width>(arr)) {
+        indexes[i] = (uint32_t)-1;
+        out_segments[i] = (uint32_t)-1;
+        return;
+    }
+    int blank = indexes[i] & 15;
+    if (blank == 13 - width || blank == 14 - width || blank == 15 - width) {
+        indexes[i] = (uint32_t)-1;
+        return;
+    }
+#endif
+    */
+    RotateDn<width>(arr);
+    pack<size>(arr);
+    indexes[i] = to_index<size>(arr);
+}
+
 HostBuffer::HostBuffer() {
     ERR(cudaHostAlloc(&Buffer, GPU_BUFFER_SIZE * sizeof(int32_t), cudaHostAllocDefault));
 }
@@ -226,6 +282,34 @@ void GpuSolver<width, height>::GpuDown(uint32_t segment, uint32_t* indexes, uint
     StatProcessedStates += count;
     StatExecutionNanos += timer.Elapsed();
 }
+
+template<int width, int height>
+void GpuSolver<width, height>::GpuUpSameSegment(uint32_t segment, uint32_t* indexes, size_t count) {
+    Timer timer;
+    int threadsPerBlock = 256;
+    int blocksPerGrid = ((int)count + threadsPerBlock - 1) / threadsPerBlock;
+    ERR(cudaMemcpy(GpuIndexesBuffer, indexes, count * sizeof(int32_t), cudaMemcpyHostToDevice));
+    kernel_up<width, height> << <blocksPerGrid, threadsPerBlock >> > (segment, GpuIndexesBuffer, count);
+    ERR(cudaGetLastError());
+    ERR(cudaMemcpy(indexes, GpuIndexesBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost));
+    StatProcessedStates += count;
+    StatExecutionNanos += timer.Elapsed();
+}
+
+template<int width, int height>
+void GpuSolver<width, height>::GpuDownSameSegment(uint32_t segment, uint32_t* indexes, size_t count) {
+    Timer timer;
+    int threadsPerBlock = 256;
+    int blocksPerGrid = ((int)count + threadsPerBlock - 1) / threadsPerBlock;
+    ERR(cudaMemcpy(GpuIndexesBuffer, indexes, count * sizeof(int32_t), cudaMemcpyHostToDevice));
+    kernel_dn<width, height> << <blocksPerGrid, threadsPerBlock >> > (segment, GpuIndexesBuffer, count);
+    ERR(cudaGetLastError());
+    ERR(cudaMemcpy(indexes, GpuIndexesBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost));
+    StatProcessedStates += count;
+    StatExecutionNanos += timer.Elapsed();
+}
+
+
 
 template<int width, int height>
 void GpuSolver<width, height>::PrintStats() {
