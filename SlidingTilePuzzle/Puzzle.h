@@ -48,11 +48,16 @@ public:
     }
 
     static bool UpChangesSegment(int blank) {
-        return blank == 13 || blank == 14 || blank == 15;
+        // MSVC does not do this optimization
+        constexpr int mask = (1 << 13) | (1 << 14) | (1 << 15);
+        return (mask >> blank) & 1;
+        //return blank == 13 || blank == 14 || blank == 15;
     }
 
     static bool DownChangesSegment(int blank) {
-        return blank == 13 - width || blank == 14 - width || blank == 15 - width;
+        constexpr int mask = (1 << (13 - width)) | (1 << (14 - width)) | (1 << (15 - width));
+        return (mask >> blank) & 1;
+        //return blank == 13 - width || blank == 14 - width || blank == 15 - width;
     }
 
     static bool CanMoveUp(uint32_t index) { return (index % 16) >= width; }

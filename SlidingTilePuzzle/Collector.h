@@ -44,13 +44,13 @@ private:
     size_t m_UpBufferPosition = 0;
     HostBuffer m_DownBuffer;
     size_t m_DownBufferPosition = 0;
-    HostBuffer m_UpDownSegments;
+    //HostBuffer m_UpDownSegments;
 
 private:
     static std::atomic<uint64_t> m_NanosSaveSegment;
-    static std::atomic <uint64_t> m_NanosHorizontalMoves;
-    static std::atomic <uint64_t> m_NanosVerticalMoves;
-    static std::atomic <uint64_t> m_NanosSameSegmentVerticalMoves;
+    static std::atomic<uint64_t> m_NanosHorizontalMoves;
+    static std::atomic<uint64_t> m_NanosVerticalMoves;
+    static std::atomic<uint64_t> m_NanosSameSegmentVerticalMoves;
 
     uint8_t m_DefaultBounds[16];
     uint64_t m_HorizontalMoves[16 * 16];

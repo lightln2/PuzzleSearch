@@ -9,6 +9,7 @@
 #include <memory>
 #include <time.h>
 #include <vector>
+#include <thread>
 
 #include "Collector.h"
 #include "FrontierFile.h"
@@ -17,6 +18,85 @@
 #include "Puzzle.h"
 #include "SegmentedFile.h"
 #include "VerticalMovesCollector.h"
+
+template<int width, int height>
+class FrontierSearcher {
+public:
+	FrontierSearcher(SegmentedFile& frontier, SegmentedFile& new_frontier, SegmentedFile& e_up, SegmentedFile& e_dn)
+		: frontier(frontier)
+		, new_frontier(new_frontier)
+		, e_up(e_up)
+		, e_dn(e_dn)
+		, frontierReader(frontier)
+		, collector(new_frontier)
+		, verticalCollector(e_up, e_dn)
+		, r_up(e_up)
+		, r_dn(e_dn)
+	{}
+
+	void Expand(int segment) {
+		total = 0;
+		frontierReader.SetSegment(segment);
+		verticalCollector.SetSegment(segment);
+		while (true) {
+			auto read = frontierReader.Read();
+			if (read.Count == 0) break;
+			verticalCollector.Add(read.Count, read.Indexes, read.Bounds);
+		}
+		verticalCollector.Close();
+	}
+
+	void Collect(int segment) {
+		r_up.SetSegment(segment);
+		r_dn.SetSegment(segment);
+		frontierReader.SetSegment(segment);
+		collector.SetSegment(segment);
+
+		bool empty = true;
+		while (true) {
+			auto& buf = r_up.Read();
+			if (buf.Size() == 0) break;
+			empty = false;
+			collector.AddUpMoves(buf.Buf(), buf.Size());
+		}
+		while (true) {
+			auto& buf = r_dn.Read();
+			if (buf.Size() == 0) break;
+			empty = false;
+			collector.AddDownMoves(buf.Buf(), buf.Size());
+		}
+		while (true) {
+			auto buf = frontierReader.Read();
+			if (buf.Count == 0) break;
+			empty = false;
+			collector.AddHorizontalMoves(buf.Indexes, buf.Bounds, buf.Count);
+			collector.AddSameSegmentVerticalMoves(buf.Indexes, buf.Bounds, buf.Count);
+		}
+		if (!empty) {
+			total += collector.SaveSegment();
+		}
+		frontier.Delete(segment);
+		e_up.Delete(segment);
+		e_dn.Delete(segment);
+	}
+
+	uint64_t GetTotal() { return total; }
+
+private:
+	SegmentedFile& frontier;
+	SegmentedFile& new_frontier;
+	SegmentedFile& e_up;
+	SegmentedFile& e_dn;
+
+	FrontierFileReader frontierReader;
+	Collector<width, height> collector;
+	VerticalMovesCollector<width, height> verticalCollector;
+	ExpandedFrontierReader r_up;
+	ExpandedFrontierReader r_dn;
+
+	uint64_t total = 0;
+};
+
 
 template<int width, int height>
 std::vector<uint64_t> FrontierSearch(SearchOptions options) {
@@ -28,12 +108,6 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 	SegmentedFile e_up(puzzle.MaxSegments(), "c:/PUZ/expanded_up");
 	SegmentedFile e_dn(puzzle.MaxSegments(), "d:/PUZ/expanded_dn");
 
-	FrontierFileReader frontierReader(frontier);
-	Collector<width, height> collector(new_frontier);
-	VerticalMovesCollector<width, height> verticalCollector(e_up, e_dn);
-	ExpandedFrontierReader r_up(e_up);
-	ExpandedFrontierReader r_dn(e_dn);
-
 	{
 		auto [initialSegment, initialIndex] = puzzle.Rank(options.InitialValue);
 		FrontierFileWriter fwriter(frontier);
@@ -41,6 +115,8 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 		fwriter.Add(initialIndex, puzzle.GetBounds(initialIndex));
 		fwriter.FinishSegment();
 	}
+
+	FrontierSearcher<width, height> searcher(frontier, new_frontier, e_up, e_dn);
 
 	uint64_t timer_stage_1 = 0;
 	uint64_t timer_stage_2 = 0;
@@ -59,14 +135,7 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 		auto frontierSize = frontier.TotalLength();
 
 		for (int segment = 0; segment < puzzle.MaxSegments(); segment++) {
-			frontierReader.SetSegment(segment);
-			verticalCollector.SetSegment(segment);
-			while (true) {
-				auto read = frontierReader.Read();
-				if (read.Count == 0) break;
-				verticalCollector.Add(read.Count, read.Indexes, read.Bounds);
-			}
-			verticalCollector.Close();
+			searcher.Expand(segment);
 		}
 
 		timer_stage_1 += timerStartStep.Elapsed();
@@ -77,40 +146,10 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 
 		Timer timerStartStage2;
 
-		size_t total = 0;
-
 		for (int segment = 0; segment < puzzle.MaxSegments(); segment++) {
-			r_up.SetSegment(segment);
-			r_dn.SetSegment(segment);
-			frontierReader.SetSegment(segment);
-			collector.SetSegment(segment);
-
-			bool empty = true;
-			while (true) {
-				auto& buf = r_up.Read();
-				if (buf.Size() == 0) break;
-				empty = false;
-				collector.AddUpMoves(buf.Buf(), buf.Size());
-			}
-			while (true) {
-				auto& buf = r_dn.Read();
-				if (buf.Size() == 0) break;
-				empty = false;
-				collector.AddDownMoves(buf.Buf(), buf.Size());
-			}
-			while (true) {
-				auto buf = frontierReader.Read();
-				if (buf.Count == 0) break;
-				empty = false;
-				collector.AddHorizontalMoves(buf.Indexes, buf.Bounds, buf.Count);
-				collector.AddSameSegmentVerticalMoves(buf.Indexes, buf.Bounds, buf.Count);
-			}
-			if (empty) continue;
-			total += collector.SaveSegment();
-			frontier.Delete(segment);
-			e_up.Delete(segment);
-			e_dn.Delete(segment);
+			searcher.Collect(segment);
 		}
+		uint64_t total = searcher.GetTotal();
 		if (total == 0) break;
 
 		timer_stage_2 += timerStartStage2.Elapsed();
@@ -137,7 +176,7 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 	std::cerr << " stage 1: " << WithTime(timer_stage_1) << std::endl;
 	std::cerr << " stage 2: " << WithTime(timer_stage_2) << std::endl;
 
-	collector.PrintStats();
+	Collector<width, height>::PrintStats();
 	GpuSolver<width, height>::PrintStats();
 	SegmentedFile::PrintStats();
 	StreamVInt::PrintStats();
