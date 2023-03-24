@@ -43,6 +43,27 @@ void Write(FHANDLE fd, void* buffer, size_t size) {
     ensure(actualSize == size);
 }
 
+size_t Read(FHANDLE fd, void* buffer, uint64_t offset, size_t size) {
+    DWORD actualSize = 0;
+    ensure(size < 2ULL * 1024 * 1024 * 1024);
+    OVERLAPPED over{ 0 };
+    over.Offset = offset;
+    over.OffsetHigh = offset >> 32;
+    ensure(ReadFile(fd, buffer, (DWORD)size, &actualSize, &over));
+    return actualSize;
+}
+
+void Write(FHANDLE fd, void* buffer, uint64_t offset, size_t size) {
+    DWORD actualSize = 0;
+    ensure(size < 2ULL * 1024 * 1024 * 1024);
+    OVERLAPPED over{ 0 };
+    over.Offset = offset;
+    over.OffsetHigh = offset >> 32;
+    ensure(WriteFile(fd, buffer, (DWORD)size, &actualSize, &over));
+    ensure(actualSize == size);
+}
+
+
 void SeekBeginning(FHANDLE fd) {
     ensure(SetFilePointer(fd, 0, 0, FILE_BEGIN) != INVALID_SET_FILE_POINTER);
 }

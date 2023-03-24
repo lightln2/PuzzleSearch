@@ -20,6 +20,8 @@ public:
 
     bool HasData(int segment) const { return m_Heads[segment] > 0; }
 
+    int MaxSegments() const { return m_Heads.size();
+    }
     uint64_t Length(int segment) const;
 
     uint64_t TotalLength() const { return m_TotalLength; }

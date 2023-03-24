@@ -18,6 +18,10 @@ namespace file {
     void Seek(FHANDLE fd, uint64_t offset);
     void CreateDirectory(const std::string& directory);
     void DeleteDirectory(const std::string& directory);
+
+    size_t Read(FHANDLE fd, void* buffer, uint64_t offset, size_t size);
+    void Write(FHANDLE fd, void* buffer, uint64_t offset, size_t size);
+
 }
 
 template <typename T>
@@ -83,6 +87,14 @@ public:
 
     size_t Read(void* buffer, size_t size) {
         return file::Read(m_Handle, buffer, size);
+    }
+
+    void Write(void* buffer, uint64_t offset, size_t size) {
+        file::Write(m_Handle, buffer, offset, size);
+    }
+
+    size_t Read(void* buffer, uint64_t offset, size_t size) {
+        return file::Read(m_Handle, buffer, offset, size);
     }
 
     template<typename T>

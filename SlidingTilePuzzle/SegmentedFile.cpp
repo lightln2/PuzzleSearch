@@ -45,7 +45,7 @@ void SegmentedFile::Write(int segment, void* buffer, size_t size) {
     Timer timer;
     assert(segment >= 0 && segment < m_Heads.size());
 
-    m_File->Write(buffer, size);
+    m_File->Write(buffer, m_TotalLength, size);
 
     int pos = (int)m_Chunks.size();
     m_Chunks.push_back(Chunk{ m_TotalLength, (uint32_t)size, -1 });
@@ -70,8 +70,7 @@ size_t SegmentedFile::Read(int segment, void* buffer, size_t size) {
     auto& chunk = m_Chunks[m_ReadPointers[segment]];
     ensure(chunk.length <= size);
 
-    m_File->Seek(chunk.offset);
-    auto read = m_File->Read(buffer, chunk.length);
+    auto read = m_File->Read(buffer, chunk.offset, chunk.length);
 
     m_ReadPointers[segment] = chunk.next;
 

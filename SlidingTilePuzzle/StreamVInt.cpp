@@ -184,6 +184,18 @@ int StreamVInt::DecodeIndexesAndDiff(int count, const uint8_t* buffer, uint32_t*
     int i = 0;
     while (i < count) {
         pos += _DecodeTuple(&buffer[pos], &indexes[i]);
+        /*
+        indexes[i + 1] += indexes[i];
+        indexes[i + 3] += indexes[i + 2];
+        indexes[i + 2] += indexes[i + 1];
+        indexes[i + 3] += indexes[i + 1];
+        indexes[i] += curIndex;
+        indexes[i + 1] += curIndex;
+        indexes[i + 2] += curIndex;
+        indexes[i + 3] += curIndex;
+        curIndex = indexes[i + 3];
+        i += 4;
+        */
         curIndex = (indexes[i++] += curIndex);
         curIndex = (indexes[i++] += curIndex);
         curIndex = (indexes[i++] += curIndex);
