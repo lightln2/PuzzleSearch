@@ -231,7 +231,8 @@ __global__ void kernel_dn(uint32_t segment, uint32_t* indexes, size_t count) {
 }
 
 HostBuffer::HostBuffer() {
-    ERR(cudaHostAlloc(&Buffer, GPU_BUFFER_SIZE * sizeof(int32_t), cudaHostAllocDefault));
+    //ERR(cudaHostAlloc(&Buffer, GPU_BUFFER_SIZE * sizeof(int32_t), cudaHostAllocDefault));
+    ERR(cudaHostAlloc(&Buffer, GPU_BUFFER_SIZE * sizeof(int32_t), cudaHostAllocPortable));
 }
 
 HostBuffer::~HostBuffer() {
@@ -245,6 +246,7 @@ std::atomic<uint64_t> GpuSolver<width, height>::StatExecutionNanos = 0;
 
 template<int width, int height>
 GpuSolver<width, height>::GpuSolver() {
+    ERR(cudaStreamCreate((cudaStream_t*)&m_Stream));
     ERR(cudaMalloc((void**)&GpuIndexesBuffer, GPU_BUFFER_SIZE * sizeof(int32_t)));
     ERR(cudaMalloc((void**)&GpuSegmentsBuffer, GPU_BUFFER_SIZE * sizeof(int32_t)));
 }
@@ -253,62 +255,63 @@ template<int width, int height>
 GpuSolver<width, height>::~GpuSolver() {
     ERR(cudaFree(GpuIndexesBuffer));
     ERR(cudaFree(GpuSegmentsBuffer));
+    ERR(cudaStreamDestroy((cudaStream_t)m_Stream));
 }
 
 template<int width, int height>
 void GpuSolver<width, height>::GpuUp(uint32_t segment, uint32_t* indexes, uint32_t* out_segments, size_t count) {
-    std::lock_guard<std::mutex> g(m_Mutex);
     Timer timer;
     int threadsPerBlock = 256;
     int blocksPerGrid = ((int)count + threadsPerBlock - 1) / threadsPerBlock;
-    ERR(cudaMemcpy(GpuIndexesBuffer, indexes, count * sizeof(int32_t), cudaMemcpyHostToDevice));
-    kernel_up<width, height> << <blocksPerGrid, threadsPerBlock >> > (segment, GpuIndexesBuffer, GpuSegmentsBuffer, count);
+    ERR(cudaMemcpyAsync(GpuIndexesBuffer, indexes, count * sizeof(int32_t), cudaMemcpyHostToDevice, (cudaStream_t)m_Stream));
+    kernel_up<width, height> << <blocksPerGrid, threadsPerBlock, 0, (cudaStream_t)m_Stream >> > (segment, GpuIndexesBuffer, GpuSegmentsBuffer, count);
     ERR(cudaGetLastError());
-    ERR(cudaMemcpy(indexes, GpuIndexesBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost));
-    ERR(cudaMemcpy(out_segments, GpuSegmentsBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost));
+    ERR(cudaMemcpyAsync(indexes, GpuIndexesBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost, (cudaStream_t)m_Stream));
+    ERR(cudaMemcpyAsync(out_segments, GpuSegmentsBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost, (cudaStream_t)m_Stream));
+    ERR(cudaStreamSynchronize((cudaStream_t)m_Stream));
     StatProcessedStates += count;
     StatExecutionNanos += timer.Elapsed();
 }
 
 template<int width, int height>
 void GpuSolver<width, height>::GpuDown(uint32_t segment, uint32_t* indexes, uint32_t* out_segments, size_t count) {
-    std::lock_guard<std::mutex> g(m_Mutex);
     Timer timer;
     int threadsPerBlock = 256;
     int blocksPerGrid = ((int)count + threadsPerBlock - 1) / threadsPerBlock;
-    ERR(cudaMemcpy(GpuIndexesBuffer, indexes, count * sizeof(int32_t), cudaMemcpyHostToDevice));
-    kernel_dn<width, height> << <blocksPerGrid, threadsPerBlock >> > (segment, GpuIndexesBuffer, GpuSegmentsBuffer, count);
+    ERR(cudaMemcpyAsync(GpuIndexesBuffer, indexes, count * sizeof(int32_t), cudaMemcpyHostToDevice, (cudaStream_t)m_Stream));
+    kernel_dn<width, height> << <blocksPerGrid, threadsPerBlock, 0, (cudaStream_t)m_Stream >> > (segment, GpuIndexesBuffer, GpuSegmentsBuffer, count);
     ERR(cudaGetLastError());
-    ERR(cudaMemcpy(indexes, GpuIndexesBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost));
-    ERR(cudaMemcpy(out_segments, GpuSegmentsBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost));
+    ERR(cudaMemcpyAsync(indexes, GpuIndexesBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost, (cudaStream_t)m_Stream));
+    ERR(cudaMemcpyAsync(out_segments, GpuSegmentsBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost, (cudaStream_t)m_Stream));
+    ERR(cudaStreamSynchronize((cudaStream_t)m_Stream));
     StatProcessedStates += count;
     StatExecutionNanos += timer.Elapsed();
 }
 
 template<int width, int height>
 void GpuSolver<width, height>::GpuUpSameSegment(uint32_t segment, uint32_t* indexes, size_t count) {
-    std::lock_guard<std::mutex> g(m_Mutex);
     Timer timer;
     int threadsPerBlock = 256;
     int blocksPerGrid = ((int)count + threadsPerBlock - 1) / threadsPerBlock;
-    ERR(cudaMemcpy(GpuIndexesBuffer, indexes, count * sizeof(int32_t), cudaMemcpyHostToDevice));
-    kernel_up<width, height> << <blocksPerGrid, threadsPerBlock >> > (segment, GpuIndexesBuffer, count);
+    ERR(cudaMemcpyAsync(GpuIndexesBuffer, indexes, count * sizeof(int32_t), cudaMemcpyHostToDevice, (cudaStream_t)m_Stream));
+    kernel_up<width, height> << <blocksPerGrid, threadsPerBlock, 0, (cudaStream_t)m_Stream >> > (segment, GpuIndexesBuffer, count);
     ERR(cudaGetLastError());
-    ERR(cudaMemcpy(indexes, GpuIndexesBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost));
+    ERR(cudaMemcpyAsync(indexes, GpuIndexesBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost, (cudaStream_t)m_Stream));
+    ERR(cudaStreamSynchronize((cudaStream_t)m_Stream));
     StatProcessedStates += count;
     StatExecutionNanos += timer.Elapsed();
 }
 
 template<int width, int height>
 void GpuSolver<width, height>::GpuDownSameSegment(uint32_t segment, uint32_t* indexes, size_t count) {
-    std::lock_guard<std::mutex> g(m_Mutex);
     Timer timer;
     int threadsPerBlock = 256;
     int blocksPerGrid = ((int)count + threadsPerBlock - 1) / threadsPerBlock;
-    ERR(cudaMemcpy(GpuIndexesBuffer, indexes, count * sizeof(int32_t), cudaMemcpyHostToDevice));
-    kernel_dn<width, height> << <blocksPerGrid, threadsPerBlock >> > (segment, GpuIndexesBuffer, count);
+    ERR(cudaMemcpyAsync(GpuIndexesBuffer, indexes, count * sizeof(int32_t), cudaMemcpyHostToDevice, (cudaStream_t)m_Stream));
+    kernel_dn<width, height> << <blocksPerGrid, threadsPerBlock, 0, (cudaStream_t)m_Stream >> > (segment, GpuIndexesBuffer, count);
     ERR(cudaGetLastError());
-    ERR(cudaMemcpy(indexes, GpuIndexesBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost));
+    ERR(cudaMemcpyAsync(indexes, GpuIndexesBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost, (cudaStream_t)m_Stream));
+    ERR(cudaStreamSynchronize((cudaStream_t)m_Stream));
     StatProcessedStates += count;
     StatExecutionNanos += timer.Elapsed();
 }

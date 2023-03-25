@@ -31,7 +31,9 @@ public:
         : m_Size(0)
         , m_Capacity(capacity)
         , m_Buffer((T*)malloc(capacity * sizeof(T)))
-    {}
+    {
+        ensure(m_Buffer != nullptr);
+    }
 
     Buffer(const Buffer&) = delete;
     Buffer& operator =(const Buffer&) = delete;
