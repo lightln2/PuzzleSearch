@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <mutex>
 #include <string>
 
 constexpr size_t GPU_BUFFER_SIZE = 8 * 1024 * 1024;
@@ -31,6 +32,7 @@ public:
 
     static void PrintStats();
 private:
+    std::mutex m_Mutex;
 
     uint32_t* GpuIndexesBuffer;
     uint32_t* GpuSegmentsBuffer;

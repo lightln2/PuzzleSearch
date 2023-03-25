@@ -7,9 +7,10 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <mutex>
+#include <thread>
 #include <time.h>
 #include <vector>
-#include <thread>
 
 #include "Collector.h"
 #include "FrontierFile.h"
@@ -35,7 +36,6 @@ public:
 	{}
 
 	void Expand(int segment) {
-		total = 0;
 		frontierReader.SetSegment(segment);
 		verticalCollector.SetSegment(segment);
 		while (true) {
@@ -73,11 +73,16 @@ public:
 			collector.AddSameSegmentVerticalMoves(buf.Indexes, buf.Bounds, buf.Count);
 		}
 		if (!empty) {
-			total += collector.SaveSegment();
+			auto cur = collector.SaveSegment();
+			total += cur;
 		}
 		frontier.Delete(segment);
 		e_up.Delete(segment);
 		e_dn.Delete(segment);
+	}
+
+	void FinishCollect() {
+		total = 0;
 	}
 
 	uint64_t GetTotal() { return total; }
@@ -116,7 +121,8 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 		fwriter.FinishSegment();
 	}
 
-	FrontierSearcher<width, height> searcher(frontier, new_frontier, e_up, e_dn);
+	FrontierSearcher<width, height> searcher1(frontier, new_frontier, e_up, e_dn);
+	FrontierSearcher<width, height> searcher2(frontier, new_frontier, e_up, e_dn);
 
 	uint64_t timer_stage_1 = 0;
 	uint64_t timer_stage_2 = 0;
@@ -126,6 +132,8 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 
 	std::cerr << "0: 1" << std::endl;
 
+	std::mutex lock;
+
 	while (widths.size() <= options.MaxDepth) {
 
 		// stage 1
@@ -134,9 +142,37 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 
 		auto frontierSize = frontier.TotalLength();
 
-		for (int segment = 0; segment < puzzle.MaxSegments(); segment++) {
-			searcher.Expand(segment);
+		{
+			int segment = 0;
+			std::thread t1([&]() {
+				while (true) {
+					int s = -1;
+					lock.lock();
+					s = segment++;
+					lock.unlock();
+					if (s >= puzzle.MaxSegments()) break;
+					searcher1.Expand(s);
+				}
+				});
+			
+			std::thread t2([&]() {
+				while (true) {
+					int s = -1;
+					lock.lock();
+					s = segment++;
+					lock.unlock();
+					if (s >= puzzle.MaxSegments()) break;
+					searcher2.Expand(s);
+				}
+				});
+			
+			t1.join();
+			t2.join();
+
 		}
+		//for (int segment = 0; segment < puzzle.MaxSegments(); segment++) {
+		//	searcher.Expand(segment);
+		//}
 
 		timer_stage_1 += timerStartStep.Elapsed();
 
@@ -146,10 +182,42 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 
 		Timer timerStartStage2;
 
-		for (int segment = 0; segment < puzzle.MaxSegments(); segment++) {
-			searcher.Collect(segment);
+		{
+			int segment = 0;
+			std::thread t1([&]() {
+				while (true) {
+					int s = -1;
+					lock.lock();
+					s = segment++;
+					lock.unlock();
+					if (s >= puzzle.MaxSegments()) break;
+					searcher1.Collect(s);
+				}
+				});
+			
+			std::thread t2([&]() {
+				while (true) {
+					int s = -1;
+					lock.lock();
+					s = segment++;
+					lock.unlock();
+					if (s >= puzzle.MaxSegments()) break;
+					searcher2.Collect(s);
+				}
+				});
+			
+			t1.join();
+			t2.join();
 		}
-		uint64_t total = searcher.GetTotal();
+
+		//for (int segment = 0; segment < puzzle.MaxSegments(); segment++) {
+		//	searcher.Collect(segment);
+		//}
+
+		//uint64_t total = searcher.GetTotal();
+		uint64_t total = searcher1.GetTotal() + searcher2.GetTotal();
+		searcher1.FinishCollect();
+		searcher2.FinishCollect();
 		if (total == 0) break;
 
 		timer_stage_2 += timerStartStage2.Elapsed();

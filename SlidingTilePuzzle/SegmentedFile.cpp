@@ -20,6 +20,7 @@ SegmentedFile::SegmentedFile(int maxSegments, const std::string& filePath)
     , m_Heads(maxSegments, -1)
     , m_Tails(maxSegments, -1)
     , m_ReadPointers(maxSegments, -1)
+    , m_Mutex(std::make_unique<std::mutex>())
 {
 }
 
@@ -42,6 +43,7 @@ void SegmentedFile::RewindAll() {
 }
 
 void SegmentedFile::Write(int segment, void* buffer, size_t size) {
+    std::lock_guard<std::mutex> g(*m_Mutex);
     Timer timer;
     assert(segment >= 0 && segment < m_Heads.size());
 
@@ -64,6 +66,7 @@ void SegmentedFile::Write(int segment, void* buffer, size_t size) {
 }
 
 size_t SegmentedFile::Read(int segment, void* buffer, size_t size) {
+    std::lock_guard<std::mutex> g(*m_Mutex);
     Timer timer;
     assert(segment >= 0 && segment < m_Heads.size());
     if (m_ReadPointers[segment] == -1) return 0;

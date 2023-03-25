@@ -257,6 +257,7 @@ GpuSolver<width, height>::~GpuSolver() {
 
 template<int width, int height>
 void GpuSolver<width, height>::GpuUp(uint32_t segment, uint32_t* indexes, uint32_t* out_segments, size_t count) {
+    std::lock_guard<std::mutex> g(m_Mutex);
     Timer timer;
     int threadsPerBlock = 256;
     int blocksPerGrid = ((int)count + threadsPerBlock - 1) / threadsPerBlock;
@@ -271,6 +272,7 @@ void GpuSolver<width, height>::GpuUp(uint32_t segment, uint32_t* indexes, uint32
 
 template<int width, int height>
 void GpuSolver<width, height>::GpuDown(uint32_t segment, uint32_t* indexes, uint32_t* out_segments, size_t count) {
+    std::lock_guard<std::mutex> g(m_Mutex);
     Timer timer;
     int threadsPerBlock = 256;
     int blocksPerGrid = ((int)count + threadsPerBlock - 1) / threadsPerBlock;
@@ -285,6 +287,7 @@ void GpuSolver<width, height>::GpuDown(uint32_t segment, uint32_t* indexes, uint
 
 template<int width, int height>
 void GpuSolver<width, height>::GpuUpSameSegment(uint32_t segment, uint32_t* indexes, size_t count) {
+    std::lock_guard<std::mutex> g(m_Mutex);
     Timer timer;
     int threadsPerBlock = 256;
     int blocksPerGrid = ((int)count + threadsPerBlock - 1) / threadsPerBlock;
@@ -298,6 +301,7 @@ void GpuSolver<width, height>::GpuUpSameSegment(uint32_t segment, uint32_t* inde
 
 template<int width, int height>
 void GpuSolver<width, height>::GpuDownSameSegment(uint32_t segment, uint32_t* indexes, size_t count) {
+    std::lock_guard<std::mutex> g(m_Mutex);
     Timer timer;
     int threadsPerBlock = 256;
     int blocksPerGrid = ((int)count + threadsPerBlock - 1) / threadsPerBlock;

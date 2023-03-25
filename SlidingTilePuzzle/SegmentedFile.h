@@ -4,6 +4,7 @@
 #include "Util.h"
 
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <vector>
 
@@ -61,6 +62,7 @@ private:
     std::vector<int> m_Heads;
     std::vector<int> m_Tails;
     std::vector<int> m_ReadPointers;
+    std::unique_ptr<std::mutex> m_Mutex;
 
 private:
     static std::atomic<uint64_t> m_StatReadsCount;
