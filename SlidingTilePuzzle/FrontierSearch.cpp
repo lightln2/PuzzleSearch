@@ -108,10 +108,10 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 	Timer totalStart;
 	Puzzle<width, height> puzzle;
 
-	SegmentedFile frontier(puzzle.MaxSegments(), "c:/PUZ/frontier1");
-	SegmentedFile new_frontier(puzzle.MaxSegments(), "c:/PUZ/frontier2");
-	SegmentedFile e_up(puzzle.MaxSegments(), "c:/PUZ/expanded_up");
-	SegmentedFile e_dn(puzzle.MaxSegments(), "c:/PUZ/expanded_dn");
+	SegmentedFile frontier(puzzle.MaxSegments(), options.FileFrontier1);
+	SegmentedFile new_frontier(puzzle.MaxSegments(), options.FileFrontier2);
+	SegmentedFile e_up(puzzle.MaxSegments(), options.FileExpanded1);
+	SegmentedFile e_dn(puzzle.MaxSegments(), options.FileExpanded2);
 
 	{
 		auto [initialSegment, initialIndex] = puzzle.Rank(options.InitialValue);
