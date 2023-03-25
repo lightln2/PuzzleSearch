@@ -121,8 +121,11 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 		fwriter.FinishSegment();
 	}
 
-	FrontierSearcher<width, height> searcher1(frontier, new_frontier, e_up, e_dn);
-	FrontierSearcher<width, height> searcher2(frontier, new_frontier, e_up, e_dn);
+	std::vector<std::unique_ptr<FrontierSearcher<width, height>>> searchers;
+	for (int i = 0; i < options.Threads; i++) {
+		searchers.emplace_back(
+			std::make_unique<FrontierSearcher<width, height>>(frontier, new_frontier, e_up, e_dn));
+	}
 
 	uint64_t timer_stage_1 = 0;
 	uint64_t timer_stage_2 = 0;
@@ -131,8 +134,6 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 	widths.push_back(1);
 
 	std::cerr << "0: 1" << std::endl;
-
-	std::mutex lock;
 
 	while (widths.size() <= options.MaxDepth) {
 
@@ -143,36 +144,23 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 		auto frontierSize = frontier.TotalLength();
 
 		{
-			int segment = 0;
-			std::thread t1([&]() {
+			std::atomic<int> segment = 0;
+			auto fnExpand = [&](int index) {
 				while (true) {
-					int s = -1;
-					lock.lock();
-					s = segment++;
-					lock.unlock();
+					int s = segment++;
 					if (s >= puzzle.MaxSegments()) break;
-					searcher1.Expand(s);
+					searchers[index]->Expand(s);
 				}
-				});
-			
-			std::thread t2([&]() {
-				while (true) {
-					int s = -1;
-					lock.lock();
-					s = segment++;
-					lock.unlock();
-					if (s >= puzzle.MaxSegments()) break;
-					searcher2.Expand(s);
-				}
-				});
-			
-			t1.join();
-			t2.join();
+			};
 
+			std::vector<std::thread> threads;
+			for (int i = 0; i < options.Threads; i++) {
+				threads.emplace_back(fnExpand, i);
+			}
+			for (int i = 0; i < options.Threads; i++) {
+				threads[i].join();
+			}
 		}
-		//for (int segment = 0; segment < puzzle.MaxSegments(); segment++) {
-		//	searcher.Expand(segment);
-		//}
 
 		timer_stage_1 += timerStartStep.Elapsed();
 
@@ -183,41 +171,30 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 		Timer timerStartStage2;
 
 		{
-			int segment = 0;
-			std::thread t1([&]() {
+			std::atomic<int> segment = 0;
+			auto fnCollect = [&](int index) {
 				while (true) {
-					int s = -1;
-					lock.lock();
-					s = segment++;
-					lock.unlock();
+					int s = segment++;
 					if (s >= puzzle.MaxSegments()) break;
-					searcher1.Collect(s);
+					searchers[index]->Collect(s);
 				}
-				});
-			
-			std::thread t2([&]() {
-				while (true) {
-					int s = -1;
-					lock.lock();
-					s = segment++;
-					lock.unlock();
-					if (s >= puzzle.MaxSegments()) break;
-					searcher2.Collect(s);
-				}
-				});
-			
-			t1.join();
-			t2.join();
+			};
+
+			std::vector<std::thread> threads;
+			for (int i = 0; i < options.Threads; i++) {
+				threads.emplace_back(fnCollect, i);
+			}
+			for (int i = 0; i < options.Threads; i++) {
+				threads[i].join();
+			}
+
 		}
 
-		//for (int segment = 0; segment < puzzle.MaxSegments(); segment++) {
-		//	searcher.Collect(segment);
-		//}
-
-		//uint64_t total = searcher.GetTotal();
-		uint64_t total = searcher1.GetTotal() + searcher2.GetTotal();
-		searcher1.FinishCollect();
-		searcher2.FinishCollect();
+		uint64_t total = 0;
+		for (auto& searcher : searchers) {
+			total += searcher->GetTotal();
+			searcher->FinishCollect();
+		}
 		if (total == 0) break;
 
 		timer_stage_2 += timerStartStage2.Elapsed();

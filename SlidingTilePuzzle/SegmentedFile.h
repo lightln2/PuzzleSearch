@@ -57,7 +57,7 @@ public:
 private:
     std::string m_FilePath;
     std::unique_ptr<RWFile> m_File;
-    uint64_t m_TotalLength;
+    volatile int64_t m_TotalLength;
     std::vector<Chunk> m_Chunks;
     std::vector<int> m_Heads;
     std::vector<int> m_Tails;

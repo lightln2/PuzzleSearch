@@ -43,15 +43,18 @@ void SegmentedFile::RewindAll() {
 }
 
 void SegmentedFile::Write(int segment, void* buffer, size_t size) {
-    std::lock_guard<std::mutex> g(*m_Mutex);
     Timer timer;
     assert(segment >= 0 && segment < m_Heads.size());
 
-    m_File->Write(buffer, m_TotalLength, size);
+    int pos = -1;
+    uint64_t offset = _InterlockedExchangeAdd64(&m_TotalLength, size);
+    m_File->Write(buffer, offset, size);
 
-    int pos = (int)m_Chunks.size();
-    m_Chunks.push_back(Chunk{ m_TotalLength, (uint32_t)size, -1 });
-    m_TotalLength += size;
+    {
+        std::lock_guard<std::mutex> g(*m_Mutex);
+        pos = (int)m_Chunks.size();
+        m_Chunks.push_back(Chunk{ (uint64_t)offset, (uint32_t)size, -1 });
+    }
 
     if (m_Heads[segment] == -1) {
         m_Heads[segment] = m_Tails[segment] = m_ReadPointers[segment] = pos;
@@ -66,7 +69,6 @@ void SegmentedFile::Write(int segment, void* buffer, size_t size) {
 }
 
 size_t SegmentedFile::Read(int segment, void* buffer, size_t size) {
-    std::lock_guard<std::mutex> g(*m_Mutex);
     Timer timer;
     assert(segment >= 0 && segment < m_Heads.size());
     if (m_ReadPointers[segment] == -1) return 0;
