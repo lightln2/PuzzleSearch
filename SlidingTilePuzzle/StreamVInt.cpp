@@ -272,6 +272,7 @@ int StreamVInt::Encode(int count, uint32_t* indexes, uint8_t* bounds, uint8_t* b
 
     dstPos += EncodeIndexes(adjusted_count, &indexes[0], &buffer[dstPos]);
     dstPos += EncodeBounds(adjusted_count, &bounds[0], &buffer[dstPos]);
+    ensure(dstPos <= buffer_capacity);
     m_StatEncodeNanos += timer.Elapsed();
     return dstPos;
 }
