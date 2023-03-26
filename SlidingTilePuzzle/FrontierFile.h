@@ -100,11 +100,59 @@ private:
     Buffer<uint8_t> m_Bounds;
 };
 
+class SmallSegmentWriter {
+    static constexpr size_t SMALL_BUFFER_SIZE = 8 * 1024;
+public:
+    SmallSegmentWriter(SegmentedFile& file, int maxSegments) 
+        : m_File(file)
+        , m_Buffer(new uint8_t[maxSegments * SMALL_BUFFER_SIZE])
+        , m_Lengths(maxSegments, 0)
+    {
+        ensure(m_Buffer != nullptr);
+    }
+
+    ~SmallSegmentWriter() {
+        delete[] m_Buffer;
+    }
+    
+    void Consume(int segment, uint8_t* buf, int size) {
+        if (size >= SMALL_BUFFER_SIZE) {
+            m_File.Write(segment, buf, size);
+        }
+        else if (m_Lengths[segment] + size <= SMALL_BUFFER_SIZE) {
+            memcpy(m_Buffer + segment * SMALL_BUFFER_SIZE + m_Lengths[segment], buf, size);
+            m_Lengths[segment] += size;
+        }
+        else if (size > m_Lengths[segment]) {
+            m_File.Write(segment, buf, size);
+        }
+        else {
+            m_File.Write(segment, m_Buffer + segment * SMALL_BUFFER_SIZE, m_Lengths[segment]);
+            memcpy(m_Buffer + segment * SMALL_BUFFER_SIZE, buf, size);
+            m_Lengths[segment] = size;
+        }
+    }
+
+    void FlushAll() {
+        for (int i = 0; i < m_Lengths.size(); i++) {
+            if (m_Lengths[i] > 0) {
+                m_File.Write(i, m_Buffer + i * SMALL_BUFFER_SIZE, m_Lengths[i]);
+                m_Lengths[i] = 0;
+            }
+        }
+    }
+
+private:
+    SegmentedFile& m_File;
+    uint8_t* m_Buffer;
+    std::vector<int> m_Lengths;
+};
+
 class ExpandedFrontierWriter {
     static constexpr size_t BUFFER_SIZE = 8 * 1024 * 1024;
 public:
-    ExpandedFrontierWriter(SegmentedFile& file)
-        : m_File(file)
+    ExpandedFrontierWriter(SmallSegmentWriter& writer)
+        : m_Writer(writer)
         , m_Indexes(StreamVInt::MAX_INDEXES_COUNT)
         , m_Buffer(BUFFER_SIZE) {}
 
@@ -135,6 +183,10 @@ public:
         }
     }
 
+    void FinishAll() {
+        m_Writer.FlushAll();
+    }
+
 private:
     void FlushData() {
         StreamVInt::Encode(m_Indexes, m_Buffer);
@@ -142,13 +194,13 @@ private:
     }
 
     void FlushBuffer() {
-        m_File.Write(m_Segment, m_Buffer);
+        m_Writer.Consume(m_Segment, m_Buffer.Buf(), m_Buffer.Size());
         m_Buffer.Clear();
     }
 
 private:
     int m_Segment = -1;
-    SegmentedFile& m_File;
+    SmallSegmentWriter& m_Writer;
     Buffer<uint32_t> m_Indexes;
     Buffer<uint8_t> m_Buffer;
 };

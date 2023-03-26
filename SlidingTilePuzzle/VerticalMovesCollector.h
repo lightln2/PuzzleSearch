@@ -64,6 +64,11 @@ public:
         m_MultDown.Close();
     }
 
+    void CloseAll() {
+        m_MultUp.CloseAll();
+        m_MultDown.CloseAll();
+    }
+
 private:
     void FlushUp() {
         m_VerticalMoves.Up();

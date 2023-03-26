@@ -40,13 +40,15 @@ TEST(TestFrontierFile, ExpandedFrontierReadWrite) {
 	constexpr int SEGMENTS = 3;
 	constexpr int COUNTS = 500;
 	SegmentedFile file(100, "./testexpanded");
-	ExpandedFrontierWriter fwriter(file);
+	SmallSegmentWriter sswriter(file, SEGMENTS);
+	ExpandedFrontierWriter fwriter(sswriter);
 	ExpandedFrontierReader freader(file);
 	for (int segment = 0; segment < SEGMENTS; segment++) {
 		fwriter.SetSegment(segment);
 		for (int i = 0; i < COUNTS; i++) fwriter.Add(i);
 		fwriter.FinishSegment();
 	}
+	sswriter.FlushAll();
 
 	for (int segment = 0; segment < SEGMENTS; segment++) {
 		freader.SetSegment(segment);

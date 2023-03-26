@@ -75,6 +75,7 @@ public:
 	}
 
 	void FinishCollect() {
+		collector.CloseAll();
 		total = 0;
 	}
 

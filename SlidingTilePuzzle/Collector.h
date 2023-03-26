@@ -30,6 +30,10 @@ public:
 
     size_t SaveSegment();
 
+    void CloseAll() {
+        m_VerticalMovesCollector.CloseAll();
+    }
+
     static void PrintStats();
 
 private:
