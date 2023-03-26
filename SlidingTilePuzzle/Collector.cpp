@@ -17,9 +17,11 @@ template<int width, int height>
 std::atomic<uint64_t> Collector<width, height>::m_NanosSameSegmentVerticalMoves = 0;
 
 template<int width, int height>
-Collector<width, height>::Collector(SegmentedFile& file)
+Collector<width, height>::Collector(SegmentedFile& file, SegmentedFile& fileCS)
     : m_File(file)
+    , m_FileCS(fileCS)
     , m_FrontierWriter(file)
+    , m_FrontierWriterCS(fileCS)
     , m_DefaultBounds{ 0 }
     , m_HorizontalMoves{ 0 }
 {
@@ -48,11 +50,21 @@ Collector<width, height>::Collector(SegmentedFile& file)
             m_HorizontalMoves[(blank * 16) | bound] = horiz;
         }
     }
+
+    for (int blank = 0; blank < puzzle.size; blank++) {
+        for (int bound = 0; bound < 16; bound++) {
+            m_VertChangesSegment[blank * 16 + bound] =
+                (puzzle.UpChangesSegment(blank) && !(bound & puzzle.B_UP)) ||
+                (puzzle.DownChangesSegment(blank) && !(bound & puzzle.B_DOWN));
+        }
+    }
+
 }
 
 template<int width, int height>
 void Collector<width, height>::SetSegment(uint32_t segment) {
     m_FrontierWriter.SetSegment(segment);
+    m_FrontierWriterCS.SetSegment(segment);
 }
 
 template<int width, int height>
@@ -160,6 +172,8 @@ size_t Collector<width, height>::SaveSegment() {
 
     size_t result = 0;
 
+    FrontierFileWriter* writers[]{ &m_FrontierWriter, &m_FrontierWriterCS };
+
     for (size_t s = 0; s < m_BoundsIndex.size(); s++) {
         if (m_BoundsIndex[s] == 0) continue;
         m_BoundsIndex[s] = 0;
@@ -185,7 +199,9 @@ size_t Collector<width, height>::SaveSegment() {
                 bound |= m_DefaultBounds[blank];
                 result++;
                 if (bound != 15) {
-                    m_FrontierWriter.Add((uint32_t)(i * 16 + blank), bound);
+                    uint32_t index = (uint32_t)(i * 16 + blank);
+                    writers[m_VertChangesSegment[blank * 16 + bound]]->Add(index, bound);
+                    //writers[Puzzle<width, height>::VerticalMoveChangesSegment(blank)]->Add(index, bound);
                 }
 
                 val &= ~(15ui64 << (blank * 4));
@@ -194,6 +210,7 @@ size_t Collector<width, height>::SaveSegment() {
     }
     
     m_FrontierWriter.FinishSegment();
+    m_FrontierWriterCS.FinishSegment();
 
     m_NanosSaveSegment += timer.Elapsed();
 

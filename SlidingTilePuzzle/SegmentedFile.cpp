@@ -43,6 +43,7 @@ void SegmentedFile::RewindAll() {
 }
 
 void SegmentedFile::Write(int segment, void* buffer, size_t size) {
+    if (size == 0) return;
     Timer timer;
     assert(segment >= 0 && segment < m_Heads.size());
 

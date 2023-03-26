@@ -60,6 +60,13 @@ public:
         //return blank == 13 - width || blank == 14 - width || blank == 15 - width;
     }
 
+    static bool VerticalMoveChangesSegment(int blank) {
+        constexpr int mask =
+            (1 << 13) | (1 << 14) | (1 << 15) |
+            (1 << (13 - width)) | (1 << (14 - width)) | (1 << (15 - width));
+        return (mask >> blank) & 1;
+    }
+
     static bool CanMoveUp(uint32_t index) { return (index % 16) >= width; }
     static bool CanMoveDown(uint32_t index) { return (index % 16) < size - width; }
     static bool CanMoveLeft(uint32_t index) { return (index % 16) % width > 0; }

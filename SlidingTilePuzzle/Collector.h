@@ -11,7 +11,7 @@ class Collector {
 private:
     static constexpr size_t VALS_PER_BOUND_INDEX = 4 * 1024;
 public:
-    Collector(SegmentedFile& file);
+    Collector(SegmentedFile& file, SegmentedFile& fileCS);
 
     void SetSegment(uint32_t segment);
 
@@ -36,7 +36,9 @@ private:
 
 private:
     SegmentedFile& m_File;
+    SegmentedFile& m_FileCS;
     FrontierFileWriter m_FrontierWriter;
+    FrontierFileWriter m_FrontierWriterCS;
     std::vector<uint64_t> m_Bounds;
     std::vector<uint8_t> m_BoundsIndex;
     GpuSolver<width, height> m_GpuSolver;
@@ -54,5 +56,6 @@ private:
 
     uint8_t m_DefaultBounds[16];
     uint64_t m_HorizontalMoves[16 * 16];
+    bool m_VertChangesSegment[16 * 16];
 };
 

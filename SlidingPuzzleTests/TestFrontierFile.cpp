@@ -97,7 +97,8 @@ TEST(TestCollector, TestCollector) {
 	constexpr int COUNTS = 1 * 1000 * 1000;
 
 	SegmentedFile file(SEGMENTS, "./testcollector");
-	Collector<4, 3> collector(file);
+	SegmentedFile fileCS(SEGMENTS, "./testcollector.cs");
+	Collector<4, 3> collector(file, fileCS);
 	collector.SetSegment(1);
 	for (int i = 0; i < COUNTS; i++) {
 		collector.Add(i, i & 15);
@@ -127,7 +128,8 @@ TEST(TestCollector, TestCollectorWithSkips) {
 	constexpr int COUNTS = 40 * 1000 * 1000;
 
 	SegmentedFile file(SEGMENTS, "./testcollector");
-	Collector<4, 3> collector(file);
+	SegmentedFile fileCS(SEGMENTS, "./testcollector.cs");
+	Collector<4, 3> collector(file, fileCS);
 	collector.SetSegment(1);
 	for (int i = 0; i < COUNTS; i += 13) {
 		collector.Add(i, i & 15);
