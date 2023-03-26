@@ -10,10 +10,10 @@ struct SearchOptions {
 
     std::string FileFrontier1 = "c:/temp/frontier1";
     std::string FileFrontier2 = "c:/temp/frontier2";
-    std::string FileFrontierCS1 = "c:/temp/frontierCS1";
-    std::string FileFrontierCS2 = "c:/temp/frontierCS2";
-    std::string FileExpanded1 = "c:/temp/expanded1";
-    std::string FileExpanded2 = "c:/temp/expanded2";
+    std::string FileExpandedUp1 = "c:/temp/expandedUp1";
+    std::string FileExpandedUp2 = "c:/temp/expandedUp2";
+    std::string FileExpandedDown1 = "c:/temp/expandedDown1";
+    std::string FileExpandedDown2 = "c:/temp/expandedDown2";
 };
 
 template<int width, int height>

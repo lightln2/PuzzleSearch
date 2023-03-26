@@ -18,6 +18,7 @@ public:
     size_t GetUpBufferSize() const { return m_UpBufferPosition; }
     uint32_t* GetDownBuffer() const { return m_DownBuffer.Buffer; }
     size_t GetDownBufferSize() const { return m_DownBufferPosition; }
+    uint32_t* GetSegmentBuffer() const { return m_SegmentsBuffer.Buffer; }
 
     void ClearUp() { m_UpBufferPosition = 0; }
 

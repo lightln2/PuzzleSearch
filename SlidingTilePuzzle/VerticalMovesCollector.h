@@ -4,21 +4,23 @@
 #include "Multiplexor.h"
 #include "Puzzle.h"
 #include "SegmentedFile.h"
+#include "VerticalMoves.h"
 
 template<int width, int height>
 class VerticalMovesCollector {
 public:
-    VerticalMovesCollector(SegmentedFile& expandedUp, SegmentedFile& expandedDown)
-        : m_ExpandedUp(expandedUp)
-        , m_ExpandedDown(expandedDown)
+    VerticalMovesCollector(
+        SegmentedFile& expandedUp,
+        SegmentedFile& expandedDown,
+        VerticalMoves<width, height>& verticalMoves)
+        : m_VerticalMoves(verticalMoves)
         , m_MultUp(Puzzle<width, height>::MaxSegments(), expandedUp)
         , m_MultDown(Puzzle<width, height>::MaxSegments(), expandedDown)
     {}
 
     void SetSegment(uint32_t segment) {
-        m_MultUp.Close();
-        m_MultDown.Close();
-        m_Segment = segment;
+        Close();
+        m_VerticalMoves.SetSegment(segment);
     }
 
     void Add(size_t count, uint32_t* indexes, uint8_t* bounds) {
@@ -34,14 +36,25 @@ public:
         }
     }
 
+    void Add(uint32_t index, uint8_t bound) {
+        if (!(bound & Puzzle<width, height>::B_UP) && Puzzle<width, height>::UpChangesSegment(index & 15)) {
+            AddUp(index);
+        }
+        if (!(bound & Puzzle<width, height>::B_DOWN) && Puzzle<width, height>::DownChangesSegment(index & 15)) {
+            AddDown(index);
+        }
+    }
+
     void AddUp(uint32_t index) {
-        m_BufferUp.Buffer[m_PositionUp++] = index;
-        if (m_PositionUp == m_BufferUp.SIZE) FlushUp();
+        if (m_VerticalMoves.AddUp(index)) {
+            FlushUp();
+        }
     }
 
     void AddDown(uint32_t index) {
-        m_BufferDown.Buffer[m_PositionDown++] = index;
-        if (m_PositionDown == m_BufferUp.SIZE) FlushDown();
+        if (m_VerticalMoves.AddDown(index)) {
+            FlushDown();
+        }
     }
 
     void Close() {
@@ -53,33 +66,29 @@ public:
 
 private:
     void FlushUp() {
-        if (m_PositionUp == 0) return;
-        m_GpuSolver.GpuUp(m_Segment, m_BufferUp.Buffer, m_BufferSegments.Buffer, m_PositionUp);
-        for (int i = 0; i < m_PositionUp; i++) {
-            m_MultUp.Add(m_BufferSegments.Buffer[i], m_BufferUp.Buffer[i]);
+        m_VerticalMoves.Up();
+        auto* buf = m_VerticalMoves.GetUpBuffer();
+        auto* seg = m_VerticalMoves.GetSegmentBuffer();
+        auto size = m_VerticalMoves.GetUpBufferSize();
+        for (int i = 0; i < size; i++) {
+            m_MultUp.Add(seg[i], buf[i]);
         }
-        m_PositionUp = 0;
+        m_VerticalMoves.ClearUp();
     }
 
     void FlushDown() {
-        if (m_PositionDown == 0) return;
-        m_GpuSolver.GpuDown(m_Segment, m_BufferDown.Buffer, m_BufferSegments.Buffer, m_PositionDown);
-        for (int i = 0; i < m_PositionDown; i++) {
-            m_MultDown.Add(m_BufferSegments.Buffer[i], m_BufferDown.Buffer[i]);
+        m_VerticalMoves.Down();
+        auto* buf = m_VerticalMoves.GetDownBuffer();
+        auto* seg = m_VerticalMoves.GetSegmentBuffer();
+        auto size = m_VerticalMoves.GetDownBufferSize();
+        for (int i = 0; i < size; i++) {
+            m_MultDown.Add(seg[i], buf[i]);
         }
-        m_PositionDown = 0;
+        m_VerticalMoves.ClearDown();
     }
 
 private:
-    uint32_t m_Segment = -1;
-    SegmentedFile& m_ExpandedUp;
-    SegmentedFile& m_ExpandedDown;
     Multiplexor m_MultUp;
     Multiplexor m_MultDown;
-    GpuSolver<width, height> m_GpuSolver;
-    HostBuffer m_BufferUp;
-    HostBuffer m_BufferDown;
-    HostBuffer m_BufferSegments;
-    int m_PositionUp = 0;
-    int m_PositionDown = 0;
+    VerticalMoves<width, height>& m_VerticalMoves;
 };

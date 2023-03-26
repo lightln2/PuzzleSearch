@@ -26,40 +26,26 @@ public:
 	FrontierSearcher(
 		SegmentedFile& frontier,
 		SegmentedFile& new_frontier,
-		SegmentedFile& frontierCS,
-		SegmentedFile& new_frontierCS,
 		SegmentedFile& e_up,
-		SegmentedFile& e_dn)
+		SegmentedFile& e_dn,
+		SegmentedFile& new_e_up,
+		SegmentedFile& new_e_dn)
 		: frontier(frontier)
 		, new_frontier(new_frontier)
-		, frontierCS(frontierCS)
-		, new_frontierCS(new_frontierCS)
 		, e_up(e_up)
 		, e_dn(e_dn)
+		, new_e_up(e_up)
+		, new_e_dn(e_dn)
 		, frontierReader(frontier)
-		, frontierReaderCS(frontierCS)
-		, collector(new_frontier, new_frontierCS)
-		, verticalCollector(e_up, e_dn)
+		, collector(new_frontier, new_e_up, new_e_dn)
 		, r_up(e_up)
 		, r_dn(e_dn)
 	{}
-
-	void Expand(int segment) {
-		frontierReaderCS.SetSegment(segment);
-		verticalCollector.SetSegment(segment);
-		while (true) {
-			auto read = frontierReaderCS.Read();
-			if (read.Count == 0) break;
-			verticalCollector.Add(read.Count, read.Indexes, read.Bounds);
-		}
-		verticalCollector.Close();
-	}
 
 	void Collect(int segment) {
 		r_up.SetSegment(segment);
 		r_dn.SetSegment(segment);
 		frontierReader.SetSegment(segment);
-		frontierReaderCS.SetSegment(segment);
 		collector.SetSegment(segment);
 
 		bool empty = true;
@@ -82,13 +68,6 @@ public:
 			collector.AddHorizontalMoves(buf.Indexes, buf.Bounds, buf.Count);
 			collector.AddSameSegmentVerticalMoves(buf.Indexes, buf.Bounds, buf.Count);
 		}
-		while (true) {
-			auto buf = frontierReaderCS.Read();
-			if (buf.Count == 0) break;
-			empty = false;
-			collector.AddHorizontalMoves(buf.Indexes, buf.Bounds, buf.Count);
-			collector.AddSameSegmentVerticalMoves(buf.Indexes, buf.Bounds, buf.Count);
-		}
 		if (!empty) {
 			auto cur = collector.SaveSegment();
 			total += cur;
@@ -104,15 +83,13 @@ public:
 private:
 	SegmentedFile& frontier;
 	SegmentedFile& new_frontier;
-	SegmentedFile& frontierCS;
-	SegmentedFile& new_frontierCS;
 	SegmentedFile& e_up;
 	SegmentedFile& e_dn;
+	SegmentedFile& new_e_up;
+	SegmentedFile& new_e_dn;
 
 	FrontierFileReader frontierReader;
-	FrontierFileReader frontierReaderCS;
 	Collector<width, height> collector;
-	VerticalMovesCollector<width, height> verticalCollector;
 	ExpandedFrontierReader r_up;
 	ExpandedFrontierReader r_dn;
 
@@ -127,10 +104,10 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 
 	SegmentedFile frontier(puzzle.MaxSegments(), options.FileFrontier1);
 	SegmentedFile new_frontier(puzzle.MaxSegments(), options.FileFrontier2);
-	SegmentedFile frontierCS(puzzle.MaxSegments(), options.FileFrontierCS1);
-	SegmentedFile new_frontierCS(puzzle.MaxSegments(), options.FileFrontierCS2);
-	SegmentedFile e_up(puzzle.MaxSegments(), options.FileExpanded1);
-	SegmentedFile e_dn(puzzle.MaxSegments(), options.FileExpanded2);
+	SegmentedFile e_up(puzzle.MaxSegments(), options.FileExpandedUp1);
+	SegmentedFile e_dn(puzzle.MaxSegments(), options.FileExpandedDown1);
+	SegmentedFile new_e_up(puzzle.MaxSegments(), options.FileExpandedUp2);
+	SegmentedFile new_e_dn(puzzle.MaxSegments(), options.FileExpandedDown2);
 
 	{
 		auto [initialSegment, initialIndex] = puzzle.Rank(options.InitialValue);
@@ -145,11 +122,8 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 	for (int i = 0; i < options.Threads; i++) {
 		searchers.emplace_back(
 			std::make_unique<FrontierSearcher<width, height>>(
-				frontier, new_frontier, frontierCS, new_frontierCS, e_up, e_dn));
+				frontier, new_frontier, e_up, e_dn, new_e_up, new_e_dn));
 	}
-
-	uint64_t timer_stage_1 = 0;
-	uint64_t timer_stage_2 = 0;
 
 	std::vector<uint64_t> widths;
 	widths.push_back(1);
@@ -158,58 +132,23 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 
 	while (widths.size() <= options.MaxDepth) {
 
-		// stage 1
-
 		Timer timerStartStep;
 
-		auto frontierSize = frontier.TotalLength();
-		auto frontierSizeCS = frontierCS.TotalLength();
-
-		{
-			std::atomic<int> segment = 0;
-			auto fnExpand = [&](int index) {
-				while (true) {
-					int s = segment++;
-					if (s >= puzzle.MaxSegments()) break;
-					searchers[index]->Expand(s);
-				}
-			};
-
-			std::vector<std::thread> threads;
-			for (int i = 0; i < options.Threads; i++) {
-				threads.emplace_back(fnExpand, i);
+		std::atomic<int> segment = 0;
+		auto fnCollect = [&](int index) {
+			while (true) {
+				int s = segment++;
+				if (s >= puzzle.MaxSegments()) break;
+				searchers[index]->Collect(s);
 			}
-			for (int i = 0; i < options.Threads; i++) {
-				threads[i].join();
-			}
+		};
+
+		std::vector<std::thread> threads;
+		for (int i = 0; i < options.Threads; i++) {
+			threads.emplace_back(fnCollect, i);
 		}
-
-		timer_stage_1 += timerStartStep.Elapsed();
-
-		//stage 2
-
-		auto expandedSize = e_up.TotalLength() + e_dn.TotalLength();
-
-		Timer timerStartStage2;
-
-		{
-			std::atomic<int> segment = 0;
-			auto fnCollect = [&](int index) {
-				while (true) {
-					int s = segment++;
-					if (s >= puzzle.MaxSegments()) break;
-					searchers[index]->Collect(s);
-				}
-			};
-
-			std::vector<std::thread> threads;
-			for (int i = 0; i < options.Threads; i++) {
-				threads.emplace_back(fnCollect, i);
-			}
-			for (int i = 0; i < options.Threads; i++) {
-				threads[i].join();
-			}
-
+		for (int i = 0; i < options.Threads; i++) {
+			threads[i].join();
 		}
 
 		uint64_t total = 0;
@@ -219,34 +158,26 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 		}
 		if (total == 0) break;
 
-		timer_stage_2 += timerStartStage2.Elapsed();
-
-		auto newFrontierSize = new_frontier.TotalLength();
-		auto newFrontierSizeCS = new_frontierCS.TotalLength();
-
 		std::cerr
 			<< widths.size() << ": " << WithDecSep(total)
 			<< " time=" << WithTime(timerStartStep.Elapsed())
-			<< " Files=" << WithSize(frontierSize) 
-			<< ", " << WithSize(frontierSizeCS)
-			<< ", " << WithSize(expandedSize)
-			<< ", " << WithSize(newFrontierSize)
-			<< ", " << WithSize(newFrontierSizeCS)
+			<< " Files=" << WithSize(frontier.TotalLength()) 
+			<< ", " << WithSize(e_up.TotalLength() + e_dn.TotalLength())
+			<< ", " << WithSize(new_frontier.TotalLength())
+			<< ", " << WithSize(new_e_up.TotalLength() + new_e_dn.TotalLength())
 			<< std::endl;
 
 		widths.push_back(total);
+
 		frontier.DeleteAll();
-		frontierCS.DeleteAll();
-		std::swap(frontier, new_frontier);
-		std::swap(frontierCS, new_frontierCS);
 		e_up.DeleteAll();
 		e_dn.DeleteAll();
+		std::swap(frontier, new_frontier);
+		std::swap(e_up, new_e_up);
+		std::swap(e_dn, new_e_dn);
 	}
 	 
 	std::cerr << "Finished in " << WithTime(totalStart.Elapsed()) << std::endl;
-
-	std::cerr << " stage 1: " << WithTime(timer_stage_1) << std::endl;
-	std::cerr << " stage 2: " << WithTime(timer_stage_2) << std::endl;
 
 	Collector<width, height>::PrintStats();
 	GpuSolver<width, height>::PrintStats();

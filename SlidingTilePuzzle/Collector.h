@@ -4,6 +4,7 @@
 #include "Puzzle.h"
 #include "GpuSolver.h"
 #include "VerticalMoves.h"
+#include "VerticalMovesCollector.h"
 
 #include <atomic>
 
@@ -12,7 +13,7 @@ class Collector {
 private:
     static constexpr size_t VALS_PER_BOUND_INDEX = 4 * 1024;
 public:
-    Collector(SegmentedFile& file, SegmentedFile& fileCS);
+    Collector(SegmentedFile& file, SegmentedFile& expandedUp, SegmentedFile& expandedDown);
 
     void SetSegment(uint32_t segment);
 
@@ -38,12 +39,14 @@ private:
 
 private:
     SegmentedFile& m_File;
-    SegmentedFile& m_FileCS;
+    SegmentedFile& m_ExpandedUp;
+    SegmentedFile& m_ExpandedDown;
     FrontierFileWriter m_FrontierWriter;
-    FrontierFileWriter m_FrontierWriterCS;
+    VerticalMoves<width, height> m_VerticalMoves;
+    VerticalMovesCollector<width, height> m_VerticalMovesCollector;
+
     std::vector<uint64_t> m_Bounds;
     std::vector<uint8_t> m_BoundsIndex;
-    VerticalMoves<width, height> m_VerticalMoves;
 
 private:
     static std::atomic<uint64_t> m_NanosSaveSegment;

@@ -97,8 +97,9 @@ TEST(TestCollector, TestCollector) {
 	constexpr int COUNTS = 1 * 1000 * 1000;
 
 	SegmentedFile file(SEGMENTS, "./testcollector");
-	SegmentedFile fileCS(SEGMENTS, "./testcollectorcs");
-	Collector<4, 3> collector(file, fileCS);
+	SegmentedFile eUp(SEGMENTS, "./testcollector_e_up");
+	SegmentedFile eDown(SEGMENTS, "./testcollector_e_down");
+	Collector<4, 3> collector(file, eUp, eDown);
 	collector.SetSegment(1);
 	for (int i = 0; i < COUNTS; i++) {
 		int blank = i % 16;
@@ -121,28 +122,17 @@ TEST(TestCollector, TestCollector) {
 			ENSURE_EQ(exp, buf.Bounds[i]);
 		}
 	}
-	FrontierFileReader freaderCS(fileCS);
-	freaderCS.SetSegment(1);
-	while (true) {
-		auto buf = freaderCS.Read();
-		if (buf.Count == 0) break;
-		stotal += buf.Count;
-		for (int i = 0; i < buf.Count; i++) {
-			int blank = buf.Indexes[i] & 15;
-			auto exp = blank | Puzzle<4, 3>::GetBounds(blank);
-			ENSURE_EQ(exp, buf.Bounds[i]);
-		}
-	}
 	EXPECT_EQ(stotal, COUNTS / 16 * 10);
 }
 
 TEST(TestCollector, TestCollectorWithSkips) {
-	constexpr int SEGMENTS = 3;
+	constexpr int SEGMENTS = 2500;
 	constexpr int COUNTS = 40 * 1000 * 1000;
 
 	SegmentedFile file(SEGMENTS, "./testcollector");
-	SegmentedFile fileCS(SEGMENTS, "./testcollector.cs");
-	Collector<4, 4> collector(file, fileCS);
+	SegmentedFile eUp(SEGMENTS, "./testcollector_e_up");
+	SegmentedFile eDown(SEGMENTS, "./testcollector_e_down");
+	Collector<4, 4> collector(file, eUp, eDown);
 	collector.SetSegment(1);
 	for (int i = 0; i < COUNTS; i += 13) {
 		collector.Add(i, i & 15);
@@ -158,16 +148,7 @@ TEST(TestCollector, TestCollectorWithSkips) {
 		if (buf.Count == 0) break;
 		stotal += buf.Count;
 	}
-	EXPECT_EQ(stotal, 1923077);
-	FrontierFileReader freaderCS(fileCS);
-	freaderCS.SetSegment(1);
-	int stotalCS = 0;
-	while (true) {
-		auto buf = freaderCS.Read();
-		if (buf.Count == 0) break;
-		stotalCS += buf.Count;
-	}
-	EXPECT_EQ(stotalCS, 384615);
+	EXPECT_EQ(stotal, 2307692);
 }
 
 
