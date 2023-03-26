@@ -77,6 +77,13 @@ static void TestIndexesTuples(std::initializer_list<uint32_t> input, int expecte
 	for (int i = 0; i < indexes.size(); i++) {
 		EXPECT_EQ(newindexes[i], indexes[i]);
 	}
+
+	int decodedWithDiff = StreamVInt::DecodeIndexesAndDiff(indexes.size(), &buffer[0], &newindexes[0]);
+	EXPECT_EQ(decoded, expected);
+	EXPECT_EQ(newindexes[0], indexes[0]);
+	for (int i = 1; i < indexes.size(); i++) {
+		EXPECT_EQ(newindexes[i] - newindexes[i - 1], indexes[i]);
+	}
 }
 
 static void TestBoundsTuples(std::initializer_list<uint8_t> input) {

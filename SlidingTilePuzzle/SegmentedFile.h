@@ -21,8 +21,8 @@ public:
 
     bool HasData(int segment) const { return m_Heads[segment] > 0; }
 
-    int MaxSegments() const { return m_Heads.size();
-    }
+    int MaxSegments() const { return (int)m_Heads.size(); }
+
     uint64_t Length(int segment) const;
 
     uint64_t TotalLength() const { return m_TotalLength; }
@@ -47,9 +47,6 @@ public:
         buffer.SetSize(read / sizeof(T));
     }
 
-    // TODO: remove method
-    void Delete(int segment) {}
-
     void DeleteAll();
 
     static void PrintStats();
@@ -57,7 +54,7 @@ public:
 private:
     std::string m_FilePath;
     std::unique_ptr<RWFile> m_File;
-    volatile int64_t m_TotalLength;
+    uint64_t m_TotalLength;
     std::vector<Chunk> m_Chunks;
     std::vector<int> m_Heads;
     std::vector<int> m_Tails;

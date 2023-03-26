@@ -18,7 +18,6 @@ public:
 
     static int EncodeIndexes(int count, const uint32_t* indexes, uint8_t* buffer);
     static int DecodeIndexes(int count, const uint8_t* buffer, uint32_t* indexes);
-    // TODO: tests
     // TODO: investigate why decode is slower than encode
     static int DecodeIndexesAndDiff(int count, const uint8_t* buffer, uint32_t* indexes);
 
@@ -31,7 +30,7 @@ public:
     static int Decode(int& size, uint8_t* buffer, uint32_t* indexes, uint8_t* bounds, int values_capacity);
 
     static void Encode(Buffer<uint32_t>& indexes, Buffer<uint8_t>& buffer) {
-        int encoded = Encode(
+        size_t encoded = Encode(
             indexes.Size(),
             indexes.Buf(),
             buffer.Buf() + buffer.Size(),
@@ -41,7 +40,7 @@ public:
 
     static int Decode(int position, Buffer<uint8_t>& buffer, Buffer<uint32_t>& indexes) {
         int size = buffer.Size() - position;
-        int decoded = Decode(size, buffer.Buf() + position, indexes.Buf(), indexes.Capacity());
+        size_t decoded = Decode(size, buffer.Buf() + position, indexes.Buf(), indexes.Capacity());
         indexes.SetSize(decoded);
         return position + size;
     }
@@ -58,7 +57,7 @@ public:
 
     static int Decode(int position, Buffer<uint8_t>& buffer, Buffer<uint32_t>& indexes, Buffer<uint8_t>& bounds) {
         int size = buffer.Size() - position;
-        int decoded = Decode(size, buffer.Buf() + position, indexes.Buf(), bounds.Buf(), indexes.Capacity());
+        size_t decoded = Decode(size, buffer.Buf() + position, indexes.Buf(), bounds.Buf(), indexes.Capacity());
         indexes.SetSize(decoded);
         return position + size;
     }

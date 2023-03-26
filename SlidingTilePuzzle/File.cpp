@@ -13,7 +13,6 @@ FHANDLE OpenFile(const std::string& fileName) {
         FILE_SHARE_READ,
         NULL,
         CREATE_ALWAYS,
-        //FILE_ATTRIBUTE_NORMAL | FILE_FLAG_DELETE_ON_CLOSE,
         FILE_ATTRIBUTE_NORMAL,
         NULL);
     ensure(fd != INVALID_HANDLE_VALUE);
@@ -63,10 +62,6 @@ void Write(FHANDLE fd, void* buffer, uint64_t offset, size_t size) {
     ensure(actualSize == size);
 }
 
-
-void SeekBeginning(FHANDLE fd) {
-    ensure(SetFilePointer(fd, 0, 0, FILE_BEGIN) != INVALID_SET_FILE_POINTER);
-}
 
 void Seek(FHANDLE fd, uint64_t offset) {
     LONG offset_high = offset >> 32;

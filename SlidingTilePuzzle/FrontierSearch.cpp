@@ -93,10 +93,6 @@ public:
 			auto cur = collector.SaveSegment();
 			total += cur;
 		}
-		frontier.Delete(segment);
-		frontierCS.Delete(segment);
-		e_up.Delete(segment);
-		e_dn.Delete(segment);
 	}
 
 	void FinishCollect() {

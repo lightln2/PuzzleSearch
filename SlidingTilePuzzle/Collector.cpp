@@ -200,7 +200,8 @@ size_t Collector<width, height>::SaveSegment() {
                 result++;
                 if (bound != 15) {
                     uint32_t index = (uint32_t)(i * 16 + blank);
-                    writers[m_VertChangesSegment[blank * 16 + bound]]->Add(index, bound);
+                    int q = (int)m_VertChangesSegment[blank * 16 + bound];
+                    writers[(int)m_VertChangesSegment[blank * 16 + bound]]->Add(index, bound);
                     //writers[Puzzle<width, height>::VerticalMoveChangesSegment(blank)]->Add(index, bound);
                 }
 
