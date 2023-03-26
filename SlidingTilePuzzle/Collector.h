@@ -3,6 +3,7 @@
 #include "FrontierFile.h"
 #include "Puzzle.h"
 #include "GpuSolver.h"
+#include "VerticalMoves.h"
 
 #include <atomic>
 
@@ -33,6 +34,7 @@ public:
 private:
     void FlushSameSegmentUpMoves();
     void FlushSameSegmentDownMoves();
+    void FlushSameSegmentAllMoves();
 
 private:
     SegmentedFile& m_File;
@@ -41,12 +43,7 @@ private:
     FrontierFileWriter m_FrontierWriterCS;
     std::vector<uint64_t> m_Bounds;
     std::vector<uint8_t> m_BoundsIndex;
-    GpuSolver<width, height> m_GpuSolver;
-    HostBuffer m_UpBuffer;
-    size_t m_UpBufferPosition = 0;
-    HostBuffer m_DownBuffer;
-    size_t m_DownBufferPosition = 0;
-    //HostBuffer m_UpDownSegments;
+    VerticalMoves<width, height> m_VerticalMoves;
 
 private:
     static std::atomic<uint64_t> m_NanosSaveSegment;

@@ -11,4 +11,3 @@ FrontierBuffer FrontierFileReader::Read() {
     m_Position = StreamVInt::Decode(m_Position, m_Buffer, m_Indexes, m_Bounds);
     return { m_Indexes.Size(), m_Indexes.Buf(), m_Bounds.Buf() };
 }
-

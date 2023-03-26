@@ -65,6 +65,7 @@ template<int width, int height>
 void Collector<width, height>::SetSegment(uint32_t segment) {
     m_FrontierWriter.SetSegment(segment);
     m_FrontierWriterCS.SetSegment(segment);
+    m_VerticalMoves.SetSegment(segment);
 }
 
 template<int width, int height>
@@ -88,14 +89,12 @@ void Collector<width, height>::AddSameSegmentVerticalMoves(uint32_t* indexes, ui
         uint32_t index = indexes[i];
         uint8_t bound = bounds[i];
         if (!(bound & Puzzle<width, height>::B_UP) && !Puzzle<width, height>::UpChangesSegment(index & 15)) {
-            m_UpBuffer.Buffer[m_UpBufferPosition++] = index;
-            if (m_UpBufferPosition == m_UpBuffer.SIZE) {
+            if (m_VerticalMoves.AddUp(index)) {
                 FlushSameSegmentUpMoves();
             }
         }
         if (!(bound & Puzzle<width, height>::B_DOWN) && !Puzzle<width, height>::DownChangesSegment(index & 15)) {
-            m_DownBuffer.Buffer[m_DownBufferPosition++] = index;
-            if (m_DownBufferPosition == m_DownBuffer.SIZE) {
+            if (m_VerticalMoves.AddDown(index)) {
                 FlushSameSegmentDownMoves();
             }
         }
@@ -105,24 +104,34 @@ void Collector<width, height>::AddSameSegmentVerticalMoves(uint32_t* indexes, ui
 
 template<int width, int height>
 void Collector<width, height>::FlushSameSegmentUpMoves() {
-    //m_GpuSolver.GpuUp(m_FrontierWriter.GetSegment(), m_UpBuffer.Buffer, m_UpDownSegments.Buffer, m_UpBufferPosition);
-    m_GpuSolver.GpuUpSameSegment(m_FrontierWriter.GetSegment(), m_UpBuffer.Buffer, m_UpBufferPosition);
-    for (size_t i = 0; i < m_UpBufferPosition; i++) {
-        assert(m_UpBuffer.Buffer[i] != (uint32_t)-1);
-        Add(m_UpBuffer.Buffer[i], Puzzle<width, height>::B_DOWN);
+    m_VerticalMoves.UpSameSegment();
+    auto* buf = m_VerticalMoves.GetUpBuffer();
+    auto size = m_VerticalMoves.GetUpBufferSize();
+    for (size_t i = 0; i < size; i++) {
+        assert(buf[i] != (uint32_t)-1);
+        Add(buf[i], Puzzle<width, height>::B_DOWN);
     }
-    m_UpBufferPosition = 0;
+    m_VerticalMoves.ClearUp();
 }
 
 template<int width, int height>
 void Collector<width, height>::FlushSameSegmentDownMoves() {
-    //m_GpuSolver.GpuDown(m_FrontierWriter.GetSegment(), m_DownBuffer.Buffer, m_UpDownSegments.Buffer, m_DownBufferPosition);
-    m_GpuSolver.GpuDownSameSegment(m_FrontierWriter.GetSegment(), m_DownBuffer.Buffer, m_DownBufferPosition);
-    for (size_t i = 0; i < m_DownBufferPosition; i++) {
-        assert(m_UpBuffer.Buffer[i] != (uint32_t)-1);
-        Add(m_DownBuffer.Buffer[i], Puzzle<width, height>::B_UP);
+    m_VerticalMoves.DownSameSegment();
+    auto* buf = m_VerticalMoves.GetDownBuffer();
+    auto size = m_VerticalMoves.GetDownBufferSize();
+    for (size_t i = 0; i < size; i++) {
+        assert(buf[i] != (uint32_t)-1);
+        Add(buf[i], Puzzle<width, height>::B_UP);
     }
-    m_DownBufferPosition = 0;
+    m_VerticalMoves.ClearDown();
+}
+
+template<int width, int height>
+void Collector<width, height>::FlushSameSegmentAllMoves() {
+    Timer timer;
+    FlushSameSegmentUpMoves();
+    FlushSameSegmentDownMoves();
+    m_NanosSameSegmentVerticalMoves += timer.Elapsed();
 }
 
 template<int width, int height>
@@ -143,28 +152,9 @@ void Collector<width, height>::AddDownMoves(uint32_t* indexes, size_t count) {
     m_NanosVerticalMoves += timer.Elapsed();
 }
 
-/*
-template<int width, int height>
-void Collector<width, height>::Add(uint32_t index, uint8_t bounds) {
-    m_Bounds[index / 16] |= (uint64_t(bounds) << ((index & 15) * 4));
-    m_BoundsIndex[index / VALS_PER_BOUND_INDEX / 16] = 1;
-}*/
-
 template<int width, int height>
 size_t Collector<width, height>::SaveSegment() {
-
-    ////////////////////// flush same segment buffers
-    {
-        Timer vtimer;
-        if (m_UpBufferPosition > 0) {
-            FlushSameSegmentUpMoves();
-        }
-        if (m_DownBufferPosition > 0) {
-            FlushSameSegmentDownMoves();
-        }
-        m_NanosSameSegmentVerticalMoves += vtimer.Elapsed();
-    }
-
+    FlushSameSegmentAllMoves();
 
     Timer timer;
 
