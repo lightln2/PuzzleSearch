@@ -123,6 +123,35 @@ TEST(TestFile, SegmentedFile) {
 	} while (0);
 }
 
+TEST(TestFile, SegmentedMultiFile) {
+	do {
+		file::CreateDirectory("./temp");
+		SegmentedFile myfile(2500, { "./temp/frontier1", "./temp/frontier2", "./temp/frontier3" });
+
+		constexpr size_t SIZE = 10 * 1024;
+		constexpr size_t BUFS = 300;
+		std::vector<uint8_t> buffer(SIZE);
+		uint8_t* buf = &buffer[0];
+
+		for (int i = 0; i < BUFS; i++) {
+			memset(buf, i & 255, SIZE);
+			int segment = i % 5;
+			myfile.Write(segment, buf, SIZE);
+		}
+
+		for (int tries = 0; tries < 3; tries++) {
+			myfile.RewindAll();
+
+			for (int i = 0; i < BUFS; i++) {
+				int segment = i % 5;
+				size_t read = myfile.Read(segment, buf, SIZE);
+				EXPECT_EQ(read, SIZE);
+				for (int j = 0; j < SIZE; j++) ensure(buf[j] == (i & 255));
+			}
+		}
+	} while (0);
+}
+
 TEST(TestFile, SegmentedFileDelete) {
 	file::CreateDirectory("./temp");
 	SegmentedFile myfile(2500, "./temp/frontier");

@@ -17,7 +17,10 @@ class SegmentedFile {
     };
 
 public:
-    SegmentedFile(int maxSegments, const std::string& filePath);
+    SegmentedFile(int maxSegments, const std::string& filePath)
+        : SegmentedFile(maxSegments, { filePath }) {}
+
+    SegmentedFile(int maxSegments, std::initializer_list<const std::string> filePaths);
 
     bool HasData(int segment) const { return m_Heads[segment] > 0; }
 
@@ -52,8 +55,8 @@ public:
     static void PrintStats();
 
 private:
-    std::string m_FilePath;
-    std::unique_ptr<RWFile> m_File;
+    std::vector<std::string> m_FilePaths;
+    std::vector<std::unique_ptr<RWFile>> m_Files;
     uint64_t m_TotalLength;
     std::vector<Chunk> m_Chunks;
     std::vector<int> m_Heads;

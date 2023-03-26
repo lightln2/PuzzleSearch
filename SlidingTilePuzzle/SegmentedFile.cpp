@@ -12,16 +12,18 @@ std::atomic<uint64_t> SegmentedFile::m_StatWritesCount = 0;
 std::atomic<uint64_t> SegmentedFile::m_StatWriteNanos = 0;
 std::atomic<uint64_t> SegmentedFile::m_StatWriteBytes = 0;
 
-SegmentedFile::SegmentedFile(int maxSegments, const std::string& filePath)
-    : m_FilePath(filePath)
-    , m_File(std::make_unique<RWFile>(filePath))
-    , m_TotalLength(0)
+SegmentedFile::SegmentedFile(int maxSegments, std::initializer_list<const std::string> filePaths)
+    : m_TotalLength(0)
     , m_Chunks(0)
     , m_Heads(maxSegments, -1)
     , m_Tails(maxSegments, -1)
     , m_ReadPointers(maxSegments, -1)
     , m_Mutex(std::make_unique<std::mutex>())
 {
+    for (const auto& file : filePaths) {
+        m_FilePaths.push_back(file);
+        m_Files.emplace_back(std::make_unique<RWFile>(file));
+    }
 }
 
 uint64_t SegmentedFile::Length(int segment) const {
@@ -46,9 +48,10 @@ void SegmentedFile::Write(int segment, void* buffer, size_t size) {
     if (size == 0) return;
     Timer timer;
     assert(segment >= 0 && segment < m_Heads.size());
+    size_t fileIdx = segment % m_Files.size();
 
     std::lock_guard<std::mutex> g(*m_Mutex);
-    m_File->Write(buffer, m_TotalLength, size);
+    m_Files[fileIdx]->Write(buffer, m_TotalLength, size);
 
     int pos = (int)m_Chunks.size();
     m_Chunks.push_back(Chunk{ m_TotalLength, (uint32_t)size, -1 });
@@ -72,10 +75,10 @@ size_t SegmentedFile::Read(int segment, void* buffer, size_t size) {
     if (m_ReadPointers[segment] == -1) return 0;
     auto& chunk = m_Chunks[m_ReadPointers[segment]];
     ensure(chunk.length <= size);
+    size_t fileIdx = segment % m_Files.size();
 
     std::lock_guard<std::mutex> g(*m_Mutex);
-    auto read = m_File->Read(buffer, chunk.offset, chunk.length);
-
+    auto read = m_Files[fileIdx]->Read(buffer, chunk.offset, chunk.length);
     m_ReadPointers[segment] = chunk.next;
 
     m_StatReadsCount++;
@@ -86,8 +89,10 @@ size_t SegmentedFile::Read(int segment, void* buffer, size_t size) {
 }
 
 void SegmentedFile::DeleteAll() {
-    m_File.reset();
-    m_File = std::make_unique<RWFile>(m_FilePath);
+    m_Files.clear();
+    for (const auto& file : m_FilePaths) {
+        m_Files.emplace_back(std::make_unique<RWFile>(file));
+    }
     m_TotalLength = 0;
     m_Chunks.clear();
     for (int i = 0; i < m_Heads.size(); i++) {
