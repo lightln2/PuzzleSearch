@@ -101,7 +101,8 @@ private:
 };
 
 class SmallSegmentWriter {
-    static constexpr size_t SMALL_BUFFER_SIZE = 8 * 1024;
+    //static constexpr size_t SMALL_BUFFER_SIZE = 8 * 1024;
+    static constexpr size_t SMALL_BUFFER_SIZE = 8;
 public:
     SmallSegmentWriter(SegmentedFile& file, int maxSegments) 
         : m_File(file)

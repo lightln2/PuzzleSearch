@@ -5,44 +5,26 @@
 #include <iomanip>
 #include <sstream>
 
-std::atomic<uint64_t> SegmentedFile::m_StatReadsCount = 0;
-std::atomic<uint64_t> SegmentedFile::m_StatReadNanos = 0;
-std::atomic<uint64_t> SegmentedFile::m_StatReadBytes = 0;
-std::atomic<uint64_t> SegmentedFile::m_StatWritesCount = 0;
-std::atomic<uint64_t> SegmentedFile::m_StatWriteNanos = 0;
-std::atomic<uint64_t> SegmentedFile::m_StatWriteBytes = 0;
+std::atomic<uint64_t> SegmentedFilePart::m_StatReadsCount = 0;
+std::atomic<uint64_t> SegmentedFilePart::m_StatReadNanos = 0;
+std::atomic<uint64_t> SegmentedFilePart::m_StatReadBytes = 0;
+std::atomic<uint64_t> SegmentedFilePart::m_StatWritesCount = 0;
+std::atomic<uint64_t> SegmentedFilePart::m_StatWriteNanos = 0;
+std::atomic<uint64_t> SegmentedFilePart::m_StatWriteBytes = 0;
 
-SegmentedFile::SegmentedFile(int maxSegments, std::initializer_list<std::string> filePaths)
-    : m_TotalLength(0)
+SegmentedFilePart::SegmentedFilePart(int maxSegments, const std::string& filePath)
+    : m_FilePath(filePath)
+    , m_File(std::make_unique<RWFile>(filePath))
+    , m_TotalLength(0)
     , m_Chunks(0)
     , m_Heads(maxSegments, -1)
     , m_Tails(maxSegments, -1)
     , m_ReadPointers(maxSegments, -1)
     , m_Mutex(std::make_unique<std::mutex>())
 {
-    for (const auto& file : filePaths) {
-        m_FilePaths.push_back(file);
-        m_Files.emplace_back(std::make_unique<RWFile>(file));
-        m_Mutexes.emplace_back(std::make_unique<std::mutex>());
-    }
 }
 
-SegmentedFile::SegmentedFile(int maxSegments, const std::vector<std::string>& filePaths)
-    : m_TotalLength(0)
-    , m_Chunks(0)
-    , m_Heads(maxSegments, -1)
-    , m_Tails(maxSegments, -1)
-    , m_ReadPointers(maxSegments, -1)
-    , m_Mutex(std::make_unique<std::mutex>())
-{
-    for (const auto& file : filePaths) {
-        m_FilePaths.push_back(file);
-        m_Files.emplace_back(std::make_unique<RWFile>(file));
-        m_Mutexes.emplace_back(std::make_unique<std::mutex>());
-    }
-}
-
-uint64_t SegmentedFile::Length(int segment) const {
+uint64_t SegmentedFilePart::Length(int segment) const {
     uint64_t totalLength = 0;
     int pos = m_Heads[segment];
     while (pos >= 0) {
@@ -52,33 +34,26 @@ uint64_t SegmentedFile::Length(int segment) const {
     return totalLength;
 }
 
-void SegmentedFile::Rewind(int segment) {
+void SegmentedFilePart::Rewind(int segment) {
     m_ReadPointers[segment] = m_Heads[segment];
 }
 
-void SegmentedFile::RewindAll() {
+void SegmentedFilePart::RewindAll() {
     for (int i = 0; i < m_ReadPointers.size(); i++) m_ReadPointers[i] = m_Heads[i];
 }
 
-void SegmentedFile::Write(int segment, void* buffer, size_t size) {
+void SegmentedFilePart::Write(int segment, void* buffer, size_t size) {
     if (size == 0) return;
     Timer timer;
     assert(segment >= 0 && segment < m_Heads.size());
-    size_t fileIdx = segment % m_Files.size();
 
     m_Mutex->lock();
     auto offset = m_TotalLength;
     m_TotalLength += size;
-    m_Mutex->unlock();
+    m_File->Write(buffer, offset, size);
 
-    m_Mutexes[fileIdx]->lock();
-    m_Files[fileIdx]->Write(buffer, offset, size);
-    m_Mutexes[fileIdx]->unlock();
-
-    m_Mutex->lock();
     int pos = (int)m_Chunks.size();
-    m_Chunks.push_back(Chunk{ offset, (uint32_t)size, -1 });
-    m_TotalLength += size;
+    m_Chunks.push_back(Chunk{ (uint64_t)offset, (uint32_t)size, -1 });
     m_Mutex->unlock();
 
     if (m_Heads[segment] == -1) {
@@ -93,20 +68,15 @@ void SegmentedFile::Write(int segment, void* buffer, size_t size) {
     m_StatWriteNanos += timer.Elapsed();
 }
 
-size_t SegmentedFile::Read(int segment, void* buffer, size_t size) {
+size_t SegmentedFilePart::Read(int segment, void* buffer, size_t size) {
     Timer timer;
     assert(segment >= 0 && segment < m_Heads.size());
     if (m_ReadPointers[segment] == -1) return 0;
     auto& chunk = m_Chunks[m_ReadPointers[segment]];
     ensure(chunk.length <= size);
-    size_t fileIdx = segment % m_Files.size();
 
-    //m_Mutex->lock();
-    m_Mutexes[fileIdx]->lock();
-    auto read = m_Files[fileIdx]->Read(buffer, chunk.offset, chunk.length);
+    auto read = m_File->Read(buffer, chunk.offset, chunk.length);
     m_ReadPointers[segment] = chunk.next;
-    m_Mutexes[fileIdx]->unlock();
-    //m_Mutex->unlock();
 
     m_StatReadsCount++;
     m_StatReadBytes += read;
@@ -115,11 +85,9 @@ size_t SegmentedFile::Read(int segment, void* buffer, size_t size) {
     return read;
 }
 
-void SegmentedFile::DeleteAll() {
-    m_Files.clear();
-    for (const auto& file : m_FilePaths) {
-        m_Files.emplace_back(std::make_unique<RWFile>(file));
-    }
+void SegmentedFilePart::DeleteAll() {
+    m_File.reset();
+    m_File = std::make_unique<RWFile>(m_FilePath);
     m_TotalLength = 0;
     m_Chunks.clear();
     for (int i = 0; i < m_Heads.size(); i++) {
@@ -127,7 +95,7 @@ void SegmentedFile::DeleteAll() {
     }
 }
 
-void SegmentedFile::PrintStats() {
+void SegmentedFilePart::PrintStats() {
     std::cerr << "SegmentedFile: "
         << WithDecSep(m_StatReadsCount) << " reads: "
         << WithSize(m_StatReadBytes) << " in " << WithTime(m_StatReadNanos)
