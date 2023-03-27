@@ -20,7 +20,9 @@ public:
     SegmentedFile(int maxSegments, const std::string& filePath)
         : SegmentedFile(maxSegments, { filePath }) {}
 
-    SegmentedFile(int maxSegments, std::initializer_list<const std::string> filePaths);
+    SegmentedFile(int maxSegments, std::initializer_list<std::string> filePaths);
+
+    SegmentedFile(int maxSegments, const std::vector<std::string>& filePaths);
 
     bool HasData(int segment) const { return m_Heads[segment] > 0; }
 
@@ -63,6 +65,7 @@ private:
     std::vector<int> m_Tails;
     std::vector<int> m_ReadPointers;
     std::unique_ptr<std::mutex> m_Mutex;
+    std::vector<std::unique_ptr<std::mutex>> m_Mutexes;
 
 private:
     static std::atomic<uint64_t> m_StatReadsCount;

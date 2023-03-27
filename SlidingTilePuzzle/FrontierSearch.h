@@ -8,12 +8,12 @@ struct SearchOptions {
     size_t MaxDepth = 1000;
     int Threads = 2;
 
-    std::string FileFrontier1 = "c:/temp/frontier1";
-    std::string FileFrontier2 = "c:/temp/frontier2";
-    std::string FileExpandedUp1 = "c:/temp/expandedUp1";
-    std::string FileExpandedUp2 = "c:/temp/expandedUp2";
-    std::string FileExpandedDown1 = "c:/temp/expandedDown1";
-    std::string FileExpandedDown2 = "c:/temp/expandedDown2";
+    std::vector<std::string> FileFrontier1 = { "c:/temp/frontier1" };
+    std::vector<std::string> FileFrontier2 = { "c:/temp/frontier2" };
+    std::vector<std::string> FileExpandedUp1 = { "c:/temp/expandedUp1" };
+    std::vector<std::string> FileExpandedUp2 = { "c:/temp/expandedUp2" };
+    std::vector<std::string> FileExpandedDown1 = { "c:/temp/expandedDown1" };
+    std::vector<std::string> FileExpandedDown2 = { "c:/temp/expandedDown2" };
 };
 
 template<int width, int height>

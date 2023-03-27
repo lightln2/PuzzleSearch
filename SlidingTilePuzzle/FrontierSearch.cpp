@@ -135,13 +135,18 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 
 		Timer timerStartStep;
 
+		std::atomic<uint64_t> total = 0;
+
 		std::atomic<int> segment = 0;
 		auto fnCollect = [&](int index) {
+			auto& searcher = *searchers[index];
 			while (true) {
 				int s = segment++;
 				if (s >= puzzle.MaxSegments()) break;
-				searchers[index]->Collect(s);
+				searcher.Collect(s);
 			}
+			total += searcher.GetTotal();
+			searcher.FinishCollect();
 		};
 
 		std::vector<std::thread> threads;
@@ -152,11 +157,6 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 			threads[i].join();
 		}
 
-		uint64_t total = 0;
-		for (auto& searcher : searchers) {
-			total += searcher->GetTotal();
-			searcher->FinishCollect();
-		}
 		if (total == 0) break;
 
 		std::cerr
