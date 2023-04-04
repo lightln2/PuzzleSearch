@@ -23,20 +23,13 @@
 template<int width, int height>
 class FrontierSearcher {
 public:
-	FrontierSearcher(
-		SegmentedFile& frontier,
-		SegmentedFile& new_frontier,
-		SegmentedFile& e_up,
-		SegmentedFile& e_dn,
-		SegmentedFile& new_e_up,
-		SegmentedFile& new_e_dn)
-		: frontier(frontier)
-		, new_frontier(new_frontier)
-		, e_up(e_up)
-		, e_dn(e_dn)
-		, new_e_up(e_up)
-		, new_e_dn(e_dn)
-		, frontierReader(frontier)
+	FrontierSearcher(SegmentedFile& frontier,
+					 SegmentedFile& new_frontier,
+					 SegmentedFile& e_up,
+					 SegmentedFile& e_dn,
+					 SegmentedFile& new_e_up,
+					 SegmentedFile& new_e_dn)
+		: frontierReader(frontier)
 		, collector(new_frontier, new_e_up, new_e_dn)
 		, r_up(e_up)
 		, r_dn(e_dn)
@@ -82,13 +75,6 @@ public:
 	uint64_t GetTotal() { return total; }
 
 private:
-	SegmentedFile& frontier;
-	SegmentedFile& new_frontier;
-	SegmentedFile& e_up;
-	SegmentedFile& e_dn;
-	SegmentedFile& new_e_up;
-	SegmentedFile& new_e_dn;
-
 	FrontierFileReader frontierReader;
 	Collector<width, height> collector;
 	ExpandedFrontierReader r_up;

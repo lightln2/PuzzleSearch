@@ -101,8 +101,8 @@ private:
 };
 
 class SmallSegmentWriter {
-    //static constexpr size_t SMALL_BUFFER_SIZE = 8 * 1024;
-    static constexpr size_t SMALL_BUFFER_SIZE = 8;
+    static constexpr size_t LARGE_BUFFER_SIZE = 8 * 1024 * 1024;
+    static constexpr size_t SMALL_BUFFER_SIZE = 8 * 1024;
 public:
     SmallSegmentWriter(SegmentedFile& file, int maxSegments) 
         : m_File(file)
@@ -143,10 +143,38 @@ public:
         }
     }
 
+    
+    Buffer<uint32_t>& GetIndexArray() {
+        if (m_IndexesPoolPos == m_IndexesPool.size()) {
+            m_IndexesPool.emplace_back(std::make_unique<Buffer<uint32_t>>(StreamVInt::MAX_INDEXES_COUNT));
+            //std::cerr << "New index buf: " << m_IndexesPoolPos << std::endl;
+        }
+        return *m_IndexesPool[m_IndexesPoolPos++];
+    }
+
+    Buffer<uint8_t>& GetBufferArray() {
+        if (m_BuffersPoolPos == m_BuffersPool.size()) {
+            m_BuffersPool.emplace_back(std::make_unique<Buffer<uint8_t>>(LARGE_BUFFER_SIZE));
+            //std::cerr << "New buffer buf: " << m_BuffersPoolPos << std::endl;
+        }
+        return *m_BuffersPool[m_BuffersPoolPos++];
+    }
+    
+
+    void ResetPools() {
+        m_IndexesPoolPos = 0;
+        m_BuffersPoolPos = 0;
+    }
+
 private:
     SegmentedFile& m_File;
     uint8_t* m_Buffer;
     std::vector<int> m_Lengths;
+   
+    std::vector<std::unique_ptr<Buffer<uint32_t>>> m_IndexesPool;
+    std::vector<std::unique_ptr<Buffer<uint8_t>>> m_BuffersPool;
+    int m_IndexesPoolPos = 0;
+    int m_BuffersPoolPos = 0;
 };
 
 class ExpandedFrontierWriter {
@@ -154,8 +182,10 @@ class ExpandedFrontierWriter {
 public:
     ExpandedFrontierWriter(SmallSegmentWriter& writer)
         : m_Writer(writer)
-        , m_Indexes(StreamVInt::MAX_INDEXES_COUNT)
-        , m_Buffer(BUFFER_SIZE) {}
+        , m_Indexes(writer.GetIndexArray())
+        , m_Buffer(writer.GetBufferArray()) {}
+        //, m_Indexes(StreamVInt::MAX_INDEXES_COUNT)
+        //, m_Buffer(BUFFER_SIZE) {}
 
     void SetSegment(int segment) {
         m_Segment = segment;
@@ -184,10 +214,6 @@ public:
         }
     }
 
-    void FinishAll() {
-        m_Writer.FlushAll();
-    }
-
 private:
     void FlushData() {
         StreamVInt::Encode(m_Indexes, m_Buffer);
@@ -202,8 +228,8 @@ private:
 private:
     int m_Segment = -1;
     SmallSegmentWriter& m_Writer;
-    Buffer<uint32_t> m_Indexes;
-    Buffer<uint8_t> m_Buffer;
+    Buffer<uint32_t>& m_Indexes;
+    Buffer<uint8_t>& m_Buffer;
 };
 
 class ExpandedFrontierReader {

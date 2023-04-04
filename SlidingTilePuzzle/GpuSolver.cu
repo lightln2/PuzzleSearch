@@ -51,23 +51,22 @@ template <int size>
 __device__ __forceinline__ void pack(int* arr) {
     arr[0] = 0;
     arr[1] = 0;
-
-    #pragma unroll
-    for (int i = 2; i < size - 2; i++) {
-        int x = arr[i];
-        #pragma unroll
-        for (int j = i + 1; j < size - 1; j++) {
-            x -= (int)(arr[i] >= arr[j]);
-        }
-        arr[i] = x;
-    }
-    /*
+    
     #pragma unroll
     for (int i = size - 2; i > 2; i--) {
         #pragma unroll
         for (int j = 2; j < i; j++) {
             arr[j] -= (int)(arr[j] >= arr[i]);
         }
+    }
+    
+    /*
+    unsigned int bits = 0;
+    #pragma unroll
+    for (int i = size - 2; i >= 2; i--) {
+        unsigned int mask = bits >> (size - 2 - arr[i]);
+        bits |= (1 << (size - 2 - arr[i]));
+        arr[i] -= __popc(mask);
     }
     */
 }

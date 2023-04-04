@@ -33,6 +33,7 @@ public:
             m_Segments[segment] = std::nullopt;
         }
         m_UsedBuffers.clear();
+        m_Writer.ResetPools();
     }
 
     void CloseAll() {

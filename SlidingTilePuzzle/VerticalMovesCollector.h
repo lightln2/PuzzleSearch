@@ -25,22 +25,16 @@ public:
 
     void Add(size_t count, uint32_t* indexes, uint8_t* bounds) {
         for (size_t i = 0; i < count; i++) {
-            uint32_t index = indexes[i];
-            uint8_t bound = bounds[i];
-            if (!(bound & Puzzle<width, height>::B_UP) && Puzzle<width, height>::UpChangesSegment(index & 15)) {
-                AddUp(index);
-            }
-            if (!(bound & Puzzle<width, height>::B_DOWN) && Puzzle<width, height>::DownChangesSegment(index & 15)) {
-                AddDown(index);
-            }
+            Add(indexes[i], bounds[i]);
         }
     }
 
-    void Add(uint32_t index, uint8_t bound) {
-        if (!(bound & Puzzle<width, height>::B_UP) && Puzzle<width, height>::UpChangesSegment(index & 15)) {
+    void Add(int index, uint8_t bound) {
+        int blank = index & 15;
+        if (!(bound & Puzzle<width, height>::B_UP) && Puzzle<width, height>::UpChangesSegment(blank)) {
             AddUp(index);
         }
-        if (!(bound & Puzzle<width, height>::B_DOWN) && Puzzle<width, height>::DownChangesSegment(index & 15)) {
+        if (!(bound & Puzzle<width, height>::B_DOWN) && Puzzle<width, height>::DownChangesSegment(blank)) {
             AddDown(index);
         }
     }
