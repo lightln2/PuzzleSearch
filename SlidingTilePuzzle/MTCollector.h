@@ -24,17 +24,17 @@ public:
 
     void AddNoVert(uint32_t index) {
         m_BoundsVert[index / 64] |= (1ui64 << (index & 63));
-        m_BoundsIndex[index / VALS_PER_BOUND_INDEX / 16] = 1;
+        m_BoundsIndex[index / VALS_PER_BOUND_INDEX / 64] = 1;
     }
 
     void AddNoHoriz(uint32_t index) {
         m_BoundsHoriz[index / 64] |= (1ui64 << (index & 63));
-        m_BoundsIndex[index / VALS_PER_BOUND_INDEX / 16] = 1;
+        m_BoundsIndex[index / VALS_PER_BOUND_INDEX / 64] = 1;
     }
 
     void AddExclude(uint32_t index) {
         m_BoundsExclude[index / 64] |= (1ui64 << (index & 63));
-        m_BoundsIndex[index / VALS_PER_BOUND_INDEX / 16] = 1;
+        m_BoundsIndex[index / VALS_PER_BOUND_INDEX / 64] = 1;
     }
 
     size_t SaveSegment();

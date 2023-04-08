@@ -209,7 +209,6 @@ __global__ void kernel_dn(uint32_t segment, uint32_t* indexes, size_t count) {
 #ifdef _DEBUG
     if (!CanRotateDn<size, width>(arr)) {
         indexes[i] = (uint32_t)-1;
-        out_segments[i] = (uint32_t)-1;
         return;
     }
     int blank = indexes[i] & 15;
@@ -250,8 +249,8 @@ __global__ void kernel_vert_cross_segment(uint32_t segment, uint32_t* indexes, u
     out_segments[i] = to_segment(arr);
 #ifdef _DEBUG
     if (out_segments[i] == segment) {
-        indexes[i] = -1;
-        out_segments[i] = -1;
+        indexes[i] = uint32_t(-1);
+        out_segments[i] = uint32_t(-1);
     }
 #endif
 }
@@ -270,7 +269,7 @@ __global__ void kernel_vert_same_segment(uint32_t segment, uint32_t* indexes, si
 
 #ifdef _DEBUG
     if (blank == 13 || blank == 14 || blank == 15) {
-        indexes[i] = -1;
+        indexes[i] = uint32_t(-1);
         return;
     }
 #endif
@@ -280,20 +279,22 @@ __global__ void kernel_vert_same_segment(uint32_t segment, uint32_t* indexes, si
     }
 
     int pos = i;
-    while (blank < size - width) {
-        RotateDn<width>(arr);
+    while (true) {
         blank = arr[OFFSET_ZERO];
-        if (blank == currentBlank) continue;
-        if (blank == 13 || blank == 14 || blank == 15) {
-            indexes[pos] = (uint32_t)(-1);
+        if (blank != currentBlank) {
+            if (blank == 13 || blank == 14 || blank == 15) {
+                indexes[pos] = (uint32_t)(-1);
+            }
+            else {
+                int arr2[16];
+                for (int j = 0; j < 16; j++) arr2[j] = arr[j];
+                pack<size>(arr2);
+                indexes[pos] = to_index<size>(arr2);
+            }
+            pos += count;
         }
-        else {
-            int arr2[16];
-            for (int j = 0; j < 16; j++) arr2[j] = arr[j];
-            pack<size>(arr2);
-            indexes[pos] = to_index<size>(arr2);
-        }
-        pos += count;
+        if (blank >= size - width) break;
+        RotateDn<width>(arr);
     }
 }
 
@@ -307,9 +308,9 @@ HostBuffer::~HostBuffer() {
 }
 
 template<int width, int height>
-std::atomic<uint64_t> GpuSolver<width, height>::StatProcessedStates = 0;
+std::atomic<uint64_t> GpuSolver<width, height>::StatProcessedStates(0);
 template<int width, int height>
-std::atomic<uint64_t> GpuSolver<width, height>::StatExecutionNanos = 0;
+std::atomic<uint64_t> GpuSolver<width, height>::StatExecutionNanos(0);
 
 template<int width, int height>
 GpuSolver<width, height>::GpuSolver() {

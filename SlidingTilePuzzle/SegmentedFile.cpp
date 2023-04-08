@@ -5,12 +5,12 @@
 #include <iomanip>
 #include <sstream>
 
-std::atomic<uint64_t> SegmentedFilePart::m_StatReadsCount = 0;
-std::atomic<uint64_t> SegmentedFilePart::m_StatReadNanos = 0;
-std::atomic<uint64_t> SegmentedFilePart::m_StatReadBytes = 0;
-std::atomic<uint64_t> SegmentedFilePart::m_StatWritesCount = 0;
-std::atomic<uint64_t> SegmentedFilePart::m_StatWriteNanos = 0;
-std::atomic<uint64_t> SegmentedFilePart::m_StatWriteBytes = 0;
+std::atomic<uint64_t> SegmentedFilePart::m_StatReadsCount(0);
+std::atomic<uint64_t> SegmentedFilePart::m_StatReadNanos(0);
+std::atomic<uint64_t> SegmentedFilePart::m_StatReadBytes(0);
+std::atomic<uint64_t> SegmentedFilePart::m_StatWritesCount(0);
+std::atomic<uint64_t> SegmentedFilePart::m_StatWriteNanos(0);
+std::atomic<uint64_t> SegmentedFilePart::m_StatWriteBytes(0);
 
 SegmentedFilePart::SegmentedFilePart(int maxSegments, const std::string& filePath)
     : m_FilePath(filePath)

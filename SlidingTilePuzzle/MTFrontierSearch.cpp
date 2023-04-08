@@ -58,7 +58,7 @@ public:
 		}
 		while (true) {
 			auto& buf = frontierReaderVert.Read();
-			if (buf.IsEmpty() == 0) break;
+			if (buf.IsEmpty()) break;
 			empty = false;
 			collector.AddSameSegmentVerticalMoves(buf.Buf(), buf.Size());
 			collector.AddExclude(buf.Buf(), buf.Size());
@@ -109,6 +109,7 @@ std::vector<uint64_t> MTFrontierSearch(MTSearchOptions options) {
 
 	{
 		auto [initialSegment, initialIndex] = puzzle.Rank(options.InitialValue);
+		std::cerr << "Init: " << puzzle.Unrank(initialSegment, initialIndex) << std::endl;
 		ensure(!puzzle.VerticalMoveChangesSegment(initialIndex % 16));
 		// TODO: allow initial states with cross-segment vertical moves
 		ensure((initialIndex % 16) % width == 0);
@@ -126,7 +127,7 @@ std::vector<uint64_t> MTFrontierSearch(MTSearchOptions options) {
 	for (int i = 0; i < options.Threads; i++) {
 		searchers.emplace_back(
 			std::make_unique<MTFrontierSearcher<width, height>>(
-				frontierVert, frontierHoriz, new_frontierVert, new_frontierHoriz, e_exp, new_e_exp));
+				frontierHoriz, frontierVert, new_frontierHoriz, new_frontierVert, e_exp, new_e_exp));
 	}
 
 	std::vector<uint64_t> widths;

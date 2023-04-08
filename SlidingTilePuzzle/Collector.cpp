@@ -5,16 +5,16 @@
 #include <immintrin.h>
 
 template<int width, int height>
-std::atomic<uint64_t> Collector<width, height>::m_NanosHorizontalMoves = 0;
+std::atomic<uint64_t> Collector<width, height>::m_NanosHorizontalMoves(0);
 
 template<int width, int height>
-std::atomic<uint64_t> Collector<width, height>::m_NanosVerticalMoves = 0;
+std::atomic<uint64_t> Collector<width, height>::m_NanosVerticalMoves(0);
 
 template<int width, int height>
-std::atomic<uint64_t> Collector<width, height>::m_NanosSaveSegment = 0;
+std::atomic<uint64_t> Collector<width, height>::m_NanosSaveSegment(0);
 
 template<int width, int height>
-std::atomic<uint64_t> Collector<width, height>::m_NanosSameSegmentVerticalMoves = 0;
+std::atomic<uint64_t> Collector<width, height>::m_NanosSameSegmentVerticalMoves(0);
 
 template<int width, int height>
 Collector<width, height>::Collector(SegmentedFile& file, SegmentedFile& expandedUp, SegmentedFile& expandedDown)

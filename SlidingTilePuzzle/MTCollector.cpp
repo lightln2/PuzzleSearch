@@ -5,19 +5,19 @@
 #include <immintrin.h>
 
 template<int width, int height>
-std::atomic<uint64_t> MTCollector<width, height>::m_NanosHorizontalMoves = 0;
+std::atomic<uint64_t> MTCollector<width, height>::m_NanosHorizontalMoves(0);
 
 template<int width, int height>
-std::atomic<uint64_t> MTCollector<width, height>::m_NanosVerticalMoves = 0;
+std::atomic<uint64_t> MTCollector<width, height>::m_NanosVerticalMoves(0);
 
 template<int width, int height>
-std::atomic<uint64_t> MTCollector<width, height>::m_NanosSaveSegment = 0;
+std::atomic<uint64_t> MTCollector<width, height>::m_NanosSaveSegment(0);
 
 template<int width, int height>
-std::atomic<uint64_t> MTCollector<width, height>::m_NanosExclude = 0;
+std::atomic<uint64_t> MTCollector<width, height>::m_NanosExclude(0);
 
 template<int width, int height>
-std::atomic<uint64_t> MTCollector<width, height>::m_NanosSameSegmentVerticalMoves = 0;
+std::atomic<uint64_t> MTCollector<width, height>::m_NanosSameSegmentVerticalMoves(0);
 
 template<int width, int height>
 MTCollector<width, height>::MTCollector(SegmentedFile& fileVert, SegmentedFile& fileHoriz, SegmentedFile& expanded)
@@ -105,7 +105,7 @@ void MTCollector<width, height>::AddSameSegmentVerticalMoves(uint32_t* indexes, 
 
 template<int width, int height>
 void MTCollector<width, height>::FlushSameSegmentVerticalMoves() {
-    auto size = m_VerticalMoves.VertCrossSegment();
+    auto size = m_VerticalMoves.VertSameSegment();
     auto* buf = m_VerticalMoves.GetBuffer();
     for (size_t i = 0; i < size; i++) {
         if (buf[i] != uint32_t(-1)) {
@@ -174,6 +174,7 @@ size_t MTCollector<width, height>::SaveSegment() {
 
             do {
                 _BitScanForward64(&bitIndex, val);
+                val &= ~(1ui64 << bitIndex);
                 bool bExclude = (valExclude >> bitIndex) & 1;
                 if (!bExclude) {
                     bool bHoriz = (valHoriz >> bitIndex) & 1;
@@ -182,14 +183,13 @@ size_t MTCollector<width, height>::SaveSegment() {
                     result++;
                     if (!bHoriz) {
                         m_FrontierWriterVert.Add(index);
+                        if (m_VertChangesSegment[index & 15]) {
+                            m_VerticalMovesCollector.Add(index);
+                        }
                     }
                     if (!bVert) {
                         m_FrontierWriterHoriz.Add(index);
                     }
-                    if (m_VertChangesSegment[index & 15]) {
-                        m_VerticalMovesCollector.Add(index);
-                    }
-                    val &= ~(1ui64 << bitIndex);
                 }
             } while (val != 0);
         }

@@ -3,8 +3,8 @@
 
 #include <immintrin.h>
 
-std::atomic<uint64_t> StreamVInt::m_StatEncodeNanos = 0;
-std::atomic<uint64_t> StreamVInt::m_StatDecodeNanos = 0;
+std::atomic<uint64_t> StreamVInt::m_StatEncodeNanos(0);
+std::atomic<uint64_t> StreamVInt::m_StatDecodeNanos(0);
 
 struct SVEnc {
     __m128i shuffleMask;
