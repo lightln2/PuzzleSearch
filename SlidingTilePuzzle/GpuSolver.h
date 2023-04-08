@@ -29,6 +29,11 @@ public:
     void GpuUpSameSegment(uint32_t segment, uint32_t* indexes, size_t count);
     void GpuDownSameSegment(uint32_t segment, uint32_t* indexes, size_t count);
 
+
+    // multi-tile
+    void MTVertSameSegment(uint32_t segment, uint32_t* indexes, size_t count);
+    void MTVertCrossSegment(uint32_t segment, uint32_t* indexes, uint32_t* out_segments, size_t count);
+
     static void PrintStats();
 private:
     void* m_Stream;

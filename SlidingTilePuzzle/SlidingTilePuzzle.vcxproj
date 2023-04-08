@@ -78,11 +78,17 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Collector.h" />
+    <ClInclude Include="FastBoolArray.h" />
     <ClInclude Include="File.h" />
     <ClInclude Include="FrontierFile.h" />
     <ClInclude Include="FrontierSearch.h" />
     <ClInclude Include="gpu.h" />
     <ClInclude Include="GpuSolver.h" />
+    <ClInclude Include="MTCollector.h" />
+    <ClInclude Include="MTFrontierFile.h" />
+    <ClInclude Include="MTFrontierSearch.h" />
+    <ClInclude Include="MTVerticalMoves.h" />
+    <ClInclude Include="MTVerticalMovesCollector.h" />
     <ClInclude Include="Multiplexor.h" />
     <ClInclude Include="Puzzle.h" />
     <ClInclude Include="SegmentedFile.h" />
@@ -100,10 +106,11 @@
     <ClCompile Include="File.cpp" />
     <ClCompile Include="FrontierFile.cpp" />
     <ClCompile Include="FrontierSearch.cpp" />
+    <ClCompile Include="MTCollector.cpp" />
+    <ClCompile Include="MTFrontierSearch.cpp" />
     <ClCompile Include="Multiplexor.cpp" />
     <ClCompile Include="Puzzle.cpp" />
     <ClCompile Include="SegmentedFile.cpp" />
     <ClCompile Include="StreamVInt.cpp" />
-    <ClCompile Include="VerticalMovesCollector.cpp" />
   </ItemGroup>
 </Project>
