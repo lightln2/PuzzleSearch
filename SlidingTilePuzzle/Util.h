@@ -6,6 +6,8 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <string>
+#include <vector>
 
 #define ensure(expression) do if(!(expression)) { \
             std::cerr << "ensure failed: " << __FILE__ << ":"<< __LINE__ << " " << #expression << std::endl; \
@@ -88,6 +90,11 @@ static std::string WithSize(uint64_t size) {
     return stream.str();
 }
 
+static void PrintVecor(std::string title, const std::vector<std::string>& values) {
+    std::cerr << title << ": [ ";
+    for (const auto& val : values) std::cerr << val << ' ';
+    std::cerr << "]" << std::endl;
+}
 
 struct Timer {
     std::chrono::steady_clock::time_point start;

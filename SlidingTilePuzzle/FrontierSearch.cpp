@@ -83,12 +83,6 @@ private:
 	uint64_t total = 0;
 };
 
-void PrintVecor(std::string title, const std::vector<std::string>& values) {
-	std::cerr << title << ": [ ";
-	for (const auto& val : values) std::cerr << val << ' ';
-	std::cerr << "]" << std::endl;
-}
-
 template<int width, int height>
 std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 	std::cerr << "single-tile metric, " << width << " x " << height << ", threads: " << options.Threads << '\n';
