@@ -51,10 +51,10 @@ void SegmentedFilePart::Write(int segment, void* buffer, size_t size) {
     auto offset = m_TotalLength;
     m_TotalLength += size;
     m_File->Write(buffer, offset, size);
+    //m_File->Write(buffer, size);
 
     int pos = (int)m_Chunks.size();
     m_Chunks.push_back(Chunk{ (uint64_t)offset, (uint32_t)size, -1 });
-    m_Mutex->unlock();
 
     if (m_Heads[segment] == -1) {
         m_Heads[segment] = m_Tails[segment] = m_ReadPointers[segment] = pos;
@@ -62,6 +62,8 @@ void SegmentedFilePart::Write(int segment, void* buffer, size_t size) {
         m_Chunks[m_Tails[segment]].next = pos;
         m_Tails[segment] = pos;
     }
+
+    m_Mutex->unlock();
 
     m_StatWritesCount++;
     m_StatWriteBytes += size;

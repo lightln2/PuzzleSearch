@@ -83,9 +83,24 @@ private:
 	uint64_t total = 0;
 };
 
+void PrintVecor(std::string title, const std::vector<std::string>& values) {
+	std::cerr << title << ": [ ";
+	for (const auto& val : values) std::cerr << val << ' ';
+	std::cerr << "]" << std::endl;
+}
 
 template<int width, int height>
 std::vector<uint64_t> FrontierSearch(SearchOptions options) {
+	std::cerr << "single-tile metric, " << width << " x " << height << ", threads: " << options.Threads << '\n';
+	std::cerr << "max depth: " << options.MaxDepth << "; ini: " << options.InitialValue << '\n';
+	PrintVecor("Frontier1", options.FileFrontier1);
+	PrintVecor("Frontier2", options.FileFrontier2);
+	PrintVecor("Up1", options.FileExpandedUp1);
+	PrintVecor("Up2", options.FileExpandedUp2);
+	PrintVecor("Down1", options.FileExpandedDown1);
+	PrintVecor("Down2", options.FileExpandedDown2);
+	std::cerr << std::endl;
+
 	Timer totalStart;
 	Puzzle<width, height> puzzle;
 
@@ -162,9 +177,13 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 		std::swap(frontier, new_frontier);
 		std::swap(e_up, new_e_up);
 		std::swap(e_dn, new_e_dn);
+
 	}
 	 
 	std::cerr << "Finished in " << WithTime(totalStart.Elapsed()) << std::endl;
+	uint64_t totalStates = 0;
+	for (auto w : widths) totalStates += w;
+	std::cerr << "Total states: " << WithDecSep(totalStates) << std::endl;
 
 	Collector<width, height>::PrintStats();
 	GpuSolver<width, height>::PrintStats();

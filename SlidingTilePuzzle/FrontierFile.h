@@ -104,62 +104,14 @@ class SmallSegmentWriter {
     static constexpr size_t LARGE_BUFFER_SIZE = 8 * 1024 * 1024;
     static constexpr size_t SMALL_BUFFER_SIZE = 8 * 1024;
 public:
-    SmallSegmentWriter(SegmentedFile& file, int maxSegments) 
-        : m_File(file)
-        , m_Buffer(new uint8_t[maxSegments * SMALL_BUFFER_SIZE])
-        , m_Lengths(maxSegments, 0)
-    {
-        ensure(m_Buffer != nullptr);
-    }
+    SmallSegmentWriter(SegmentedFile& file, int maxSegments);
+    ~SmallSegmentWriter();
 
-    ~SmallSegmentWriter() {
-        delete[] m_Buffer;
-    }
+    void Consume(int segment, uint8_t* buf, int size);
+    void FlushAll();
     
-    void Consume(int segment, uint8_t* buf, int size) {
-        if (size >= SMALL_BUFFER_SIZE) {
-            m_File.Write(segment, buf, size);
-        }
-        else if (m_Lengths[segment] + size <= SMALL_BUFFER_SIZE) {
-            memcpy(m_Buffer + segment * SMALL_BUFFER_SIZE + m_Lengths[segment], buf, size);
-            m_Lengths[segment] += size;
-        }
-        else if (size > m_Lengths[segment]) {
-            m_File.Write(segment, buf, size);
-        }
-        else {
-            m_File.Write(segment, m_Buffer + segment * SMALL_BUFFER_SIZE, m_Lengths[segment]);
-            memcpy(m_Buffer + segment * SMALL_BUFFER_SIZE, buf, size);
-            m_Lengths[segment] = size;
-        }
-    }
-
-    void FlushAll() {
-        for (int i = 0; i < m_Lengths.size(); i++) {
-            if (m_Lengths[i] > 0) {
-                m_File.Write(i, m_Buffer + i * SMALL_BUFFER_SIZE, m_Lengths[i]);
-                m_Lengths[i] = 0;
-            }
-        }
-    }
-
-    
-    Buffer<uint32_t>& GetIndexArray() {
-        if (m_IndexesPoolPos == m_IndexesPool.size()) {
-            m_IndexesPool.emplace_back(std::make_unique<Buffer<uint32_t>>(StreamVInt::MAX_INDEXES_COUNT));
-            //std::cerr << "New index buf: " << m_IndexesPoolPos << std::endl;
-        }
-        return *m_IndexesPool[m_IndexesPoolPos++];
-    }
-
-    Buffer<uint8_t>& GetBufferArray() {
-        if (m_BuffersPoolPos == m_BuffersPool.size()) {
-            m_BuffersPool.emplace_back(std::make_unique<Buffer<uint8_t>>(LARGE_BUFFER_SIZE));
-            //std::cerr << "New buffer buf: " << m_BuffersPoolPos << std::endl;
-        }
-        return *m_BuffersPool[m_BuffersPoolPos++];
-    }
-    
+    Buffer<uint32_t>& GetIndexArray();
+    Buffer<uint8_t>& GetBufferArray();
 
     void ResetPools() {
         m_IndexesPoolPos = 0;
@@ -178,14 +130,11 @@ private:
 };
 
 class ExpandedFrontierWriter {
-    static constexpr size_t BUFFER_SIZE = 8 * 1024 * 1024;
 public:
     ExpandedFrontierWriter(SmallSegmentWriter& writer)
         : m_Writer(writer)
         , m_Indexes(writer.GetIndexArray())
         , m_Buffer(writer.GetBufferArray()) {}
-        //, m_Indexes(StreamVInt::MAX_INDEXES_COUNT)
-        //, m_Buffer(BUFFER_SIZE) {}
 
     void SetSegment(int segment) {
         m_Segment = segment;
