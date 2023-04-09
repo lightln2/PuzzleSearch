@@ -80,8 +80,10 @@ void MTCollector<width, height>::AddSameSegmentVerticalMoves(uint32_t* indexes, 
     Timer timer;
     for (size_t i = 0; i < count; i++) {
         uint32_t index = indexes[i];
-        if (m_VerticalMoves.AddSameSegment(index)) {
-            FlushSameSegmentVerticalMoves();
+        if (!Puzzle<width, height>::UpChangesSegment(index & 16)) {
+            if (m_VerticalMoves.AddSameSegment(index)) {
+                FlushSameSegmentVerticalMoves();
+            }
         }
     }
     m_NanosSameSegmentVerticalMoves += timer.Elapsed();
@@ -149,30 +151,28 @@ size_t MTCollector<width, height>::SaveSegment() {
             uint64_t valHoriz = m_BoundsHoriz[i];
             uint64_t valVert = m_BoundsVert[i];
             uint64_t valExclude = m_BoundsExclude[i];
-            uint64_t val = valHoriz | valVert | valExclude;
-            if (val == 0) continue;
+            if ((valHoriz | valVert | valExclude) == 0) continue;
             m_BoundsHoriz[i] = 0;
             m_BoundsVert[i] = 0;
             m_BoundsExclude[i] = 0;
+            uint64_t val = (valHoriz | valVert) & ~valExclude;
+            if (val == 0) continue;
             unsigned long bitIndex = 0;
 
             do {
                 _BitScanForward64(&bitIndex, val);
                 val &= ~(1ui64 << bitIndex);
-                bool bExclude = (valExclude >> bitIndex) & 1;
-                if (!bExclude) {
-                    bool bHoriz = (valHoriz >> bitIndex) & 1;
-                    bool bVert = (valVert >> bitIndex) & 1;
-                    uint32_t index = (i * 64) | bitIndex;
-                    result++;
-                    if (!bHoriz) {
-                        m_FrontierWriterVert.Add(index);
-                    }
-                    if (!bVert) {
-                        m_FrontierWriterHoriz.Add(index);
-                        if (m_VertChangesSegment[index & 15]) {
-                            m_VerticalMovesCollector.Add(index);
-                        }
+                bool bHoriz = (valHoriz >> bitIndex) & 1;
+                bool bVert = (valVert >> bitIndex) & 1;
+                uint32_t index = (i * 64) | bitIndex;
+                result++;
+                if (!bHoriz) {
+                    m_FrontierWriterVert.Add(index);
+                }
+                if (!bVert) {
+                    m_FrontierWriterHoriz.Add(index);
+                    if (m_VertChangesSegment[index & 15]) {
+                        m_VerticalMovesCollector.Add(index);
                     }
                 }
             } while (val != 0);

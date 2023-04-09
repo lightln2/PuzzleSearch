@@ -152,7 +152,7 @@ public:
             m_Lock->lock();
             m_UndeletedSegments[index]--;
             if (m_UndeletedSegments[index] == 0) {
-                std::cerr << "Delete " << index << std::endl;
+                //std::cerr << "Delete " << index << std::endl;
                 m_Files[index].DeleteAll();
             }
             m_Lock->unlock();

@@ -48,6 +48,7 @@ public:
     }
 
     static bool UpChangesSegment(int blank) {
+        if (size <= 13) return false;
         // MSVC does not do this optimization
         constexpr int mask = (1 << 13) | (1 << 14) | (1 << 15);
         return (mask >> blank) & 1;
@@ -55,12 +56,14 @@ public:
     }
 
     static bool DownChangesSegment(int blank) {
+        if (size <= 13) return false;
         constexpr int mask = (1 << (13 - width)) | (1 << (14 - width)) | (1 << (15 - width));
         return (mask >> blank) & 1;
         //return blank == 13 - width || blank == 14 - width || blank == 15 - width;
     }
 
     static bool VerticalMoveChangesSegment(int blank) {
+        if (size <= 13) return false;
         constexpr int mask =
             (1 << 13) | (1 << 14) | (1 << 15) |
             (1 << (13 - width)) | (1 << (14 - width)) | (1 << (15 - width));

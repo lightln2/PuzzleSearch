@@ -204,7 +204,7 @@ __global__ void kernel_up(uint32_t segment, uint32_t* indexes, size_t count) {
         return;
     }
     int blank = indexes[i] & 15;
-    if (blank == 13 || blank == 14 || blank == 15) {
+    if (UpChangesSegment(blank)) {
         indexes[i] = (uint32_t)-1;
         return;
     }
@@ -229,7 +229,7 @@ __global__ void kernel_dn(uint32_t segment, uint32_t* indexes, size_t count) {
         return;
     }
     int blank = indexes[i] & 15;
-    if (blank == 13 - width || blank == 14 - width || blank == 15 - width) {
+    if (DownChangesSegment<width>(blank)) {
         indexes[i] = (uint32_t)-1;
         return;
     }
@@ -325,7 +325,7 @@ __global__ void kernel_vert_same_segment(uint32_t segment, uint32_t* indexes, si
         while (true) {
             blank = arr[OFFSET_ZERO];
             if (blank != currentBlank) {
-                if (blank == 13 || blank == 14 || blank == 15) {
+                if (UpChangesSegment(blank)) {
                     indexes[pos] = (uint32_t)(-1);
                 }
                 else {
