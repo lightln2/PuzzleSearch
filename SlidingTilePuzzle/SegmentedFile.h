@@ -74,17 +74,33 @@ class SegmentedFile {
 public:
     SegmentedFile(int maxSegments, const std::string& file)
         : SegmentedFile(maxSegments, { file })
+    { }
+
+    SegmentedFile(int maxSegments, std::initializer_list<std::string> files) 
+        : SegmentedFile(maxSegments, std::vector<std::string>(files))
     {}
 
-    SegmentedFile(int maxSegments, std::initializer_list<std::string> files) {
+    SegmentedFile(int maxSegments, const std::vector<std::string>& files, bool sequentialFiles = false) 
+        : m_SequentialFiles(sequentialFiles)
+    {
         for (const auto& file : files) {
             m_Files.emplace_back(maxSegments, file);
         }
-    }
+        m_SegmentToFile.reserve(maxSegments);
+        if (sequentialFiles) {
+            m_Lock = std::make_unique<std::mutex>();
+            m_UndeletedSegments.resize(m_Files.size());
+            for (int i = 0; i < maxSegments; i++) {
+                int index = m_Files.size() * i / maxSegments;
+                m_SegmentToFile.push_back(index);
+                m_UndeletedSegments[index]++;
+            }
 
-    SegmentedFile(int maxSegments, const std::vector<std::string>& files) {
-        for (const auto& file : files) {
-            m_Files.emplace_back(maxSegments, file);
+        }
+        else {
+            for (int i = 0; i < maxSegments; i++) {
+                m_SegmentToFile.push_back(i % m_Files.size());
+            }
         }
     }
 
@@ -130,9 +146,30 @@ public:
         buffer.SetSize(read / sizeof(T));
     }
 
+    void Delete(int segment) {
+        if (m_SequentialFiles) {
+            int index = m_SegmentToFile[segment];
+            m_Lock->lock();
+            m_UndeletedSegments[index]--;
+            if (m_UndeletedSegments[index] == 0) {
+                std::cerr << "Delete " << index << std::endl;
+                m_Files[index].DeleteAll();
+            }
+            m_Lock->unlock();
+        }
+    }
     void DeleteAll() {
         for (auto& file : m_Files) {
             file.DeleteAll();
+        }
+        if (m_SequentialFiles) {
+            for (int i = 0; i < m_UndeletedSegments.size(); i++) {
+                m_UndeletedSegments[i] = 0;
+            }
+            for (int i = 0; i < m_SegmentToFile.size(); i++) {
+                int index = m_SegmentToFile[i];
+                m_UndeletedSegments[index]++;
+            }
         }
     }
 
@@ -142,13 +179,17 @@ public:
 
 private:
     SegmentedFilePart& GetFile(int segment) {
-        return m_Files[segment % m_Files.size()];
+        return m_Files[m_SegmentToFile[segment]];
     }
 
     const SegmentedFilePart& GetFile(int segment) const {
-        return m_Files[segment % m_Files.size()];
+        return m_Files[m_SegmentToFile[segment]];
     }
 
 private:
+    bool m_SequentialFiles;
+    std::vector<int> m_UndeletedSegments;
+    std::vector<int> m_SegmentToFile;
     std::vector<SegmentedFilePart> m_Files;
+    std::unique_ptr<std::mutex> m_Lock;
 };

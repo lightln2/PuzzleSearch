@@ -209,6 +209,9 @@ public:
         return m_Indexes;
     }
 
+    void DeleteSegment() {
+        m_File.Delete(m_Segment);
+    }
 private:
     int m_Segment = -1;
     int m_Position = 0;

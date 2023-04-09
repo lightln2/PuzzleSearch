@@ -65,6 +65,7 @@ public:
 				collector.AddExclude(buf.Buf(), buf.Size());
 			}
 		}
+		r_exp.DeleteSegment();
 		if (!empty) {
 			auto cur = collector.SaveSegment();
 			total += cur;
@@ -106,8 +107,8 @@ std::vector<uint64_t> MTFrontierSearch(MTSearchOptions options) {
 	SegmentedFile frontierHoriz(puzzle.MaxSegments(), options.FileFrontierHoriz1);
 	SegmentedFile new_frontierVert(puzzle.MaxSegments(), options.FileFrontierVert2);
 	SegmentedFile new_frontierHoriz(puzzle.MaxSegments(), options.FileFrontierHoriz2);
-	SegmentedFile e_exp(puzzle.MaxSegments(), options.FileExpanded1);
-	SegmentedFile new_e_exp(puzzle.MaxSegments(), options.FileExpanded2);
+	SegmentedFile e_exp(puzzle.MaxSegments(), options.FileExpanded1, options.ExpandedFileSequentialParts);
+	SegmentedFile new_e_exp(puzzle.MaxSegments(), options.FileExpanded2, options.ExpandedFileSequentialParts);
 
 	{
 		auto [initialSegment, initialIndex] = puzzle.Rank(options.InitialValue);

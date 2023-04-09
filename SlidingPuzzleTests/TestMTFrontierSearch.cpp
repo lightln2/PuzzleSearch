@@ -141,6 +141,9 @@ TEST(TestMTFrontierSearch, Search8x2_edge3) {
 
 TEST(TestMTFrontierSearch, Search4x4) {
 	MTSearchOptions opts;
+	opts.FileExpanded1 = { "c:/temp/frontierExp1.part1", "c:/temp/frontierExp1.part2", "c:/temp/frontierExp1.part3" };
+	opts.FileExpanded2 = { "c:/temp/frontierExp2.part1", "c:/temp/frontierExp2.part2", "c:/temp/frontierExp2.part3" };
+	opts.ExpandedFileSequentialParts = true;
 	opts.MaxDepth = 15;
 	TestSearch<4, 4>(15,
 		"1 6 18 54 162 486 1457 4334 12568 36046 102801 289534 808623 2231878 6076994 16288752", opts);

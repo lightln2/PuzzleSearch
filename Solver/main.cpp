@@ -40,7 +40,7 @@ void FrontierSearch() {
 void MTFrontierSearch() {
 
     MTSearchOptions opts;
-    opts.Threads = 1;
+    opts.Threads = 5;
 
     /*
     opts.FileFrontier1 = { "e:/PUZ/frontier1", "h:/PUZ/frontier1" };
@@ -55,13 +55,14 @@ void MTFrontierSearch() {
     opts.FileFrontierHoriz1 = { "d:/PUZ/frontier-horiz-1" };
     opts.FileFrontierVert2 = { "d:/PUZ/frontier-vert-2" };
     opts.FileFrontierHoriz2 = { "d:/PUZ/frontier-horiz-2" };
-    opts.FileExpanded1 = { "c:/PUZ/frontierExp1" };
-    opts.FileExpanded2 = { "c:/PUZ/expandedExp2" };
+    opts.FileExpanded1 = { "c:/PUZ/frontierExp1.part1", "c:/PUZ/frontierExp1.part2", "c:/PUZ/frontierExp1.part3", "c:/PUZ/frontierExp1.part4", "c:/PUZ/frontierExp1.part5" };
+    opts.FileExpanded2 = { "c:/PUZ/frontierExp2.part1", "c:/PUZ/frontierExp2.part2", "c:/PUZ/frontierExp2.part3", "c:/PUZ/frontierExp2.part4", "c:/PUZ/frontierExp2.part5" };
+    opts.ExpandedFileSequentialParts = true;
 
-    //opts.MaxDepth = 10;
+    //opts.MaxDepth = 17;
 
     try {
-        MTFrontierSearch<6, 2>(opts);
+        MTFrontierSearch<4, 4>(opts);
     }
     catch (const std::exception& ex) {
         std::cerr << "Error: " << ex.what() << std::endl;
