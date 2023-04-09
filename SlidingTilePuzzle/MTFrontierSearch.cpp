@@ -61,7 +61,9 @@ public:
 			if (buf.IsEmpty()) break;
 			empty = false;
 			collector.AddSameSegmentVerticalMoves(buf.Buf(), buf.Size());
-			collector.AddExclude(buf.Buf(), buf.Size());
+			if (width != 2) {
+				collector.AddExclude(buf.Buf(), buf.Size());
+			}
 		}
 		if (!empty) {
 			auto cur = collector.SaveSegment();
@@ -109,10 +111,9 @@ std::vector<uint64_t> MTFrontierSearch(MTSearchOptions options) {
 
 	{
 		auto [initialSegment, initialIndex] = puzzle.Rank(options.InitialValue);
-		std::cerr << "Init: " << puzzle.Unrank(initialSegment, initialIndex) << std::endl;
-		ensure(!puzzle.VerticalMoveChangesSegment(initialIndex % 16));
-		// TODO: allow initial states with cross-segment vertical moves
-		ensure((initialIndex % 16) % width == 0);
+		auto initialBlank = initialIndex % 16;
+		std::cerr << "Initial: " << puzzle.Unrank(initialSegment, initialIndex) << std::endl;
+		ensure(!puzzle.VerticalMoveChangesSegment(initialBlank));
 		MTFrontierFileWriter fwriterHoriz(frontierHoriz);
 		fwriterHoriz.SetSegment(initialSegment);
 		fwriterHoriz.Add(initialIndex);
@@ -121,6 +122,15 @@ std::vector<uint64_t> MTFrontierSearch(MTSearchOptions options) {
 		fwriterVert.SetSegment(initialSegment);
 		fwriterVert.Add(initialIndex);
 		fwriterVert.FinishSegment();
+
+		if (puzzle.MultiTileHasCrossSegment(initialBlank)) {
+			MTVerticalMoves<width, height> moves;
+			MTVerticalMovesCollector<width, height> coll(e_exp, moves);
+			coll.SetSegment(initialSegment);
+			coll.Add(initialIndex);
+			coll.Close();
+			coll.CloseAll();
+		}
 	}
 
 	std::vector<std::unique_ptr<MTFrontierSearcher<width, height>>> searchers;

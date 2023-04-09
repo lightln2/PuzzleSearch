@@ -52,23 +52,7 @@ MTCollector<width, height>::MTCollector(SegmentedFile& fileVert, SegmentedFile& 
     }
 
     for (int blank = 0; blank < puzzle.size; blank++) {
-        if (size == 14) {
-            m_VertChangesSegment[blank] = (blank % width == 13 % width);
-        }
-        else if (size == 15) {
-            m_VertChangesSegment[blank] = 
-                (blank % width == 13 % width) || 
-                (blank % width == 14 % width);
-        }
-        else if (size == 16) {
-            m_VertChangesSegment[blank] =
-                (blank % width == 13 % width) || 
-                (blank % width == 14 % width) || 
-                (blank % width == 15 % width);
-        }
-        else {
-            m_VertChangesSegment[blank] = false;
-        }
+        m_VertChangesSegment[blank] = puzzle.MultiTileHasCrossSegment(blank);
     }
 }
 
@@ -128,7 +112,7 @@ void MTCollector<width, height>::AddCrossSegmentVerticalMoves(uint32_t* indexes,
     for (size_t i = 0; i < count; i++) {
         AddNoVert(indexes[i]);
         int blank = indexes[i] & 15;
-        if (blank == 13 - width || blank == 14 - width || blank == 15 - width) {
+        if (Puzzle<width, height>::CanMoveDown(blank)) {
             if (m_VerticalMoves.AddSameSegment(indexes[i])) {
                 FlushSameSegmentVerticalMoves();
             }
@@ -183,12 +167,12 @@ size_t MTCollector<width, height>::SaveSegment() {
                     result++;
                     if (!bHoriz) {
                         m_FrontierWriterVert.Add(index);
-                        if (m_VertChangesSegment[index & 15]) {
-                            m_VerticalMovesCollector.Add(index);
-                        }
                     }
                     if (!bVert) {
                         m_FrontierWriterHoriz.Add(index);
+                        if (m_VertChangesSegment[index & 15]) {
+                            m_VerticalMovesCollector.Add(index);
+                        }
                     }
                 }
             } while (val != 0);
@@ -211,6 +195,7 @@ void MTCollector<width, height>::PrintStats() {
         << "; horiz moves=" << WithTime(m_NanosHorizontalMoves)
         << "; vert moves=" << WithTime(m_NanosVerticalMoves)
         << "; same seg moves=" << WithTime(m_NanosSameSegmentVerticalMoves)
+        << "; exclude last =" << WithTime(m_NanosExclude)
         << std::endl;
 }
 

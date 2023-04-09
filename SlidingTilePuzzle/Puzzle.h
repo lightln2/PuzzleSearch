@@ -67,6 +67,21 @@ public:
         return (mask >> blank) & 1;
     }
 
+    static bool MultiTileHasCrossSegment(int blank) {
+        if (size == 14) {
+            return blank % width == 13 % width;
+        }
+        else if (size == 15) {
+            return blank % width == 13 % width || blank % width == 14 % width;
+        }
+        else if (size == 16) {
+            return blank % width == 13 % width || blank % width == 14 % width || blank % width == 15 % width;
+        }
+        else {
+            return false;
+        }
+    }
+
     static bool CanMoveUp(uint32_t index) { return (index % 16) >= width; }
     static bool CanMoveDown(uint32_t index) { return (index % 16) < size - width; }
     static bool CanMoveLeft(uint32_t index) { return (index % 16) % width > 0; }

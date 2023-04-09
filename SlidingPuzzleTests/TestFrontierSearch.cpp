@@ -24,12 +24,39 @@ TEST(TestFrontierSearch, Search3x2) {
 	TestSearch<3, 2>(21, "1 2 3 5 6 7 10 12 12 16 23 25 28 39 44 40 29 21 18 12 6 1");
 }
 
+TEST(TestFrontierSearch, Search3x2_edge) {
+	SearchOptions opts;
+	opts.InitialValue = "1 0 2  3 4 5";
+	TestSearch<3, 2>(21, "1 3 4 4 6 10 10 10 16 20 20 26 36 40 40 37 29 20 14 9 4 1", opts);
+}
+
 TEST(TestFrontierSearch, Search4x2) {
 	TestSearch<4, 2>(36, "1 2 3 6 10 14 19 28 42 61 85 119 161 215 293 396 506 632 788 985 1194 1414 1664 1884 1999 1958 1770 1463 1076 667 361 190 88 39 19 7 1");
 }
 
+TEST(TestFrontierSearch, Search4x2_edge) {
+	SearchOptions opts;
+	opts.InitialValue = "1 0 2 3  4 5 6 7";
+	TestSearch<4, 2>(35,
+		"1 3 5 7 10 16 24 34 49 72 100 134 182 252 339 439 557 714 892 1082 1281 1503 1741 1913 1963 1883 1681 1330 887 512 280 146 72 36 16 4", opts);
+}
+
 TEST(TestFrontierSearch, Search3x3) {
 	TestSearch<3, 3>(31, "1 2 4 8 16 20 39 62 116 152 286 396 748 1024 1893 2512 4485 5638 9529 10878 16993 17110 23952 20224 24047 15578 14560 6274 3910 760 221 2");
+}
+
+TEST(TestFrontierSearch, Search3x3_edge) {
+	SearchOptions opts;
+	opts.InitialValue = "1 0 2  3 4 5  6 7 8";
+	TestSearch<3, 3>(31,
+		"1 3 5 10 14 28 42 80 108 202 278 524 726 1348 1804 3283 4193 7322 8596 13930 14713 21721 19827 25132 18197 18978 9929 7359 2081 878 126 2", opts);
+}
+
+TEST(TestFrontierSearch, Search3x3_center) {
+	SearchOptions opts;
+	opts.InitialValue = "1 2 3  4 0 5  6 7 8";
+	TestSearch<3, 3>(30,
+		"1 4 8 8 16 32 60 72 136 200 376 512 964 1296 2368 3084 5482 6736 11132 12208 18612 18444 24968 19632 22289 13600 11842 4340 2398 472 148", opts);
 }
 
 TEST(TestFrontierSearch, Search5x2) {
@@ -62,8 +89,44 @@ TEST(TestFrontierSearch, Search8x2) {
 	TestSearch<8, 2>(25, "1 2 3 6 11 20 37 68 125 227 394 672 1151 1983 3373 5703 9508 15640 25293 40732 65032 103390 162830 255543 397013 613104", opts);
 }
 
+TEST(TestFrontierSearch, Search8x2_edge1) {
+	SearchOptions opts;
+	opts.MaxDepth = 15;
+	opts.InitialValue = "1 0 2 3 4 5 6 7  8 9 10 11 12 13 14 15";
+	TestSearch<8, 2>(15, "1 3 5 8 15 29 52 95 173 302 518 902 1545 2629 4439 7446", opts);
+}
+
+TEST(TestFrontierSearch, Search8x2_edge2) {
+	SearchOptions opts;
+	opts.MaxDepth = 15;
+	opts.InitialValue = "1 2 0 3 4 5 6 7  8 9 10 11 12 13 14 15";
+	TestSearch<8, 2>(15, "1 3 6 11 19 35 65 114 197 351 614 1056 1790 3040 5063 8375", opts);
+}
+
+TEST(TestFrontierSearch, Search8x2_edge3) {
+	SearchOptions opts;
+	opts.MaxDepth = 15;
+	opts.InitialValue = "1 2 3 0 4 5 6 7  8 9 10 11 12 13 14 15";
+	TestSearch<8, 2>(15, "1 3 6 12 23 41 69 119 212 378 656 1139 1922 3219 5316 8776", opts);
+}
+
 TEST(TestFrontierSearch, Search4x4) {
 	SearchOptions opts;
 	opts.MaxDepth = 20;
 	TestSearch<4, 4>(20, "1 2 4 10 24 54 107 212 446 946 1948 3938 7808 15544 30821 60842 119000 231844 447342 859744 1637383", opts);
 }
+
+TEST(TestFrontierSearch, Search4x4_edge) {
+	SearchOptions opts;
+	opts.MaxDepth = 15;
+	opts.InitialValue = "1 0 2 3  4 5 6 7  8 9 10 11  12 13 14 15";
+	TestSearch<4, 4>(15, "1 3 6 14 32 66 134 280 585 1214 2462 4946 9861 19600 38688 76086", opts);
+}
+
+TEST(TestFrontierSearch, Search4x4_center) {
+	SearchOptions opts;
+	opts.MaxDepth = 15;
+	opts.InitialValue = "1 2 3 4  5 0 6 7  8 9 10 11  12 13 14 15";
+	TestSearch<4, 4>(15, "1 4 10 20 38 80 174 372 762 1540 3072 6196 12356 24516 48179 94356", opts);
+}
+

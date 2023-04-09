@@ -32,6 +32,79 @@ void TestMove(std::string puzzleStr) {
 
 }
 
+template<int width, int height>
+void TestMultiTileMove(std::string puzzleStr) {
+	Puzzle<width, height> puzzle;
+	GpuSolver<width, height> gpuSolver;
+	auto [segment, index] = puzzle.Rank(puzzleStr);
+
+	std::vector<uint32_t> exp_same_segment_indexes;
+	uint32_t exp_cross_segment = uint32_t(-1);
+	uint32_t exp_cross_index = uint32_t(-1);
+
+	auto ind = index;
+	auto seg = segment;
+	while (puzzle.CanMoveUp(ind)) {
+		auto [new_seg, new_ind] = puzzle.MoveUp(seg, ind);
+		ind = new_ind;
+		seg = new_seg;
+		if (seg == segment) exp_same_segment_indexes.push_back(ind);
+		else {
+			if (puzzle.DownChangesSegment(ind % 16)) {
+				exp_cross_segment = seg;
+				exp_cross_index = ind;
+			}
+		}
+	}
+
+	ind = index;
+	seg = segment;
+	while (puzzle.CanMoveDown(ind)) {
+		auto [new_seg, new_ind] = puzzle.MoveDown(seg, ind);
+		ind = new_ind;
+		seg = new_seg;
+		if (seg == segment) exp_same_segment_indexes.push_back(ind);
+		else {
+			if (puzzle.UpChangesSegment(ind % 16)) {
+				exp_cross_segment = seg;
+				exp_cross_index = ind;
+			}
+		}
+	}
+
+	std::sort(exp_same_segment_indexes.begin(), exp_same_segment_indexes.end());
+
+	HostBuffer segments, indexes;
+
+	{
+		indexes.Buffer[0] = index;
+
+		gpuSolver.MTVertSameSegment(segment, indexes.Buffer, 1);
+		std::vector<uint32_t> new_indexes;
+		for (int i = 0; i < height - 1; i++) {
+			if (indexes.Buffer[i] != uint32_t(-1)) {
+				new_indexes.push_back(indexes.Buffer[i]);
+			}
+		}
+		std::sort(new_indexes.begin(), new_indexes.end());
+
+		EXPECT_EQ(exp_same_segment_indexes.size(), new_indexes.size());
+		for (int i = 0; i < new_indexes.size(); i++) {
+			EXPECT_EQ(exp_same_segment_indexes[i], new_indexes[i]);
+		}
+
+	}
+
+
+	{
+		indexes.Buffer[0] = index;
+
+		gpuSolver.MTVertCrossSegment(segment, indexes.Buffer, segments.Buffer, 1);
+		EXPECT_EQ(indexes.Buffer[0], exp_cross_index);
+		EXPECT_EQ(segments.Buffer[0], exp_cross_segment);
+	}
+}
+
 TEST(TestGpuSolver, TestMoves4x4) {
 	TestMove<4, 4>("0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15");
 	TestMove<4, 4>("15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0");
@@ -126,3 +199,60 @@ TEST(TestGpuSolverPerformance, TestMoves8x2) {
 	}
 }
 
+TEST(TestGpuSolver, TestMultiTileMoves4x4) {
+	TestMultiTileMove<4, 4>("0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15");
+	TestMultiTileMove<4, 4>("15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0");
+	TestMultiTileMove<4, 4>("15 14 8 6 1 2 9 13 12 5 0 3 4 10 11 7");
+
+	TestMultiTileMove<4, 4>("1 0 2 3 4 5 6 7 8 9 10 11 12 13 14 15");
+	TestMultiTileMove<4, 4>("1 2 0 3 4 5 6 7 8 9 10 11 12 13 14 15");
+	TestMultiTileMove<4, 4>("1 2 3 0 4 5 6 7 8 9 10 11 12 13 14 15");
+	TestMultiTileMove<4, 4>("1 2 3 4 0 5 6 7 8 9 10 11 12 13 15 14");
+	TestMultiTileMove<4, 4>("1 2 3 4 5 0 6 7 8 9 10 11 12 13 15 14");
+	TestMultiTileMove<4, 4>("1 2 3 4 5 6 0 7 8 9 10 11 12 13 15 14");
+	TestMultiTileMove<4, 4>("1 2 3 4 5 6 7 0 8 9 10 11 12 13 15 14");
+	TestMultiTileMove<4, 4>("1 2 3 4 5 6 7 8 0 9 10 11 12 13 14 15");
+	TestMultiTileMove<4, 4>("1 2 3 4 5 6 7 8 9 0 10 11 12 13 14 15");
+	TestMultiTileMove<4, 4>("1 2 3 4 5 6 7 8 9 10 0 11 12 13 14 15");
+	TestMultiTileMove<4, 4>("1 2 3 4 5 6 7 8 9 10 11 0 12 13 14 15");
+	TestMultiTileMove<4, 4>("1 2 3 4 5 6 7 8 9 10 11 12 0 13 15 14");
+	TestMultiTileMove<4, 4>("1 2 3 4 5 6 7 8 9 10 11 12 13 0 15 14");
+	TestMultiTileMove<4, 4>("1 2 3 4 5 6 7 8 9 10 11 12 13 15 0 14");
+	TestMultiTileMove<4, 4>("1 2 3 4 5 6 7 8 9 10 11 12 13 15 14 0");
+}
+
+TEST(TestGpuSolver, TestMultiTileMoves5x3) {
+	TestMultiTileMove<5, 3>("0 1 2 3 4 5 6 7 8 9 10 11 12 13 14");
+	TestMultiTileMove<5, 3>("1 0 2 3 4 5 6 7 8 9 10 11 12 13 14");
+	TestMultiTileMove<5, 3>("1 2 0 3 4 5 6 7 8 9 10 11 12 13 14");
+	TestMultiTileMove<5, 3>("1 2 3 0 4 5 6 7 8 9 10 11 12 13 14");
+	TestMultiTileMove<5, 3>("1 2 3 4 0 5 6 7 8 9 10 11 12 13 14");
+	TestMultiTileMove<5, 3>("1 2 3 4 5 0 6 7 8 9 10 11 12 13 14");
+	TestMultiTileMove<5, 3>("1 2 3 4 5 6 0 7 8 9 10 11 12 13 14");
+	TestMultiTileMove<5, 3>("1 2 3 4 5 6 7 0 8 9 10 11 12 13 14");
+	TestMultiTileMove<5, 3>("1 2 3 4 5 6 7 8 0 9 10 11 12 13 14");
+	TestMultiTileMove<5, 3>("1 2 3 4 5 6 7 8 9 0 10 11 12 13 14");
+	TestMultiTileMove<5, 3>("1 2 3 4 5 6 7 8 9 10 0 11 12 13 14");
+	TestMultiTileMove<5, 3>("1 2 3 4 5 6 7 8 9 10 11 0 12 13 14");
+	TestMultiTileMove<5, 3>("1 2 3 4 5 6 7 8 9 10 11 12 0 13 14");
+	TestMultiTileMove<5, 3>("1 2 3 4 5 6 7 8 9 10 11 12 13 0 14");
+}
+
+TEST(TestGpuSolver, TestMultiTileMoves8x2) {
+	TestMultiTileMove<8, 2>("0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15");
+	TestMultiTileMove<8, 2>("1 0 2 3 4 5 6 7 8 9 10 11 12 13 14 15");
+	TestMultiTileMove<8, 2>("1 2 0 3 4 5 6 7 8 9 10 11 12 13 14 15");
+	TestMultiTileMove<8, 2>("1 2 3 0 4 5 6 7 8 9 10 11 12 13 14 15");
+	TestMultiTileMove<8, 2>("1 2 3 4 0 5 6 7 8 9 10 11 12 13 14 15");
+	TestMultiTileMove<8, 2>("1 2 3 4 5 0 6 7 8 9 10 11 12 13 14 15");
+	TestMultiTileMove<8, 2>("1 2 3 4 5 6 0 7 8 9 10 11 12 13 14 15");
+	TestMultiTileMove<8, 2>("1 2 3 4 5 6 7 0 8 9 10 11 12 13 14 15");
+	TestMultiTileMove<8, 2>("1 2 3 4 5 6 7 8 0 9 10 11 12 13 15 14");
+	TestMultiTileMove<8, 2>("1 2 3 4 5 6 7 8 9 0 10 11 12 13 15 14");
+	TestMultiTileMove<8, 2>("1 2 3 4 5 6 7 8 9 10 0 11 12 13 15 14");
+	TestMultiTileMove<8, 2>("1 2 3 4 5 6 7 8 9 10 11 0 12 13 15 14");
+	TestMultiTileMove<8, 2>("1 2 3 4 5 6 7 8 9 10 11 12 0 13 15 14");
+	TestMultiTileMove<8, 2>("1 2 3 4 5 6 7 8 9 10 11 12 13 0 15 14");
+	TestMultiTileMove<8, 2>("1 2 3 4 5 6 7 8 9 10 11 12 13 15 0 14");
+	TestMultiTileMove<8, 2>("1 2 3 4 5 6 7 8 9 10 11 12 13 15 14 0");
+}

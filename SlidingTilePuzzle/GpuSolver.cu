@@ -125,6 +125,25 @@ __device__ __forceinline__ void RotateDn(int* arr) {
     arr[OFFSET_ZERO] += width;
 }
 
+__device__ __forceinline__ bool UpChangesSegment(int blank) {
+    constexpr int mask = (1 << 13) | (1 << 14) | (1 << 15);
+    return (mask >> blank) & 1;
+}
+
+template <int width>
+__device__ __forceinline__ bool DownChangesSegment(int blank) {
+    constexpr int mask = (1 << (13 - width)) | (1 << (14 - width)) | (1 << (15 - width));
+    return (mask >> blank) & 1;
+}
+
+template <int width>
+__device__ __forceinline__ bool VerticalMoveChangesSegment(int blank) {
+    constexpr int mask =
+        (1 << 13) | (1 << 14) | (1 << 15) |
+        (1 << (13 - width)) | (1 << (14 - width)) | (1 << (15 - width));
+    return (mask >> blank) & 1;
+}
+
 template<int width, int height>
 __global__ void kernel_up(uint32_t segment, uint32_t* indexes, uint32_t* out_segments, size_t count) {
     constexpr int size = width * height;
@@ -134,7 +153,6 @@ __global__ void kernel_up(uint32_t segment, uint32_t* indexes, uint32_t* out_seg
     from_segment(arr, segment);
     from_index<size>(arr, indexes[i]);
     unpack<size, width, width % 2 == 0>(arr);
-    /*
 #ifdef _DEBUG
     if (!CanRotateUp<width>(arr)) {
         indexes[i] = (uint32_t)-1;
@@ -142,7 +160,6 @@ __global__ void kernel_up(uint32_t segment, uint32_t* indexes, uint32_t* out_seg
         return;
     }
 #endif
-    */
     RotateUp<width>(arr);
     pack<size>(arr);
     out_segments[i] = to_segment(arr);
@@ -234,7 +251,7 @@ __global__ void kernel_vert_cross_segment(uint32_t segment, uint32_t* indexes, u
     unpack<size, width, width % 2 == 0>(arr);
     int blank = arr[OFFSET_ZERO];
 
-    if (blank == 13 || blank == 14 || blank == 15) {
+    if (UpChangesSegment(blank)) {
         RotateUp<width>(arr);
     }
     else {
@@ -245,14 +262,14 @@ __global__ void kernel_vert_cross_segment(uint32_t segment, uint32_t* indexes, u
     }
 
     pack<size>(arr);
-    indexes[i] = to_index<size>(arr);
-    out_segments[i] = to_segment(arr);
-#ifdef _DEBUG
-    if (out_segments[i] == segment) {
-        indexes[i] = uint32_t(-1);
-        out_segments[i] = uint32_t(-1);
+    auto ind = to_index<size>(arr);
+    auto seg = to_segment(arr);
+    if (seg == segment) {
+        seg = uint32_t(-1);
+        ind = uint32_t(-1);
     }
-#endif
+    indexes[i] = ind;
+    out_segments[i] = seg;
 }
 
 template<int width, int height>
@@ -265,36 +282,63 @@ __global__ void kernel_vert_same_segment(uint32_t segment, uint32_t* indexes, si
     from_index<size>(arr, indexes[i]);
     unpack<size, width, width % 2 == 0>(arr);
     int blank = arr[OFFSET_ZERO];
-    int currentBlank = blank;
 
-#ifdef _DEBUG
-    if (blank == 13 || blank == 14 || blank == 15) {
-        indexes[i] = uint32_t(-1);
-        return;
-    }
-#endif
-    while (blank >= width) {
-        RotateUp<width>(arr);
-        blank = arr[OFFSET_ZERO];
-    }
-
-    int pos = i;
-    while (true) {
-        blank = arr[OFFSET_ZERO];
-        if (blank != currentBlank) {
-            if (blank == 13 || blank == 14 || blank == 15) {
-                indexes[pos] = (uint32_t)(-1);
-            }
-            else {
-                int arr2[16];
-                for (int j = 0; j < 16; j++) arr2[j] = arr[j];
-                pack<size>(arr2);
-                indexes[pos] = to_index<size>(arr2);
-            }
-            pos += count;
+    if (width == 2) {
+        if (VerticalMoveChangesSegment<width>(blank)) {
+            indexes[i] = uint32_t(-1);
+            return;
         }
-        if (blank >= size - width) break;
-        RotateDn<width>(arr);
+        if (CanRotateUp<width>(arr)) {
+            RotateUp<width>(arr);
+        }
+        else {
+            RotateDn<width>(arr);
+        }
+
+        pack<size>(arr);
+        indexes[i] = to_index<size>(arr);
+#ifdef _DEBUG
+        auto seg = to_segment(arr);
+        if (seg != segment) {
+            indexes[i] = uint32_t(-1);
+        }
+#endif
+    }
+    else {
+        if (UpChangesSegment(blank)) {
+            int pos = i;
+            for (int j = 0; j < height - 1; j++) {
+                indexes[pos] = uint32_t(-1);
+                pos += count;
+            }
+            return;
+        }
+
+        int currentBlank = blank;
+
+        while (blank >= width) {
+            RotateUp<width>(arr);
+            blank = arr[OFFSET_ZERO];
+        }
+
+        int pos = i;
+        while (true) {
+            blank = arr[OFFSET_ZERO];
+            if (blank != currentBlank) {
+                if (blank == 13 || blank == 14 || blank == 15) {
+                    indexes[pos] = (uint32_t)(-1);
+                }
+                else {
+                    int arr2[16];
+                    for (int j = 0; j < 16; j++) arr2[j] = arr[j];
+                    pack<size>(arr2);
+                    indexes[pos] = to_index<size>(arr2);
+                }
+                pos += count;
+            }
+            if (blank >= size - width) break;
+            RotateDn<width>(arr);
+        }
     }
 }
 
