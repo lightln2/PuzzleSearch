@@ -11,7 +11,7 @@
 template<int width, int height>
 class MTCollector {
 private:
-    static constexpr size_t VALS_PER_BOUND_INDEX = 4 * 1024;
+    static constexpr size_t VALS_PER_BOUND_INDEX = 1 * 1024;
 public:
     MTCollector(SegmentedFile& file, SegmentedFile& expandedUp, SegmentedFile& expandedDown);
 
