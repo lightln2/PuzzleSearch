@@ -24,15 +24,15 @@ template<int width, int height>
 class MTFrontierSearcher {
 public:
 	MTFrontierSearcher(
-		SegmentedFile& frontierHoriz,
 		SegmentedFile& frontierVert,
-		SegmentedFile& new_frontierHoriz,
+		SegmentedFile& frontierHoriz,
 		SegmentedFile& new_frontierVert,
+		SegmentedFile& new_frontierHoriz,
 		SegmentedFile& exp,
 		SegmentedFile& new_exp)
-		: frontierReaderHoriz(frontierHoriz)
-		, frontierReaderVert(frontierVert)
-		, collector(new_frontierHoriz, new_frontierVert, new_exp)
+		: frontierReaderVert(frontierVert)
+		, frontierReaderHoriz(frontierHoriz)
+		, collector(new_frontierVert, new_frontierHoriz, new_exp)
 		, r_exp(exp)
 	{}
 
@@ -80,8 +80,8 @@ public:
 	uint64_t GetTotal() { return total; }
 
 private:
-	MTFrontierFileReader frontierReaderHoriz;
 	MTFrontierFileReader frontierReaderVert;
+	MTFrontierFileReader frontierReaderHoriz;
 	MTCollector<width, height> collector;
 	ExpandedFrontierReader r_exp;
 
@@ -138,7 +138,7 @@ std::vector<uint64_t> MTFrontierSearch(MTSearchOptions options) {
 	for (int i = 0; i < options.Threads; i++) {
 		searchers.emplace_back(
 			std::make_unique<MTFrontierSearcher<width, height>>(
-				frontierHoriz, frontierVert, new_frontierHoriz, new_frontierVert, e_exp, new_e_exp));
+				frontierVert, frontierHoriz, new_frontierVert, new_frontierHoriz, e_exp, new_e_exp));
 	}
 
 	std::vector<uint64_t> widths;

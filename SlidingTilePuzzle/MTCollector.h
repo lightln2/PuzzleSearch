@@ -13,7 +13,7 @@ class MTCollector {
 private:
     static constexpr size_t VALS_PER_BOUND_INDEX = 1 * 1024;
 public:
-    MTCollector(SegmentedFile& file, SegmentedFile& expandedUp, SegmentedFile& expandedDown);
+    MTCollector(SegmentedFile& fileVert, SegmentedFile& fileHoriz, SegmentedFile& expanded);
 
     void SetSegment(uint32_t segment);
 

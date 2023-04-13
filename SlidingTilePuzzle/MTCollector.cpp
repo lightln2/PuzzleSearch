@@ -167,10 +167,10 @@ size_t MTCollector<width, height>::SaveSegment() {
                 uint32_t index = (i * 64) | bitIndex;
                 result++;
                 if (!bHoriz) {
-                    m_FrontierWriterVert.Add(index);
+                    m_FrontierWriterHoriz.Add(index);
                 }
                 if (!bVert) {
-                    m_FrontierWriterHoriz.Add(index);
+                    m_FrontierWriterVert.Add(index);
                     if (m_VertChangesSegment[index & 15]) {
                         m_VerticalMovesCollector.Add(index);
                     }
