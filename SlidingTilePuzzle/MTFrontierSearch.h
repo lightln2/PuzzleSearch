@@ -15,6 +15,10 @@ struct MTSearchOptions {
     std::vector<std::string> FileExpanded1 = { "c:/temp/expanded1" };
     std::vector<std::string> FileExpanded2 = { "c:/temp/expanded2" };
     bool ExpandedFileSequentialParts = false;
+
+    size_t SmallFileLimit = 0;
+    std::string FileSmallExpanded1 = "c:/temp/small_expanded1";
+    std::string FileSmallExpanded2 = "c:/temp/small_expanded2";
 };
 
 template<int width, int height>

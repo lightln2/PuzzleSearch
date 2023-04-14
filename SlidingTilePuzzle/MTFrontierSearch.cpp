@@ -109,6 +109,10 @@ std::vector<uint64_t> MTFrontierSearch(MTSearchOptions options) {
 	SegmentedFile new_frontierHoriz(puzzle.MaxSegments(), options.FileFrontierHoriz2);
 	SegmentedFile e_exp(puzzle.MaxSegments(), options.FileExpanded1, options.ExpandedFileSequentialParts);
 	SegmentedFile new_e_exp(puzzle.MaxSegments(), options.FileExpanded2, options.ExpandedFileSequentialParts);
+	if (options.SmallFileLimit > 0) {
+		e_exp.SetSmallFile(options.FileSmallExpanded1, options.SmallFileLimit);
+		new_e_exp.SetSmallFile(options.FileSmallExpanded2, options.SmallFileLimit);
+	}
 
 	{
 		auto [initialSegment, initialIndex] = puzzle.Rank(options.InitialValue);

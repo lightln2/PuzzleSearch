@@ -104,34 +104,68 @@ public:
         }
     }
 
-    bool HasData(int segment) const { return GetFile(segment).HasData(segment); }
+    void SetSmallFile(const std::string& smallFileName, size_t smallFileLimit) {
+        m_SmallFileLimit = smallFileLimit;
+        m_SmallFile.emplace(MaxSegments(), smallFileName);
+    }
+
+    bool HasData(int segment) const {
+        if (m_SmallFileLimit > 0) {
+            return m_SmallFile->HasData(segment) || GetFile(segment).HasData(segment);
+        }
+        return GetFile(segment).HasData(segment); 
+    }
 
     int MaxSegments() const { return GetFile(0).MaxSegments(); }
 
-    uint64_t Length(int segment) const { return GetFile(segment).Length(segment); }
+    uint64_t Length(int segment) const { 
+        if (m_SmallFileLimit > 0) {
+            return m_SmallFile->Length(segment) + GetFile(segment).Length(segment);
+        }
+        return GetFile(segment).Length(segment);
+    }
 
     uint64_t TotalLength() const { 
         uint64_t length = 0;
+        if (m_SmallFileLimit > 0) {
+            length += m_SmallFile->TotalLength();
+        }
         for (const auto& file : m_Files) {
             length += file.TotalLength();
         }
         return length;
     }
 
-    void Rewind(int segment) { GetFile(segment).Rewind(segment); }
+    void Rewind(int segment) { 
+        if (m_SmallFileLimit > 0) {
+            m_SmallFile->Rewind(segment);
+        }
+        GetFile(segment).Rewind(segment);
+    }
 
     void RewindAll() {
+        if (m_SmallFileLimit > 0) {
+            m_SmallFile->RewindAll();
+        }
         for (auto& file : m_Files) {
             file.RewindAll();
         }
     }
 
     void Write(int segment, void* buffer, size_t size) {
+        if (m_SmallFileLimit > 0 && size < m_SmallFileLimit) {
+            m_SmallFile->Write(segment, buffer, size);
+            return;
+        }
         GetFile(segment).Write(segment, buffer, size);
     }
 
     size_t Read(int segment, void* buffer, size_t size) {
-        return GetFile(segment).Read(segment, buffer, size);
+        auto read = GetFile(segment).Read(segment, buffer, size);
+        if (read == 0 && m_SmallFileLimit > 0) {
+            return m_SmallFile->Read(segment, buffer, size);
+        }
+        return read;
     }
 
     template<typename T>
@@ -159,6 +193,10 @@ public:
         }
     }
     void DeleteAll() {
+        if (m_SmallFileLimit > 0) {
+            m_SmallFile->DeleteAll();
+        }
+
         for (auto& file : m_Files) {
             file.DeleteAll();
         }
@@ -191,5 +229,7 @@ private:
     std::vector<int> m_UndeletedSegments;
     std::vector<int> m_SegmentToFile;
     std::vector<SegmentedFilePart> m_Files;
+    std::optional<SegmentedFilePart> m_SmallFile;
+    size_t m_SmallFileLimit = 0;
     std::unique_ptr<std::mutex> m_Lock;
 };

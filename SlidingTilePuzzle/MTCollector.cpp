@@ -2,6 +2,7 @@
 #include "Util.h"
 
 #include <chrono>
+#include <intrin.h>
 #include <immintrin.h>
 
 template<int width, int height>
@@ -157,14 +158,18 @@ size_t MTCollector<width, height>::SaveSegment() {
             m_BoundsExclude[i] = 0;
             uint64_t val = (valHoriz | valVert) & ~valExclude;
             if (val == 0) continue;
-            unsigned long bitIndex = 0;
-
+            uint32_t i_base = i * 64;
             do {
+                unsigned long bitIndex;
                 _BitScanForward64(&bitIndex, val);
-                val &= ~(1ui64 << bitIndex);
-                bool bHoriz = (valHoriz >> bitIndex) & 1;
-                bool bVert = (valVert >> bitIndex) & 1;
-                uint32_t index = (i * 64) | bitIndex;
+                //val &= ~(1ui64 << bitIndex);
+                val = _blsr_u64(val);
+                //bool bHoriz = (valHoriz >> bitIndex) & 1;
+                //bool bVert = (valVert >> bitIndex) & 1;
+                bool bHoriz = valHoriz & (1ui64 << bitIndex);
+                bool bVert = valVert & (1ui64 << bitIndex);
+
+                uint32_t index = i_base | bitIndex;
                 result++;
                 if (!bHoriz) {
                     m_FrontierWriterHoriz.Add(index);
