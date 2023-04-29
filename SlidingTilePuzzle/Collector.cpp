@@ -189,10 +189,10 @@ size_t Collector<width, height>::SaveSegment() {
                 bound |= m_DefaultBounds[blank];
                 result++;
                 if (bound != 15) {
-                    uint32_t index = (uint32_t)(i * 16 + blank);
+                    uint32_t index = (uint32_t)((i * 16) | blank);
                     m_FrontierWriter.Add(index, bound);
 
-                    if (m_VertChangesSegment[blank * 16 + bound]) {
+                    if (m_VertChangesSegment[(blank * 16) | bound]) {
                         m_VerticalMovesCollector.Add(index, bound);
                     }
                 }

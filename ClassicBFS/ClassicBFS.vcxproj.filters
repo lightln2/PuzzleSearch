@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="TwoBitBFS.cpp" />
+    <ClCompile Include="PermutationMap.cpp" />
+    <ClCompile Include="SimpleSlidingTilePuzzle.cpp" />
+    <ClCompile Include="ClassicBFS.cpp" />
+    <ClCompile Include="DiskBasedTwoBitBFS.cpp" />
+    <ClCompile Include="DiskBasedSearch.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="TwoBitBFS.h" />
+    <ClInclude Include="PermutationMap.h" />
+    <ClInclude Include="GPU.h" />
+    <ClInclude Include="SimplePuzzle.h" />
+    <ClInclude Include="ClassicBFS.h" />
+    <ClInclude Include="DiskBasedSearch.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="Gpu.cu" />
+  </ItemGroup>
+</Project>
