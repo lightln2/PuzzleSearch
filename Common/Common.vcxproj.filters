@@ -3,10 +3,12 @@
   <ItemGroup>
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="File.cpp" />
+    <ClCompile Include="Store.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Util.h" />
     <ClInclude Include="File.h" />
     <ClInclude Include="Buffer.h" />
+    <ClInclude Include="Store.h" />
   </ItemGroup>
 </Project>

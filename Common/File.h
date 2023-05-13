@@ -55,6 +55,14 @@ public:
     size_t Read(void* buffer, size_t size) { return file::Read(m_Handle, buffer, size); }
     size_t Read(void* buffer, uint64_t offset, size_t size) { return file::Read(m_Handle, buffer, offset, size); }
 
+    void Recreate() {
+        if (m_Handle) {
+            file::CloseFile(m_Handle);
+            file::DeleteFile(m_FileName);
+        }
+        m_Handle = file::OpenFile(m_FileName);
+    }
+
 private:
     file::FHANDLE m_Handle = nullptr;
     std::string m_FileName;
