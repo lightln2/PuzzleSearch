@@ -58,3 +58,9 @@ TEST(StoreTests, SequentialMultiFile) {
 	auto store = Store::CreateSequentialStore(50, { "./dir4", "./dir5", "./dir6" });
 	TestStore(store);
 }
+
+TEST(StoreTests, SwapStores) {
+	auto store1 = Store::CreateSequentialStore(50, { "./f1" });
+	auto store2 = Store::CreateSequentialStore(50, { "./f2" });
+	std::swap(store1, store2);
+}

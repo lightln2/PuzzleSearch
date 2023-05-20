@@ -38,6 +38,7 @@
   <ItemGroup>
     <ClCompile Include="FileTests.cpp" />
     <ClCompile Include="StoreTests.cpp" />
+    <ClCompile Include="TestBoolArray.cpp" />
     <ClCompile Include="UtilTests.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

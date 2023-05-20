@@ -1,4 +1,5 @@
 #include "ClassicBFS.h"
+#include "../Common/BoolArray.h"
 
 #include <iostream>
 
@@ -6,12 +7,12 @@ std::vector<uint64_t> ClassicBFS(SimpleSlidingPuzzle& puzzle, std::string initia
     const auto SIZE = puzzle.MaxIndexes();
     std::vector<uint64_t> result;
 
-    std::vector<bool> closedList(SIZE, false);
-    std::vector<bool> openList(SIZE, false);
-    std::vector<bool> newOpenList(SIZE, false);
+    BoolArray closedList(SIZE);
+    BoolArray openList(SIZE);
+    BoolArray newOpenList(SIZE);
     auto initialIndex = puzzle.Parse(initialState);
-    openList[initialIndex] = true;
-    closedList[initialIndex] = true;
+    openList.Set(initialIndex);
+    closedList.Set(initialIndex);
     result.push_back(1);
 
     std::vector<uint64_t> children(puzzle.MaxBranching(), puzzle.INVALID_INDEX);
@@ -21,18 +22,16 @@ std::vector<uint64_t> ClassicBFS(SimpleSlidingPuzzle& puzzle, std::string initia
 
     while (true) {
         uint64_t count = 0;
-        for (uint64_t i = 0; i < SIZE; i++) {
-            if (!openList[i]) continue;
-            openList[i] = false;
-            puzzle.Expand(i, 0, &children[0], &usedOperatorBits[0]);
-            for (const auto child: children) {
+        openList.ScanBitsAndClear([&](uint64_t index) {
+            puzzle.Expand(index, 0, &children[0], &usedOperatorBits[0]);
+            for (const auto child : children) {
                 if (child == puzzle.INVALID_INDEX) continue;
-                if (closedList[child]) continue;
+                if (closedList.Get(child)) continue;
                 count++;
-                closedList[child] = true;
-                newOpenList[child] = true;
+                closedList.Set(child);
+                newOpenList.Set(child);
             }
-        }
+        });
         if (count == 0) break;
         result.push_back(count);
         std::swap(openList, newOpenList);
@@ -107,11 +106,12 @@ std::vector<uint64_t> ThreeBitBFS(SimpleSlidingPuzzle& puzzle, std::string initi
     const auto SIZE = puzzle.MaxIndexes();
     std::vector<uint64_t> result;
 
-    std::vector<bool> listOld(SIZE, false);
-    std::vector<bool> listCur(SIZE, false);
-    std::vector<bool> listNew(SIZE, false);
+    BoolArray listOld(SIZE);
+    BoolArray listCur(SIZE);
+    BoolArray listNew(SIZE);
+
     auto initialIndex = puzzle.Parse(initialState);
-    listCur[initialIndex] = true;
+    listCur.Set(initialIndex);
     result.push_back(1);
 
     std::vector<uint64_t> children(puzzle.MaxBranching(), puzzle.INVALID_INDEX);
@@ -121,25 +121,23 @@ std::vector<uint64_t> ThreeBitBFS(SimpleSlidingPuzzle& puzzle, std::string initi
 
     while (true) {
         uint64_t count = 0;
-        for (uint64_t i = 0; i < SIZE; i++) {
-            if (!listCur[i]) continue;
-            puzzle.Expand(i, 0, &children[0], &usedOperatorBits[0]);
+        listCur.ScanBits([&](uint64_t index) {
+            puzzle.Expand(index, 0, &children[0], &usedOperatorBits[0]);
             for (const auto child : children) {
                 if (child == puzzle.INVALID_INDEX) continue;
-                if (listOld[child]) continue;
-                if (listCur[child]) continue;
-                if (listNew[child]) continue;
-
+                if (listOld.Get(child)) continue;
+                if (listCur.Get(child)) continue;
+                if (listNew.Get(child)) continue;
                 count++;
-                listNew[child] = true;
+                listNew.Set(child);
             }
-        }
+        });
         if (count == 0) break;
         result.push_back(count);
 
         std::swap(listOld, listCur);
         std::swap(listCur, listNew);
-        for (uint64_t i = 0; i < SIZE; i++) listNew[i] = false;
+        listNew.Clear();
         std::cerr << "Step: " << result.size() << "; count: " << count << std::endl;
     }
 

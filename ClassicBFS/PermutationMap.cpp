@@ -56,12 +56,3 @@ void PermutationUnrank(uint64_t index, int* arr, int size) {
 
     PermutationUncompact(arr, size);
 }
-
-uint64_t TestPermutationRankUnrank(uint64_t index, int size) {
-    int arr[16];
-    PermutationUnrank(index, arr, size);
-    int temp = arr[size - 1];
-    arr[size - 1] = arr[size - 2];
-    arr[size - 2] = temp;
-    return PermutationRank(arr, size);
-}

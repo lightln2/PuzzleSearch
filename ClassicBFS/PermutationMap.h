@@ -15,5 +15,3 @@ void PermutationUncompact(int* arr, int size);
 uint64_t PermutationRank(int* arr, int size);
 
 void PermutationUnrank(uint64_t index, int* arr, int size);
-
-uint64_t TestPermutationRankUnrank(uint64_t index, int size);

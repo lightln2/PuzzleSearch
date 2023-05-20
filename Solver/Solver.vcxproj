@@ -70,6 +70,9 @@
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -82,10 +85,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ClassicBFS\ClassicBFS.vcxproj">
       <Project>{2d488571-c7dd-4445-bd84-d4cc6dc8f0a1}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Common\Common.vcxproj">
+      <Project>{dab52854-a6a4-4125-8b4a-34082a93a9c8}</Project>
     </ProjectReference>
     <ProjectReference Include="..\HanoiTowers\HanoiTowers.vcxproj">
       <Project>{4a424ced-a09e-4993-a9cd-ec826dd3a6a9}</Project>

@@ -5,6 +5,13 @@
 #include <mutex>
 #include <optional>
 
+std::atomic<uint64_t> Store::m_StatReadsCount(0);
+std::atomic<uint64_t> Store::m_StatReadNanos(0);
+std::atomic<uint64_t> Store::m_StatReadBytes(0);
+std::atomic<uint64_t> Store::m_StatWritesCount(0);
+std::atomic<uint64_t> Store::m_StatWriteNanos(0);
+std::atomic<uint64_t> Store::m_StatWriteBytes(0);
+
 Store::Store(StoreImplRef impl)
     : m_Impl(std::move(impl))
 {}
@@ -36,12 +43,20 @@ void Store::RewindAll() {
 void Store::Write(int segment, void* buffer, size_t size) {
     ensure(segment >= 0 && segment < MaxSegments());
     if (size == 0) return;
+    m_StatWritesCount++;
+    m_StatWriteBytes += size;
+    Timer timer;
     m_Impl->Write(segment, buffer, size);
+    m_StatWriteNanos += timer.Elapsed();
 }
 
 size_t Store::Read(int segment, void* buffer, size_t size) {
     ensure(segment >= 0 && segment < MaxSegments());
+    m_StatReadsCount++;
+    m_StatReadBytes += size;
+    Timer timer;
     return m_Impl->Read(segment, buffer, size);
+    m_StatReadNanos += timer.Elapsed();
 }
 
 void Store::Delete(int segment) {
@@ -50,6 +65,16 @@ void Store::Delete(int segment) {
 
 void Store::DeleteAll() {
     m_Impl->DeleteAll();
+}
+
+void Store::PrintStats() {
+    std::cerr
+        << "Store: "
+        << "reads: " << WithDecSep(m_StatReadsCount)
+        << "; " << WithSize(m_StatReadBytes) << " in " << WithTime(m_StatReadNanos)
+        << "; writes: " << WithDecSep(m_StatWritesCount)
+        << "; " << WithSize(m_StatWriteBytes) << " in " << WithTime(m_StatWriteNanos)
+        << std::endl;
 }
 
 namespace {
@@ -124,6 +149,7 @@ public:
     }
 
     virtual void Delete(int segment) {
+        m_Mutex->lock();
         if (HasData(segment)) {
             m_Heads[segment] = m_Tails[segment] = m_ReadPointers[segment] = -1;
             m_NonemptySegments--;
@@ -131,6 +157,7 @@ public:
         if (m_NonemptySegments == 0) {
             DeleteAll();
         }
+        m_Mutex->unlock();
     }
 
     virtual void DeleteAll() {

@@ -1,8 +1,9 @@
 #pragma once
 
+#include <atomic>
 #include <cstdint>
-#include <vector>
 #include <memory>
+#include <vector>
 
 class StoreImpl {
 public:
@@ -60,6 +61,8 @@ public:
     void Delete(int segment);
     void DeleteAll();
 
+    static void PrintStats();
+
     template<typename T>
     void WriteArray(int segment, const T* buffer, size_t size) {
         Write(segment, buffer, size * sizeof(T));
@@ -82,6 +85,15 @@ public:
         size_t read = ReadArray<T>(segment, &buffer[0], buffer.capacity());
         buffer.resize(read);
     }
+
 private:
     StoreImplRef m_Impl;
+
+private:
+    static std::atomic<uint64_t> m_StatReadsCount;
+    static std::atomic<uint64_t> m_StatReadNanos;
+    static std::atomic<uint64_t> m_StatReadBytes;
+    static std::atomic<uint64_t> m_StatWritesCount;
+    static std::atomic<uint64_t> m_StatWriteNanos;
+    static std::atomic<uint64_t> m_StatWriteBytes;
 };
