@@ -79,12 +79,20 @@
   <ItemGroup>
     <ClCompile Include="BoolArray.h" />
     <ClCompile Include="File.cpp" />
+    <ClCompile Include="InMemoryClassicBFS.cpp" />
+    <ClCompile Include="InMemoryFrontierSearch.cpp" />
+    <ClCompile Include="InMemoryThreeBitBFS.cpp" />
+    <ClCompile Include="InMemoryTwoBitBFS.cpp" />
     <ClCompile Include="Store.cpp" />
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Buffer.h" />
     <ClInclude Include="File.h" />
+    <ClInclude Include="InMemoryClassicBFS.h" />
+    <ClInclude Include="InMemoryFrontierSearch.h" />
+    <ClInclude Include="InMemoryThreeBitBFS.h" />
+    <ClInclude Include="InMemoryTwoBitBFS.h" />
     <ClInclude Include="Puzzle.h" />
     <ClInclude Include="Store.h" />
     <ClInclude Include="Util.h" />

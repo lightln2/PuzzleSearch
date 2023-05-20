@@ -111,6 +111,7 @@
     <ClCompile Include="DiskBasedTwoBitBFS.cpp" />
     <ClCompile Include="PermutationMap.cpp" />
     <ClCompile Include="SimpleSlidingTilePuzzle.cpp" />
+    <ClCompile Include="SlidingTilePuzzleSimple.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="Gpu.cu" />
@@ -121,6 +122,7 @@
     <ClInclude Include="GPU.h" />
     <ClInclude Include="PermutationMap.h" />
     <ClInclude Include="SimplePuzzle.h" />
+    <ClInclude Include="SlidingTilePuzzleSimple.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.vcxproj">

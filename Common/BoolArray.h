@@ -6,6 +6,38 @@
 #include <intrin.h>
 #include <vector>
 
+template<typename F>
+__forceinline void ScanBits(uint64_t val, uint64_t baseIndex, F func) {
+    unsigned long bitIndex;
+    while (_BitScanForward64(&bitIndex, val)) {
+        func(baseIndex | bitIndex);
+        //val &= ~(1ui64 << bitIndex);
+        val = _blsr_u64(val);
+    }
+}
+
+template<typename F>
+__forceinline void ScanTwoBits(uint64_t val, uint64_t baseIndex, F func) {
+    unsigned long bitIndex;
+    while (_BitScanForward64(&bitIndex, val)) {
+        auto pos = bitIndex / 2;
+        auto offset = pos * 2;
+        func(baseIndex | pos, (val >> offset) & 3);
+        val &= ~(3ui64 << offset);
+    }
+}
+
+template<typename F>
+__forceinline void ScanFourBits(uint64_t val, uint64_t baseIndex, F func) {
+    unsigned long bitIndex;
+    while (_BitScanForward64(&bitIndex, val)) {
+        auto pos = bitIndex / 4;
+        auto offset = pos * 4;
+        func(baseIndex | pos, (val >> offset) & 15);
+        val &= ~(15ui64 << offset);
+    }
+}
+
 class BoolArray {
 public:
     BoolArray() {}
@@ -41,12 +73,7 @@ public:
         for (uint64_t i = 0; i < m_Values.size(); i++) {
             auto val = m_Values[i];
             if (val == 0) continue;
-            unsigned long bitIndex;
-            while (_BitScanForward64(&bitIndex, val)) {
-                func((i * 64) | bitIndex);
-                //val &= ~(1ui64 << bitIndex);
-                val = _blsr_u64(val);
-            }
+            ::ScanBits(val, i * 64, func);
         }
     }
 
@@ -56,12 +83,7 @@ public:
             auto val = m_Values[i];
             m_Values[i] = 0;
             if (val == 0) continue;
-            unsigned long bitIndex;
-            while (_BitScanForward64(&bitIndex, val)) {
-                func((i * 64) | bitIndex);
-                //val &= ~(1ui64 << bitIndex);
-                val = _blsr_u64(val);
-            }
+            ::ScanBits(val, i * 64, func);
         }
     }
 

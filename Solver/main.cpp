@@ -99,7 +99,6 @@ int main() {
         //TestCPUvsGPU();
         
         //TestBoolArray();
-
         TestClassicBFS();
     }
     catch (const std::exception& ex) {

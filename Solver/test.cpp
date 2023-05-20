@@ -5,6 +5,11 @@
 #include "../ClassicBFS/PermutationMap.h"
 #include "../ClassicBFS/ClassicBFS.h"
 
+#include "../Common/InMemoryClassicBFS.h"
+#include "../Common/InMemoryTwoBitBFS.h"
+#include "../Common/InMemoryThreeBitBFS.h"
+#include "../Common/InMemoryFrontierSearch.h"
+#include "../ClassicBFS/SlidingTilePuzzleSimple.h"
 
 void TestBoolArray() {
     constexpr int TRY = 10;
@@ -32,10 +37,17 @@ void TestBoolArray() {
 
 void TestClassicBFS() {
     Timer timer;
-    SimpleSlidingPuzzle puzzle(4, 3);
     std::string initial = "0 1 2 3 4 5 6 7 8 9 10 11";
+    /*
+    SimpleSlidingPuzzle puzzle(4, 3);
     //ClassicBFS(puzzle, initial);
     ThreeBitBFS(puzzle, initial);
     //FrontierSearch(puzzle, initial);
+    */
+    SlidingTilePuzzleSimple puzzle(4, 3);
+    //InMemoryClassicBFS(puzzle, initial);
+    //InMemoryTwoBitBFS(puzzle, initial);
+    //InMemoryThreeBitBFS(puzzle, initial);
+    InMemoryFrontierSearch(puzzle, initial);
     std::cerr << "Time: " << timer << std::endl;
 }

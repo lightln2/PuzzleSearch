@@ -5,6 +5,10 @@
     <ClCompile Include="File.cpp" />
     <ClCompile Include="Store.cpp" />
     <ClCompile Include="BoolArray.h" />
+    <ClCompile Include="InMemoryClassicBFS.cpp" />
+    <ClCompile Include="InMemoryTwoBitBFS.cpp" />
+    <ClCompile Include="InMemoryThreeBitBFS.cpp" />
+    <ClCompile Include="InMemoryFrontierSearch.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Util.h" />
@@ -12,5 +16,9 @@
     <ClInclude Include="Buffer.h" />
     <ClInclude Include="Store.h" />
     <ClInclude Include="Puzzle.h" />
+    <ClInclude Include="InMemoryClassicBFS.h" />
+    <ClInclude Include="InMemoryTwoBitBFS.h" />
+    <ClInclude Include="InMemoryThreeBitBFS.h" />
+    <ClInclude Include="InMemoryFrontierSearch.h" />
   </ItemGroup>
 </Project>

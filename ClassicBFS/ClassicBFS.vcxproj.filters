@@ -6,6 +6,7 @@
     <ClCompile Include="ClassicBFS.cpp" />
     <ClCompile Include="DiskBasedTwoBitBFS.cpp" />
     <ClCompile Include="DiskBasedSearch.cpp" />
+    <ClCompile Include="SlidingTilePuzzleSimple.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PermutationMap.h" />
@@ -13,6 +14,7 @@
     <ClInclude Include="SimplePuzzle.h" />
     <ClInclude Include="ClassicBFS.h" />
     <ClInclude Include="DiskBasedSearch.h" />
+    <ClInclude Include="SlidingTilePuzzleSimple.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="Gpu.cu" />
