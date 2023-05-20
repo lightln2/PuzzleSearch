@@ -12,7 +12,7 @@ namespace {
             return (array[index / 16] >> offset) & 15;
         }
 
-        void SetBit(int index, int bit) {
+        void SetBit(uint64_t index, int bit) {
             auto offset = 4 * (index % 16);
             array[index / 16] |= (1ui64 << (offset + bit));
         }

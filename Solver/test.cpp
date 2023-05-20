@@ -1,14 +1,11 @@
 #include "../Common/BoolArray.h"
 #include "../Common/Util.h"
 
-#include "../ClassicBFS/GPU.h"
-#include "../ClassicBFS/PermutationMap.h"
-#include "../ClassicBFS/ClassicBFS.h"
-
 #include "../Common/InMemoryClassicBFS.h"
 #include "../Common/InMemoryTwoBitBFS.h"
 #include "../Common/InMemoryThreeBitBFS.h"
 #include "../Common/InMemoryFrontierSearch.h"
+#include "../ClassicBFS/SlidingTilePuzzleGpu.h"
 #include "../ClassicBFS/SlidingTilePuzzleSimple.h"
 
 void TestBoolArray() {
@@ -44,7 +41,8 @@ void TestClassicBFS() {
     ThreeBitBFS(puzzle, initial);
     //FrontierSearch(puzzle, initial);
     */
-    SlidingTilePuzzleSimple puzzle(4, 3);
+    //SlidingTilePuzzleSimple puzzle(4, 3);
+    SlidingTilePuzzleGpu puzzle(4, 3);
     //InMemoryClassicBFS(puzzle, initial);
     //InMemoryTwoBitBFS(puzzle, initial);
     //InMemoryThreeBitBFS(puzzle, initial);

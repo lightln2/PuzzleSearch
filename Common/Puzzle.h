@@ -6,7 +6,7 @@
 
 class Puzzle {
 public:
-    static constexpr size_t MAX_INDEXES_BUFFER = 128 * 1024;
+    static constexpr size_t MAX_INDEXES_BUFFER = 1 * 1024 * 1024;
     static constexpr uint64_t INVALID_INDEX = uint64_t(-1);
 
 public:
@@ -18,8 +18,8 @@ public:
     virtual uint64_t Parse(std::string state) = 0;
 
     virtual void Expand(
-        const std::vector<uint64_t>& indexes,
-        const std::vector<int>& usedOperatorBits,
+        std::vector<uint64_t>& indexes,
+        std::vector<int>& usedOperatorBits,
         std::vector<uint64_t>& expandedIndexes,
         std::vector<int>& expandedOperators) = 0;
 };

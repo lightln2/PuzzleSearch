@@ -106,22 +106,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ClassicBFS.cpp" />
-    <ClCompile Include="DiskBasedSearch.cpp" />
-    <ClCompile Include="DiskBasedTwoBitBFS.cpp" />
     <ClCompile Include="PermutationMap.cpp" />
-    <ClCompile Include="SimpleSlidingTilePuzzle.cpp" />
+    <ClCompile Include="SlidingTilePuzzleGpu.cpp" />
     <ClCompile Include="SlidingTilePuzzleSimple.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="Gpu.cu" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ClassicBFS.h" />
-    <ClInclude Include="DiskBasedSearch.h" />
     <ClInclude Include="GPU.h" />
     <ClInclude Include="PermutationMap.h" />
-    <ClInclude Include="SimplePuzzle.h" />
+    <ClInclude Include="SlidingTilePuzzleGpu.h" />
     <ClInclude Include="SlidingTilePuzzleSimple.h" />
   </ItemGroup>
   <ItemGroup>

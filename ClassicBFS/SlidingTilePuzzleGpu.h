@@ -5,9 +5,10 @@
 #include <cstdint>
 #include <string>
 
-class SlidingTilePuzzleSimple : public Puzzle {
+class SlidingTilePuzzleGpu : public Puzzle {
 public:
-    SlidingTilePuzzleSimple(int width, int height);
+    SlidingTilePuzzleGpu(int width, int height);
+    ~SlidingTilePuzzleGpu();
 
     virtual int OperatorsCount() const { return 4; }
 
@@ -24,10 +25,9 @@ public:
         std::vector<int>& expandedOperators);
 
 private:
-    void Expand(uint64_t index, int op, uint64_t* children, int* operators);
-
-private:
     int m_Width;
     int m_Height;
     int m_Size;
+    uint64_t* gpuSrc;
+    uint64_t* gpuDst;
 };

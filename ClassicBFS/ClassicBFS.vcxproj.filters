@@ -2,19 +2,14 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="PermutationMap.cpp" />
-    <ClCompile Include="SimpleSlidingTilePuzzle.cpp" />
-    <ClCompile Include="ClassicBFS.cpp" />
-    <ClCompile Include="DiskBasedTwoBitBFS.cpp" />
-    <ClCompile Include="DiskBasedSearch.cpp" />
     <ClCompile Include="SlidingTilePuzzleSimple.cpp" />
+    <ClCompile Include="SlidingTilePuzzleGpu.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PermutationMap.h" />
     <ClInclude Include="GPU.h" />
-    <ClInclude Include="SimplePuzzle.h" />
-    <ClInclude Include="ClassicBFS.h" />
-    <ClInclude Include="DiskBasedSearch.h" />
     <ClInclude Include="SlidingTilePuzzleSimple.h" />
+    <ClInclude Include="SlidingTilePuzzleGpu.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="Gpu.cu" />

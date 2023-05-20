@@ -92,8 +92,8 @@ void SlidingTilePuzzleSimple::Expand(uint64_t index, int op, uint64_t* children,
 }
 
 void SlidingTilePuzzleSimple::Expand(
-    const std::vector<uint64_t>& indexes,
-    const std::vector<int>& usedOperatorBits,
+    std::vector<uint64_t>& indexes,
+    std::vector<int>& usedOperatorBits,
     std::vector<uint64_t>& expandedIndexes,
     std::vector<int>& expandedOperators)
 {
