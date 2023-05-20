@@ -1,6 +1,8 @@
 #include "InMemoryClassicBFS.h"
 #include "BoolArray.h"
 
+#include <optional>
+
 namespace {
 
     struct FourBitArray {
@@ -17,9 +19,23 @@ namespace {
             array[index / 16] |= (1ui64 << (offset + bit));
         }
 
+        void Clear(uint64_t index) {
+            auto offset = 4 * (index % 16);
+            array[index / 16] &= ~(15ui64 << offset);
+        }
+
         void Clear() {
             for (uint64_t i = 0; i < array.size(); i++) {
                 array[i] = 0;
+            }
+        }
+
+        template<typename F>
+        void Scan(F func) {
+            for (uint64_t i = 0; i < array.size(); i++) {
+                uint64_t val = array[i];
+                if (val == 0) continue;
+                ScanFourBits(val, i * 16, func);
             }
         }
 
@@ -45,57 +61,46 @@ std::vector<uint64_t> InMemoryFrontierSearch(Puzzle& puzzle, std::string initial
     FourBitArray current(SIZE);
     FourBitArray next(SIZE);
 
-    std::vector<uint64_t> indexes;
-    std::vector<int> usedOperatorBits;
-    std::vector<uint64_t> childIndexes;
-    std::vector<int> childOperators;
+    BoolArray currentExclude(puzzle.HasOddLengthCycles() ? SIZE : 0);
+    BoolArray nextExclude(puzzle.HasOddLengthCycles() ? SIZE : 0);
 
-    indexes.reserve(Puzzle::MAX_INDEXES_BUFFER);
-    usedOperatorBits.reserve(Puzzle::MAX_INDEXES_BUFFER);
+    ExpandBuffer nodes(puzzle);
 
-    std::cerr << "Step: 0; count: 1" << std::endl;
-
-    auto fnExpand = [&]() {
-        puzzle.Expand(indexes, usedOperatorBits, childIndexes, childOperators);
-        for (int i = 0; i < childIndexes.size(); i++) {
-            auto child = childIndexes[i];
-            auto bit = childOperators[i];
-            if (child == puzzle.INVALID_INDEX) continue;
-            next.SetBit(child, bit);
-        }
-
-        indexes.clear();
-        usedOperatorBits.clear();
-        childIndexes.clear();
-        childOperators.clear();
+    auto fnExpand = [&](uint32_t child, int op) {
+        next.SetBit(child, op);
     };
 
     while (true) {
+        Timer timerStep;
+
         uint64_t count = 0;
+
         if (result.size() == 0) {
             auto initialIndex = puzzle.Parse(initialState);
-            indexes.push_back(initialIndex);
-            usedOperatorBits.push_back(0);
+            nodes.Add(initialIndex, 0, fnExpand);
+            if (puzzle.HasOddLengthCycles()) {
+                nextExclude.Set(initialIndex);
+            }
             count++;
-            fnExpand();
         }
         else {
             current.ScanAndClear([&](uint64_t index, int val) {
-                count++;
-                indexes.push_back(index);
-                usedOperatorBits.push_back(val);
-                if (indexes.size() == Puzzle::MAX_INDEXES_BUFFER) {
-                    fnExpand();
+                if (puzzle.HasOddLengthCycles()) {
+                    if (currentExclude.Get(index)) return;
+                    nextExclude.Set(index);
                 }
+                nodes.Add(index, val, fnExpand);
+                count++;
             });
-            if (indexes.size() > 0) {
-                fnExpand();
-            }
         }
+        nodes.Finish(fnExpand);
+
         if (count == 0) break;
 
         std::swap(current, next);
-        std::cerr << "Step: " << result.size() << "; count: " << count << std::endl;
+        std::swap(currentExclude, nextExclude);
+        nextExclude.Clear();
+        std::cerr << "Step: " << result.size() << "; count: " << count << " in " << timerStep << std::endl;
         result.push_back(count);
     }
 

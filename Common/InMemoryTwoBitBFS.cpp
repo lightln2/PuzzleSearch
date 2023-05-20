@@ -7,11 +7,11 @@ namespace {
     public:
         TwoBitArray(uint64_t size) : array(size * 2, false) {}
 
-        int Get(int index) {
+        int Get(uint64_t index) {
             return array[2 * index] * 2 + array[2 * index + 1];
         }
 
-        void Set(int index, int value) {
+        void Set(uint64_t index, int value) {
             array[2 * index] = value / 2;
             array[2 * index + 1] = value % 2;
         }
@@ -28,13 +28,7 @@ std::vector<uint64_t> InMemoryTwoBitBFS(Puzzle& puzzle, std::string initialState
 
     int UNVISITED = 0, OLD = 1, CUR = 2, NEXT = 3;
 
-    std::vector<uint64_t> indexes;
-    std::vector<int> usedOperatorBits;
-    std::vector<uint64_t> childIndexes;
-    std::vector<int> childOperators;
-
-    indexes.reserve(Puzzle::MAX_INDEXES_BUFFER);
-    usedOperatorBits.reserve(Puzzle::MAX_INDEXES_BUFFER);
+    ExpandBuffer nodes(puzzle);
 
     TwoBitArray array(SIZE);
     for (uint64_t i = 0; i < SIZE; i++) array.Set(i, UNVISITED);
@@ -42,40 +36,26 @@ std::vector<uint64_t> InMemoryTwoBitBFS(Puzzle& puzzle, std::string initialState
     array.Set(initialIndex, CUR);
     result.push_back(1);
 
-    auto fnExpand = [&]() {
-        int cnt = 0;
-        puzzle.Expand(indexes, usedOperatorBits, childIndexes, childOperators);
-        for (const auto child : childIndexes) {
-            if (child == puzzle.INVALID_INDEX) continue;
-            if (array.Get(child) == UNVISITED) {
-                cnt++;
-                array.Set(child, NEXT);
-            }
-        }
-        indexes.clear();
-        usedOperatorBits.clear();
-        childIndexes.clear();
-        childOperators.clear();
-        return cnt;
-    };
-
     std::cerr << "Step: 0; count: 1" << std::endl;
 
     while (true) {
         uint64_t count = 0;
+
+        auto fnExpand = [&](uint64_t child, int op) {
+            if (array.Get(child) == UNVISITED) {
+                count++;
+                array.Set(child, NEXT);
+            }
+        };
+
         for (uint64_t i = 0; i < SIZE; i++) {
             int val = array.Get(i);
             if (val != CUR) continue;
             array.Set(i, OLD);
-            indexes.push_back(i);
-            usedOperatorBits.push_back(0);
-            if (indexes.size() == Puzzle::MAX_INDEXES_BUFFER) {
-                count += fnExpand();
-            }
+            nodes.Add(i, 0, fnExpand);
         }
-        if (indexes.size() > 0) {
-            count += fnExpand();
-        }
+        nodes.Finish(fnExpand);
+
         if (count == 0) break;
         result.push_back(count);
 

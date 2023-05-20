@@ -12,6 +12,7 @@ public:
 public:
     virtual int OperatorsCount() const = 0;
     virtual uint64_t IndexesCount() const = 0;
+    virtual bool HasOddLengthCycles() const = 0;
 
     virtual std::string ToString(uint64_t index) = 0;
 
@@ -36,7 +37,7 @@ public:
     template<typename F>
     void Add(uint64_t index, int usedOperatorBits, F func) {
         indexes.push_back(index);
-        usedOperatorBits.push_back(0);
+        this->usedOperatorBits.push_back(usedOperatorBits);
         if (indexes.size() == Puzzle::MAX_INDEXES_BUFFER) {
             Expand(func);
         }
@@ -51,7 +52,7 @@ public:
 
 private:
     template<typename F>
-    uint64_t Expand(F func) {
+    void Expand(F func) {
         puzzle.Expand(indexes, usedOperatorBits, childIndexes, childOperators);
         for (size_t i = 0; i < childIndexes.size(); i++) {
             auto childIndex = childIndexes[i];

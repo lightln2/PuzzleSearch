@@ -56,13 +56,13 @@ TEST(SimplePuzzleTest, TestSlidingTileGpu3x2) {
     usedOpBits.push_back(0);
     puz.Expand(indexes, usedOpBits, children, ops);
     EXPECT_EQ(puz.INVALID_INDEX, children[0]);
-    EXPECT_EQ(-1, ops[0]);
+    EXPECT_EQ(15, ops[0]);
     EXPECT_EQ("3 1 2 0 4 5", puz.ToString(children[1]));
-    EXPECT_NE(-1, ops[1]);
+    EXPECT_NE(15, ops[1]);
     EXPECT_EQ(puz.INVALID_INDEX, children[2]);
-    EXPECT_EQ(-1, ops[2]);
+    EXPECT_EQ(15, ops[2]);
     EXPECT_EQ("1 0 2 3 4 5", puz.ToString(children[3]));
-    EXPECT_NE(-1, ops[3]);
+    EXPECT_NE(15, ops[3]);
 }
 
 TEST(SimplePuzzleTest, TestSlidingTileGpu4x4) {

@@ -14,6 +14,8 @@ public:
 
     virtual uint64_t IndexesCount() const;
 
+    virtual bool HasOddLengthCycles() const { return false; }
+
     virtual std::string ToString(uint64_t index);
 
     virtual uint64_t Parse(std::string state);

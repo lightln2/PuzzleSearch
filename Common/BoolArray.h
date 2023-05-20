@@ -6,6 +6,10 @@
 #include <intrin.h>
 #include <vector>
 
+__forceinline uint64_t BitsCount(uint64_t val) {
+    return __popcnt64(val);
+}
+
 template<typename F>
 __forceinline void ScanBits(uint64_t val, uint64_t baseIndex, F func) {
     unsigned long bitIndex;
@@ -57,6 +61,14 @@ public:
 
     bool Get(uint64_t index) {
         return m_Values[index / 64] & (1ui64 << (index & 63));
+    }
+
+    uint64_t BitsCount() {
+        uint64_t result = 0;
+        for (uint64_t i = 0; i < m_Values.size(); i++) {
+            result += ::BitsCount(m_Values[i]);
+        }
+        return result;
     }
 
     std::vector<uint64_t>& Data() { return m_Values; }
