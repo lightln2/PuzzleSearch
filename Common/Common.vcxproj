@@ -78,22 +78,27 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BoolArray.h" />
+    <ClCompile Include="DiskBasedClassicBFS.cpp" />
     <ClCompile Include="File.cpp" />
     <ClCompile Include="InMemoryClassicBFS.cpp" />
     <ClCompile Include="InMemoryFrontierSearch.cpp" />
     <ClCompile Include="InMemoryThreeBitBFS.cpp" />
     <ClCompile Include="InMemoryTwoBitBFS.cpp" />
+    <ClCompile Include="Multiplexor.cpp" />
+    <ClCompile Include="SegmentReader.cpp" />
+    <ClCompile Include="SegmentWriter.cpp" />
     <ClCompile Include="Store.cpp" />
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Buffer.h" />
+    <ClInclude Include="DiskBasedBFS.h" />
     <ClInclude Include="File.h" />
-    <ClInclude Include="InMemoryClassicBFS.h" />
-    <ClInclude Include="InMemoryFrontierSearch.h" />
-    <ClInclude Include="InMemoryThreeBitBFS.h" />
-    <ClInclude Include="InMemoryTwoBitBFS.h" />
+    <ClInclude Include="InMemoryBFS.h" />
+    <ClInclude Include="Multiplexor.h" />
     <ClInclude Include="Puzzle.h" />
+    <ClInclude Include="SegmentReader.h" />
+    <ClInclude Include="SegmentWriter.h" />
     <ClInclude Include="Store.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>

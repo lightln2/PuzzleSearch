@@ -1,12 +1,10 @@
 #include "../Common/BoolArray.h"
 #include "../Common/Util.h"
 
-#include "../Common/InMemoryClassicBFS.h"
-#include "../Common/InMemoryTwoBitBFS.h"
-#include "../Common/InMemoryThreeBitBFS.h"
-#include "../Common/InMemoryFrontierSearch.h"
+#include "../Common/InMemoryBFS.h"
 #include "../ClassicBFS/SlidingTilePuzzleGpu.h"
 #include "../ClassicBFS/SlidingTilePuzzleSimple.h"
+#include "../Common/DiskBasedBFS.h"
 
 void TestBoolArray() {
     constexpr int TRY = 10;
@@ -33,7 +31,6 @@ void TestBoolArray() {
 }
 
 void TestClassicBFS() {
-    Timer timer;
     std::string initial = "0 1 2 3 4 5 6 7 8 9 10 11";
 
     /*
@@ -52,5 +49,15 @@ void TestClassicBFS() {
         InMemoryThreeBitBFS(puzzle, initial);
         //InMemoryFrontierSearch(puzzle, initial);
     }
-    std::cerr << "Time: " << timer << std::endl;
+}
+
+
+void TestDiskBasedBFS() {
+    std::string initial = "0 1 2 3 4 5 6 7 8 9 10 11";
+
+    SlidingTilePuzzleGpu puzzle(4, 3);
+    PuzzleOptions opts;
+    opts.directories = { "c:/temp" };
+    opts.segmentBits = 24;
+    DiskBasedClassicBFS(puzzle, initial, opts);
 }

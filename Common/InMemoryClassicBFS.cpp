@@ -1,4 +1,4 @@
-#include "InMemoryClassicBFS.h"
+#include "InMemoryBFS.h"
 #include "BoolArray.h"
 
 std::vector<uint64_t> InMemoryClassicBFS(Puzzle& puzzle, std::string initialState) {

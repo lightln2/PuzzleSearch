@@ -87,6 +87,7 @@ void MTFrontierSearch4x3() {
 
 void TestBoolArray();
 void TestClassicBFS();
+void TestDiskBasedBFS();
 
 int main() {
     try {
@@ -99,7 +100,8 @@ int main() {
         //TestCPUvsGPU();
         
         //TestBoolArray();
-        TestClassicBFS();
+        //TestClassicBFS();
+        TestDiskBasedBFS();
     }
     catch (const std::exception& ex) {
         std::cerr << "Error: " << ex.what() << std::endl;

@@ -2,10 +2,7 @@
 
 #include "../ClassicBFS/SlidingTilePuzzleGpu.h"
 #include "../ClassicBFS/SlidingTilePuzzleSimple.h"
-#include "../Common/InMemoryClassicBFS.h"
-#include "../Common/InMemoryTwoBitBFS.h"
-#include "../Common/InMemoryThreeBitBFS.h"
-#include "../Common/InMemoryFrontierSearch.h"
+#include "../Common/InMemoryBFS.h"
 
 #include <string>
 #include <sstream>

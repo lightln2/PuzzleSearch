@@ -1,8 +1,11 @@
 #pragma once
 
+#include "Util.h"
+
 #include <atomic>
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <vector>
 
 class StoreImpl {
@@ -65,7 +68,7 @@ public:
 
     template<typename T>
     void WriteArray(int segment, const T* buffer, size_t size) {
-        Write(segment, buffer, size * sizeof(T));
+        Write(segment, (void*)buffer, size * sizeof(T));
     }
 
     template<typename T>
@@ -75,13 +78,14 @@ public:
 
     template<typename T>
     size_t ReadArray(int segment, T* buffer, size_t capacity) {
-        size_t read = Read(segment, buffer, capacity * sizeof(T));
+        size_t read = Read(segment, (void*)buffer, capacity * sizeof(T));
         ensure(read % sizeof(T) == 0);
         return read / sizeof(T);
     }
 
     template<typename T>
     void Read(int segment, std::vector<T>& buffer) {
+        buffer.resize(buffer.capacity());
         size_t read = ReadArray<T>(segment, &buffer[0], buffer.capacity());
         buffer.resize(read);
     }

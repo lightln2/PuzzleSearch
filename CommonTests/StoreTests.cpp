@@ -2,6 +2,9 @@
 
 #include "../Common/Store.h"
 #include "../Common/Util.h"
+#include "../Common/SegmentReader.h"
+#include "../Common/SegmentWriter.h"
+#include "../Common/Multiplexor.h"
 
 void TestStore(Store& store) {
 	constexpr size_t SIZE = 10 * 1024;
@@ -63,4 +66,65 @@ TEST(StoreTests, SwapStores) {
 	auto store1 = Store::CreateSequentialStore(50, { "./f1" });
 	auto store2 = Store::CreateSequentialStore(50, { "./f2" });
 	std::swap(store1, store2);
+}
+
+TEST(StoreTests, TestReaderWriter) {
+	constexpr int SEGMENTS = 6;
+	constexpr uint32_t VALUES = 5 * 1024 * 1024;
+
+	auto store = Store::CreateSequentialStore(SEGMENTS, { "./f1" });
+	SegmentReader reader(store);
+	SegmentWriter writer(store);
+
+	for (int i = 0; i < SEGMENTS; i++) {
+		writer.SetSegment(i);
+		for (uint32_t j = 0; j < VALUES; j++) {
+			writer.Add(j);
+		}
+		writer.Flush();
+	}
+
+	for (int i = 0; i < SEGMENTS; i++) {
+		reader.SetSegment(i);
+		uint64_t count = 0;
+		uint64_t sum = 0;
+		while (true) {
+			auto& data = reader.Read();
+			if (data.empty()) break;
+			count += data.size();
+			for (auto v : data) sum += v;
+		}
+		EXPECT_EQ(VALUES, count);
+		EXPECT_EQ((uint64_t)VALUES * (VALUES - 1) / 2, sum);
+	}
+}
+
+TEST(StoreTests, TestMultiplexor) {
+	constexpr int SEGMENTS = 6;
+	constexpr uint32_t VALUES = 5 * 1024 * 1024;
+
+	auto store = Store::CreateSequentialStore(SEGMENTS, { "./f1" });
+	SegmentReader reader(store);
+	Multiplexor mp(store, SEGMENTS);
+
+	for (uint32_t j = 0; j < VALUES; j++) {
+		for (int i = 0; i < SEGMENTS; i++) {
+			mp.Add(i, j);
+		}
+	}
+	mp.FlushAllSegments();
+
+	for (int i = 0; i < SEGMENTS; i++) {
+		reader.SetSegment(i);
+		uint64_t count = 0;
+		uint64_t sum = 0;
+		while (true) {
+			auto& data = reader.Read();
+			if (data.empty()) break;
+			count += data.size();
+			for (auto v : data) sum += v;
+		}
+		EXPECT_EQ(VALUES, count);
+		EXPECT_EQ((uint64_t)VALUES * (VALUES - 1) / 2, sum);
+	}
 }

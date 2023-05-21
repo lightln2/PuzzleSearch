@@ -1,4 +1,4 @@
-#include "InMemoryClassicBFS.h"
+#include "InMemoryBFS.h"
 #include "BoolArray.h"
 
 #include <optional>

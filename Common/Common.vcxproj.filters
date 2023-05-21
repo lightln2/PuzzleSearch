@@ -9,6 +9,10 @@
     <ClCompile Include="InMemoryTwoBitBFS.cpp" />
     <ClCompile Include="InMemoryThreeBitBFS.cpp" />
     <ClCompile Include="InMemoryFrontierSearch.cpp" />
+    <ClCompile Include="Multiplexor.cpp" />
+    <ClCompile Include="SegmentReader.cpp" />
+    <ClCompile Include="SegmentWriter.cpp" />
+    <ClCompile Include="DiskBasedClassicBFS.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Util.h" />
@@ -16,9 +20,10 @@
     <ClInclude Include="Buffer.h" />
     <ClInclude Include="Store.h" />
     <ClInclude Include="Puzzle.h" />
-    <ClInclude Include="InMemoryClassicBFS.h" />
-    <ClInclude Include="InMemoryTwoBitBFS.h" />
-    <ClInclude Include="InMemoryThreeBitBFS.h" />
-    <ClInclude Include="InMemoryFrontierSearch.h" />
+    <ClInclude Include="Multiplexor.h" />
+    <ClInclude Include="InMemoryBFS.h" />
+    <ClInclude Include="SegmentReader.h" />
+    <ClInclude Include="SegmentWriter.h" />
+    <ClInclude Include="DiskBasedBFS.h" />
   </ItemGroup>
 </Project>
