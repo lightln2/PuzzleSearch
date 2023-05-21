@@ -63,10 +63,32 @@ public:
         return m_Values[index / 64] & (1ui64 << (index & 63));
     }
 
+    void AndNot(const BoolArray& exclude) {
+        for (uint64_t i = 0; i < m_Values.size(); i++) {
+            m_Values[i] &= ~exclude.m_Values[i];
+        }
+    }
+
+    void Or(const BoolArray& other) {
+        for (uint64_t i = 0; i < m_Values.size(); i++) {
+            m_Values[i] |= other.m_Values[i];
+        }
+    }
+
     uint64_t BitsCount() {
         uint64_t result = 0;
         for (uint64_t i = 0; i < m_Values.size(); i++) {
             result += ::BitsCount(m_Values[i]);
+        }
+        return result;
+    }
+
+    uint64_t AndNotAndCount(const BoolArray& exclude) {
+        uint64_t result = 0;
+        for (uint64_t i = 0; i < m_Values.size(); i++) {
+            uint64_t val = m_Values[i] & ~exclude.m_Values[i];
+            m_Values[i] = val;
+            result += ::BitsCount(val);
         }
         return result;
     }

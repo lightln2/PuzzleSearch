@@ -16,23 +16,22 @@ std::vector<uint64_t> InMemoryClassicBFS(Puzzle& puzzle, std::string initialStat
 
     ExpandBuffer nodes(puzzle);
 
+    auto fnExpand = [&](uint64_t child, int op) {
+        newOpenList.Set(child);
+    };
+
+
     std::cerr << "InMemoryClassicBFS" << std::endl;
     std::cerr << "Step: 0; count: 1" << std::endl;
 
     while (true) {
-        uint64_t count = 0;
-
-        auto fnExpand = [&](uint64_t child, int op) {
-            if (closedList.Get(child)) return;
-            count++;
-            closedList.Set(child);
-            newOpenList.Set(child);
-        };
-
         openList.ScanBitsAndClear([&](uint64_t index) {
             nodes.Add(index, 0, fnExpand);
         });
         nodes.Finish(fnExpand);
+
+        uint64_t count = newOpenList.AndNotAndCount(closedList);
+        closedList.Or(newOpenList);
 
         if (count == 0) break;
         result.push_back(count);

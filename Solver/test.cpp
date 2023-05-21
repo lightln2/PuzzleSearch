@@ -49,8 +49,8 @@ void TestClassicBFS() {
         SlidingTilePuzzleGpu puzzle(4, 3);
         //InMemoryClassicBFS(puzzle, initial);
         //InMemoryTwoBitBFS(puzzle, initial);
-        //InMemoryThreeBitBFS(puzzle, initial);
-        InMemoryFrontierSearch(puzzle, initial);
+        InMemoryThreeBitBFS(puzzle, initial);
+        //InMemoryFrontierSearch(puzzle, initial);
     }
     std::cerr << "Time: " << timer << std::endl;
 }
