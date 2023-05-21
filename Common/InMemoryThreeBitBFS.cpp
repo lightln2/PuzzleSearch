@@ -2,6 +2,7 @@
 #include "BoolArray.h"
 
 std::vector<uint64_t> InMemoryThreeBitBFS(Puzzle& puzzle, std::string initialState) {
+    Timer timer;
     const auto SIZE = puzzle.IndexesCount();
     std::vector<uint64_t> result;
 
@@ -15,6 +16,7 @@ std::vector<uint64_t> InMemoryThreeBitBFS(Puzzle& puzzle, std::string initialSta
 
     ExpandBuffer nodes(puzzle);
 
+    std::cerr << "InMemoryThreeBitBFS" << std::endl;
     std::cerr << "Step: 0; count: 1" << std::endl;
 
     while (true) {
@@ -41,5 +43,6 @@ std::vector<uint64_t> InMemoryThreeBitBFS(Puzzle& puzzle, std::string initialSta
         std::cerr << "Step: " << result.size() << "; count: " << count << std::endl;
     }
 
+    std::cerr << "Time: " << timer << std::endl;
     return result;
 }

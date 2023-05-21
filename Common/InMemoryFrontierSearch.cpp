@@ -55,6 +55,7 @@ namespace {
 } // namespace
 
 std::vector<uint64_t> InMemoryFrontierSearch(Puzzle& puzzle, std::string initialState) {
+    Timer timer;
     const auto SIZE = puzzle.IndexesCount();
     std::vector<uint64_t> result;
 
@@ -69,6 +70,8 @@ std::vector<uint64_t> InMemoryFrontierSearch(Puzzle& puzzle, std::string initial
     auto fnExpand = [&](uint32_t child, int op) {
         next.SetBit(child, op);
     };
+
+    std::cerr << "InMemoryFrontierSearch" << std::endl;
 
     while (true) {
         Timer timerStep;
@@ -104,5 +107,6 @@ std::vector<uint64_t> InMemoryFrontierSearch(Puzzle& puzzle, std::string initial
         result.push_back(count);
     }
 
+    std::cerr << "Time: " << timer << std::endl;
     return result;
 }

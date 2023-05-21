@@ -35,17 +35,22 @@ void TestBoolArray() {
 void TestClassicBFS() {
     Timer timer;
     std::string initial = "0 1 2 3 4 5 6 7 8 9 10 11";
+
     /*
-    SimpleSlidingPuzzle puzzle(4, 3);
-    //ClassicBFS(puzzle, initial);
-    ThreeBitBFS(puzzle, initial);
-    //FrontierSearch(puzzle, initial);
+    {
+        SlidingTilePuzzleSimple puzzle(4, 3);
+        InMemoryClassicBFS(puzzle, initial);
+        InMemoryTwoBitBFS(puzzle, initial);
+        InMemoryThreeBitBFS(puzzle, initial);
+        InMemoryFrontierSearch(puzzle, initial);
+    }
     */
-    //SlidingTilePuzzleSimple puzzle(4, 3);
-    SlidingTilePuzzleGpu puzzle(4, 3);
-    //InMemoryClassicBFS(puzzle, initial);
-    //InMemoryTwoBitBFS(puzzle, initial);
-    //InMemoryThreeBitBFS(puzzle, initial);
-    InMemoryFrontierSearch(puzzle, initial);
+    {
+        SlidingTilePuzzleGpu puzzle(4, 3);
+        //InMemoryClassicBFS(puzzle, initial);
+        //InMemoryTwoBitBFS(puzzle, initial);
+        //InMemoryThreeBitBFS(puzzle, initial);
+        InMemoryFrontierSearch(puzzle, initial);
+    }
     std::cerr << "Time: " << timer << std::endl;
 }
