@@ -59,6 +59,10 @@ public:
         m_Values[index / 64] |= (1ui64 << (index & 63));
     }
 
+    void Clear(uint64_t index) {
+        m_Values[index / 64] &= ~(1ui64 << (index & 63));
+    }
+
     bool Get(uint64_t index) {
         return m_Values[index / 64] & (1ui64 << (index & 63));
     }

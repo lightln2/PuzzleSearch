@@ -6,15 +6,38 @@
 #include "Store.h"
 #include "Util.h"
 
+namespace {
+
+    void LoadBoolArray(int segment, Store& store, BoolArray& arr) {
+        arr.Clear();
+        auto read = store.ReadArray(segment, &arr.Data()[0], arr.Data().size());
+        ensure(read == 0 || read == arr.Data().size());
+        store.Delete(segment);
+    };
+
+    void SaveBoolArray(int segment, Store& store, BoolArray& arr) {
+        store.WriteArray(segment, &arr.Data()[0], arr.Data().size());
+        arr.Clear();
+    };
+
+
+} // namespace
+
 std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
     std::cerr << "DB_BFS" << std::endl;
     Timer timer;
     const uint64_t SIZE = puzzle.IndexesCount();
-    const uint64_t SEGMENT_SIZE = 1ui64 << opts.segmentBits;
+    uint64_t SEGMENT_SIZE = 1ui64 << opts.segmentBits;
     const uint64_t SEGMENT_MASK = SEGMENT_SIZE - 1;
     const int SEGMENTS = (SIZE + SEGMENT_SIZE - 1) / SEGMENT_SIZE;
+    if (SEGMENTS == 1 && SEGMENT_SIZE > SIZE) {
+        SEGMENT_SIZE = SIZE; // SEGMENT_MASK is still valid
+    }
 
-    std::cerr << "segments: " << SEGMENTS << std::endl;
+    std::cerr
+        << "total: " << WithDecSep(SIZE)
+        << "; segments: " << WithDecSep(SEGMENTS)
+        << "; segment size: " << WithDecSep(SEGMENT_SIZE) << std::endl;
 
     std::vector<uint64_t> result;
 
@@ -47,29 +70,17 @@ std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialSta
     BoolArray openList(SEGMENT_SIZE);
     BoolArray newOpenList(SEGMENT_SIZE);
 
-    auto fnLoadBoolArray = [](int segment, Store& store, BoolArray& arr) {
-        arr.Clear();
-        auto read = store.ReadArray(segment, &arr.Data()[0], arr.Data().size());
-        ensure(read == 0 || read == arr.Data().size());
-        store.Delete(segment);
-    };
-
-    auto fnSaveBoolArray = [](int segment, Store& store, BoolArray& arr) {
-        store.WriteArray(segment, &arr.Data()[0], arr.Data().size());
-        arr.Clear();
-    };
-
     auto fnLoadClosedList = [&](int segment) {
-        fnLoadBoolArray(segment, currentClosedListStore, closedList);
+        LoadBoolArray(segment, currentClosedListStore, closedList);
     };
     auto fnSaveClosedList = [&](int segment) {
-        fnSaveBoolArray(segment, nextClosedListStore, closedList);
+        SaveBoolArray(segment, nextClosedListStore, closedList);
     };
     auto fnLoadOpenList = [&](int segment) {
-        fnLoadBoolArray(segment, currentOpenListStore, openList);
+        LoadBoolArray(segment, currentOpenListStore, openList);
     };
     auto fnSaveOpenList = [&](int segment) {
-        fnSaveBoolArray(segment, nextOpenListStore, newOpenList);
+        SaveBoolArray(segment, nextOpenListStore, newOpenList);
     };
 
     auto fnGetSegIdx = [&](uint64_t index) {
@@ -78,23 +89,18 @@ std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialSta
 
     auto initialIndex = puzzle.Parse(initialState);
     auto [seg, idx] = fnGetSegIdx(initialIndex);
-
     newOpenList.Set(idx);
-    //closedList.Set(idx);
     fnSaveOpenList(seg);
-    //fnSaveClosedList(seg);
     std::swap(currentOpenListStore, nextOpenListStore);
-    //std::swap(currentClosedListStore, nextClosedListStore);
-    //std::swap(currentCrossSegmentStore, nextCrossSegmentStore);
-
-    //result.push_back(1);
 
     ExpandBuffer nodes(puzzle);
 
-    //std::cerr << "Step: 0; count: 1" << std::endl;
+    uint64_t total_sz_open = 0;
+    uint64_t total_sz_closed = 0;
+    uint64_t total_sz_xseg = 0;
 
     while (true) {
-
+        Timer stepTimer;
         uint64_t totalCount = 0;
 
         for (int segment = 0; segment < SEGMENTS; segment++) {
@@ -103,13 +109,11 @@ std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialSta
             fnLoadOpenList(segment);
             fnLoadClosedList(segment);
             currentXSegReader.SetSegment(segment);
-            //std::cerr << "ST segment: " << segment << "; openList: " << openList.BitsCount() << "; closedList: " << closedList.BitsCount() << std::endl;
 
             while (true) {
                 auto& vect = currentXSegReader.Read();
                 if (vect.empty()) break;
                 for (uint32_t idx : vect) {
-                    //std::cerr << "RD: " << segment << ":" << idx << std::endl;
                     openList.Set(idx);
                 }
             }
@@ -121,10 +125,7 @@ std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialSta
             auto fnExpand = [&](uint64_t child, int op) {
                 auto [seg, idx] = fnGetSegIdx(child);
                 if (seg == segment) newOpenList.Set(idx);
-                else {
-                    //std::cerr << "XSEG: " << seg << ":" << idx << std::endl;
-                    mult.Add(seg, idx);
-                }
+                else mult.Add(seg, idx);
             };
 
             openList.ScanBitsAndClear([&](uint64_t index) {
@@ -135,9 +136,6 @@ std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialSta
             mult.FlushAllSegments();
 
             newOpenList.AndNot(closedList);
-
-
-            //std::cerr << "FN segment: " << segment << "; openList: " << newOpenList.BitsCount() << "; closedList: " << closedList.BitsCount() << std::endl;
 
             fnSaveOpenList(segment);
             fnSaveClosedList(segment);
@@ -151,9 +149,25 @@ std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialSta
         std::swap(currentOpenListStore, nextOpenListStore);
         std::swap(currentClosedListStore, nextClosedListStore);
         std::swap(currentCrossSegmentStore, nextCrossSegmentStore);
-        std::cerr << "Step: " << result.size() << "; count: " << totalCount << std::endl;
+        std::cerr 
+            << "Step: " << result.size() 
+            << "; count: " << totalCount
+            << " in " << stepTimer 
+            << "; size: open=" << WithSize(currentOpenListStore.TotalLength())
+            << ", closed=" << WithSize(currentClosedListStore.TotalLength())
+            << ", x-seg=" << WithSize(currentCrossSegmentStore.TotalLength())
+            << std::endl;
+        total_sz_open += currentOpenListStore.TotalLength();
+        total_sz_closed += currentClosedListStore.TotalLength();
+        total_sz_xseg += currentCrossSegmentStore.TotalLength();
     }
 
     std::cerr << "Time: " << timer << std::endl;
+    Store::PrintStats();
+    std::cerr
+        << "Total files: open=" << WithSize(total_sz_open)
+        << "; closed=" << WithSize(total_sz_closed)
+        << "; x-seg=" << WithSize(total_sz_xseg)
+        << std::endl;
     return result;
 }

@@ -79,6 +79,7 @@
   <ItemGroup>
     <ClCompile Include="BoolArray.h" />
     <ClCompile Include="DiskBasedClassicBFS.cpp" />
+    <ClCompile Include="DiskBasedTwoBitBFS.cpp" />
     <ClCompile Include="File.cpp" />
     <ClCompile Include="InMemoryClassicBFS.cpp" />
     <ClCompile Include="InMemoryFrontierSearch.cpp" />

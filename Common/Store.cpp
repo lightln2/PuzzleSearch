@@ -52,11 +52,14 @@ void Store::Write(int segment, void* buffer, size_t size) {
 
 size_t Store::Read(int segment, void* buffer, size_t size) {
     ensure(segment >= 0 && segment < MaxSegments());
-    m_StatReadsCount++;
-    m_StatReadBytes += size;
     Timer timer;
-    return m_Impl->Read(segment, buffer, size);
+    size_t read = m_Impl->Read(segment, buffer, size);
+    if (read > 0) {
+        m_StatReadsCount++;
+        m_StatReadBytes += read;
+    }
     m_StatReadNanos += timer.Elapsed();
+    return read;
 }
 
 void Store::Delete(int segment) {

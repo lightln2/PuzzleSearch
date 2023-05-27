@@ -13,6 +13,7 @@
     <ClCompile Include="SegmentReader.cpp" />
     <ClCompile Include="SegmentWriter.cpp" />
     <ClCompile Include="DiskBasedClassicBFS.cpp" />
+    <ClCompile Include="DiskBasedTwoBitBFS.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Util.h" />
