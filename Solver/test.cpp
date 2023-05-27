@@ -59,7 +59,8 @@ void TestDiskBasedBFS() {
     SlidingTilePuzzleGpu puzzle(4, 3);
     PuzzleOptions opts;
     opts.directories = { "c:/temp" };
-    opts.segmentBits = 28;
+    //opts.segmentBits = 28;
+    opts.segmentBits = 32;
 
-    DiskBasedTwoBitBFS(puzzle, initial, opts);
+    DiskBasedThreeBitBFS(puzzle, initial, opts);
 }
