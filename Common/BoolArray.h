@@ -42,6 +42,18 @@ __forceinline void ScanFourBits(uint64_t val, uint64_t baseIndex, F func) {
     }
 }
 
+template<typename F>
+__forceinline void ScanBits(uint64_t val, uint64_t baseIndex, int bits, F func) {
+    unsigned long bitIndex;
+    uint64_t mask = (1ui64 << bits) - 1;
+    while (_BitScanForward64(&bitIndex, val)) {
+        auto pos = bitIndex / bits;
+        auto offset = pos * bits;
+        func(baseIndex | pos, (val >> offset) & mask);
+        val &= ~(mask << offset);
+    }
+}
+
 class BoolArray {
 public:
     BoolArray() {}
@@ -127,4 +139,38 @@ public:
 
 private:
     std::vector<uint64_t> m_Values;
+};
+
+class MultiBitArray {
+private:
+    static int RoundBits(int bits) {
+        static int round[] = {-1, 1, 2, 4, 4, 8, 8, 8, 8, 16, 16, 16, 16, 16, 16, 16, 16};
+        ensure(bits > 0 && bits <= 16);
+        return round[bits];
+    }
+
+public:
+    MultiBitArray(int bits, uint64_t size)
+        : m_Bits(RoundBits(bits))
+        , m_Array(m_Bits * size)
+    {}
+
+    void Set(uint64_t index, int bit) {
+        m_Array.Set(index * m_Bits + bit);
+    }
+
+    template<typename F>
+    void ScanBitsAndClear(F func) {
+        int bits_per_word = 64 / m_Bits;
+        for (uint64_t i = 0; i < m_Array.Data().size(); i++) {
+            auto val = m_Array.Data()[i];
+            m_Array.Data()[i] = 0;
+            if (val == 0) continue;
+            ::ScanBits(val, i * bits_per_word, m_Bits, func);
+        }
+    }
+
+private:
+    int m_Bits;
+    BoolArray m_Array;
 };

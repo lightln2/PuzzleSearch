@@ -53,14 +53,16 @@ void TestClassicBFS() {
 
 
 void TestDiskBasedBFS() {
-    std::string initial = "0 1 2 3 4 5 6 7 8 9 10 11 12 13";
+    std::string initial = "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15";
 
-    //SlidingTilePuzzleGpu puzzle(3, 3);
+    //SlidingTilePuzzleGpu puzzle(5, 2);
     SlidingTilePuzzleGpu puzzle(4, 3);
     PuzzleOptions opts;
     opts.directories = { "c:/temp" };
-    //opts.segmentBits = 28;
-    opts.segmentBits = 32;
+    opts.segmentBits = 25;
+    //opts.segmentBits = 32;
 
-    DiskBasedThreeBitBFS(puzzle, initial, opts);
+    //DiskBasedThreeBitBFS(puzzle, initial, opts);
+    DiskBasedFrontierSearch(puzzle, initial, opts);
+    //DiskBasedSinglePassFrontierSearch(puzzle, initial, opts);
 }
