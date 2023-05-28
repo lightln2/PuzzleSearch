@@ -89,6 +89,7 @@
     <ClCompile Include="InMemoryThreeBitBFS.cpp" />
     <ClCompile Include="InMemoryTwoBitBFS.cpp" />
     <ClCompile Include="Multiplexor.cpp" />
+    <ClCompile Include="Puzzle.cpp" />
     <ClCompile Include="SegmentReader.cpp" />
     <ClCompile Include="SegmentWriter.cpp" />
     <ClCompile Include="Store.cpp" />

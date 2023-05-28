@@ -40,5 +40,6 @@ std::vector<uint64_t> InMemoryClassicBFS(Puzzle& puzzle, std::string initialStat
     }
 
     std::cerr << "Time: " << timer << std::endl;
+    ExpandBuffer::PrintStats();
     return result;
 }

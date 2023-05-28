@@ -2,7 +2,7 @@
 
 #include "../ClassicBFS/SlidingTilePuzzleSimple.h"
 #include "../ClassicBFS/SlidingTilePuzzleGpu.h"
-#include "../SlidingTilePuzzle/Util.h"
+#include "../Common/Util.h"
 
 #include <string>
 #include <sstream>

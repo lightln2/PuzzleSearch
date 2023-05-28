@@ -1,5 +1,8 @@
 #pragma once
 
+#include "Util.h"
+
+#include <atomic>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -50,10 +53,19 @@ public:
         }
     }
 
+    static void PrintStats();
+
 private:
     template<typename F>
     void Expand(F func) {
+        Timer expandTimer;
+
         puzzle.Expand(indexes, usedOperatorBits, childIndexes, childOperators);
+
+        m_StatExpandedTimes++;
+        m_StatExpandedNodes += indexes.size();
+        m_StatExpandedNanos += expandTimer.Elapsed();
+
         for (size_t i = 0; i < childIndexes.size(); i++) {
             auto childIndex = childIndexes[i];
             auto op = childOperators[i];
@@ -73,4 +85,9 @@ private:
     std::vector<int> usedOperatorBits;
     std::vector<uint64_t> childIndexes;
     std::vector<int> childOperators;
+
+private:
+    static std::atomic<uint64_t> m_StatExpandedNodes;
+    static std::atomic<uint64_t> m_StatExpandedNanos;
+    static std::atomic<uint64_t> m_StatExpandedTimes;
 };

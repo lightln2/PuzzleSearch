@@ -110,6 +110,8 @@ std::vector<uint64_t> DiskBasedFrontierSearch(Puzzle& puzzle, std::string initia
         for (int segment = 0; segment < SEGMENTS; segment++) {
             uint64_t indexBase = (uint64_t)segment << opts.segmentBits;
 
+            bool hasData = false;
+
             xSegReader.SetSegment(segment);
             frontierReader.SetSegment(segment);
             frontierWriter.SetSegment(segment);
@@ -117,6 +119,7 @@ std::vector<uint64_t> DiskBasedFrontierSearch(Puzzle& puzzle, std::string initia
             while (true) {
                 auto& vect = xSegReader.Read();
                 if (vect.empty()) break;
+                hasData = true;
                 for (uint32_t val : vect) {
                     auto [idx, op] = fnGetIndexAndOp(val);
                     array.Set(idx, op);
@@ -135,6 +138,8 @@ std::vector<uint64_t> DiskBasedFrontierSearch(Puzzle& puzzle, std::string initia
                 }
                 curFrontierStore.Delete(segment);
             }
+
+            if (!hasData) continue;
 
             uint64_t count = 0;
             array.ScanBitsAndClear([&](uint64_t index, int opBits) {
@@ -169,6 +174,7 @@ std::vector<uint64_t> DiskBasedFrontierSearch(Puzzle& puzzle, std::string initia
 
     std::cerr << "Time: " << timer << std::endl;
     Store::PrintStats();
+    ExpandBuffer::PrintStats();
     std::cerr
         << "Total files: frontier=" << WithSize(total_sz_frontier)
         << "; x-seg=" << WithSize(total_sz_xseg)

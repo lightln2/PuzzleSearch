@@ -17,6 +17,7 @@
     <ClCompile Include="DiskBasedThreeBitBFS.cpp" />
     <ClCompile Include="DiskBasedSinglePassFrontierSearch.cpp" />
     <ClCompile Include="DiskBasedFrontierSearch.cpp" />
+    <ClCompile Include="Puzzle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Util.h" />

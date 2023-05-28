@@ -25,11 +25,12 @@ namespace {
 
 std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
     std::cerr << "DB_BFS" << std::endl;
+    ensure(opts.segmentBits <= 32);
     Timer timer;
     const uint64_t SIZE = puzzle.IndexesCount();
     uint64_t SEGMENT_SIZE = 1ui64 << opts.segmentBits;
     const uint64_t SEGMENT_MASK = SEGMENT_SIZE - 1;
-    const int SEGMENTS = (SIZE + SEGMENT_SIZE - 1) / SEGMENT_SIZE;
+    const int SEGMENTS = int((SIZE + SEGMENT_SIZE - 1) / SEGMENT_SIZE);
     if (SEGMENTS == 1 && SEGMENT_SIZE > SIZE) {
         SEGMENT_SIZE = SIZE; // SEGMENT_MASK is still valid
     }
@@ -84,7 +85,7 @@ std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialSta
     };
 
     auto fnGetSegIdx = [&](uint64_t index) {
-        return std::pair<int, uint32_t>(index >> opts.segmentBits, index & SEGMENT_MASK);
+        return std::pair<int, uint32_t>(int(index >> opts.segmentBits), uint32_t(index & SEGMENT_MASK));
     };
 
     auto initialIndex = puzzle.Parse(initialState);
