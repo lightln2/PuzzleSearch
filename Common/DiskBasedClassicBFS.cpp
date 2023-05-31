@@ -6,6 +6,8 @@
 #include "Store.h"
 #include "Util.h"
 
+#include <thread>
+
 namespace {
 
     void LoadBoolArray(int segment, Store& store, BoolArray& arr) {
@@ -175,6 +177,8 @@ std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialSta
     Store currentCrossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "xseg1");
     Store nextCrossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "xseg2");
 
+    
+    /*
     DB_BFS_Solver solver(
         puzzle,
         opts,
@@ -187,9 +191,25 @@ std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialSta
         nextClosedListStore,
         currentCrossSegmentStore,
         nextCrossSegmentStore);
+    */
 
-
-    solver.SetInitialNode(initialState);
+    std::vector<std::unique_ptr<DB_BFS_Solver>> solvers;
+    for (int i = 0; i < opts.threads; i++) {
+        solvers.emplace_back(std::make_unique<DB_BFS_Solver>(
+            puzzle,
+            opts,
+            SEGMENTS,
+            SEGMENT_SIZE,
+            SEGMENT_MASK,
+            currentOpenListStore,
+            nextOpenListStore,
+            currentClosedListStore,
+            nextClosedListStore,
+            currentCrossSegmentStore,
+            nextCrossSegmentStore));
+    }
+    
+    solvers[0]->SetInitialNode(initialState);
 
     uint64_t total_sz_open = 0;
     uint64_t total_sz_closed = 0;
@@ -197,11 +217,22 @@ std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialSta
 
     while (true) {
         Timer stepTimer;
-        uint64_t totalCount = 0;
+        std::atomic<uint64_t> totalCount{ 0 };
+        std::atomic<int> currentSegment{ 0 };
 
-        for (int segment = 0; segment < SEGMENTS; segment++) {
-            totalCount += solver.Process(segment);
+        std::vector<std::thread> threads;
+        for (int i = 0; i < opts.threads; i++) {
+            auto fnProcess = [&](int index) {
+                auto& solver = *(solvers[index]);
+                while (true) {
+                    int segment = currentSegment.fetch_add(1);
+                    if (segment >= SEGMENTS) break;
+                    totalCount += solver.Process(segment);
+                }
+            };
+            threads.emplace_back(fnProcess, i);
         }
+        for (auto& thread : threads) thread.join();
 
         if (totalCount == 0) break;
         result.push_back(totalCount);

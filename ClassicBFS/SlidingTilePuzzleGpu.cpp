@@ -80,9 +80,11 @@ void SlidingTilePuzzleGpu::Expand(
     for (uint64_t i = 0; i < indexes.size(); i++) {
         indexes[i] = (indexes[i] * 16) | usedOperatorBits[i];
     }
+    m_Mutex.lock();
     CopyToGpu(&indexes[0], gpuSrc, indexes.size());
     GpuSlidingTilePuzzleSimpleExpand(gpuSrc, gpuDst, m_Width, m_Size, indexes.size());
     CopyFromGpu(gpuDst, &expandedIndexes[0], indexes.size() * 4);
+    m_Mutex.unlock();
     for (int i = 0; i < expandedIndexes.size(); i++) {
         auto val = expandedIndexes[i];
         expandedOperators[i] = val & 15;

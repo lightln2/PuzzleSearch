@@ -9,6 +9,7 @@ struct PuzzleOptions {
     size_t maxSteps = 10000;
     int segmentBits = 32;
     std::vector<std::string> directories = { "." };
+    int threads = 1;
 };
 
 std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialState, PuzzleOptions opts = {});

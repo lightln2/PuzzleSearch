@@ -3,6 +3,7 @@
 #include "../Common/Puzzle.h"
 
 #include <cstdint>
+#include <mutex>
 #include <string>
 
 class SlidingTilePuzzleGpu : public Puzzle {
@@ -32,4 +33,5 @@ private:
     int m_Size;
     uint64_t* gpuSrc;
     uint64_t* gpuDst;
+    std::mutex m_Mutex;
 };
