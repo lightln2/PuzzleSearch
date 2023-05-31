@@ -67,7 +67,7 @@ std::vector<uint64_t> InMemoryFrontierSearch(Puzzle& puzzle, std::string initial
 
     ExpandBuffer nodes(puzzle);
 
-    auto fnExpand = [&](uint32_t child, int op) {
+    auto fnExpand = [&](uint64_t child, int op) {
         next.SetBit(child, op);
     };
 

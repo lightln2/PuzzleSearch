@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Buffer.h"
 #include "Util.h"
 
 #include <atomic>
@@ -46,6 +47,9 @@ public:
     static Store CreateMultiFileStore(int maxSegments, std::vector<std::string> directories);
     static Store CreateSequentialStore(int maxSegments, std::vector<std::string> filePaths);
 
+    static Store CreateMultiFileStore(int maxSegments,
+                                      std::vector<std::string> directories,
+                                      const std::string& subdir);
 private:
     Store(StoreImplRef impl);
 
@@ -77,6 +81,11 @@ public:
     }
 
     template<typename T>
+    void Write(int segment, const Buffer<T>& buffer) {
+        WriteArray<T>(segment, buffer.Buf(), buffer.Size());
+    }
+
+    template<typename T>
     size_t ReadArray(int segment, T* buffer, size_t capacity) {
         size_t read = Read(segment, (void*)buffer, capacity * sizeof(T));
         ensure(read % sizeof(T) == 0);
@@ -89,6 +98,17 @@ public:
         size_t read = ReadArray<T>(segment, &buffer[0], buffer.capacity());
         buffer.resize(read);
     }
+
+    template<typename T>
+    void Read(int segment, Buffer<T>& buffer) {
+        size_t read = ReadArray<T>(segment, buffer.Buf(), buffer.Capacity());
+        buffer.SetSize(read);
+    }
+
+private:
+    static std::vector<std::string> CreatePaths(
+        const std::vector<std::string>& directories,
+        const std::string& path);
 
 private:
     StoreImplRef m_Impl;

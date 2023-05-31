@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Buffer.h"
 #include "Store.h"
 
 class SegmentWriter {
@@ -17,5 +18,5 @@ public:
 private:
     Store& m_Store;
     int m_Segment = -1;
-    std::vector<uint32_t> m_Buffer;
+    Buffer<uint32_t> m_Buffer;
 };

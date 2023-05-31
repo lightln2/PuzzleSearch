@@ -90,9 +90,9 @@ TEST(StoreTests, TestReaderWriter) {
 		uint64_t sum = 0;
 		while (true) {
 			auto& data = reader.Read();
-			if (data.empty()) break;
-			count += data.size();
-			for (auto v : data) sum += v;
+			if (data.IsEmpty()) break;
+			count += data.Size();
+			for (size_t i = 0; i < data.Size(); i++) sum += data[i];
 		}
 		EXPECT_EQ(VALUES, count);
 		EXPECT_EQ((uint64_t)VALUES * (VALUES - 1) / 2, sum);
@@ -120,9 +120,9 @@ TEST(StoreTests, TestMultiplexor) {
 		uint64_t sum = 0;
 		while (true) {
 			auto& data = reader.Read();
-			if (data.empty()) break;
-			count += data.size();
-			for (auto v : data) sum += v;
+			if (data.IsEmpty()) break;
+			count += data.Size();
+			for (size_t i = 0; i < data.Size(); i++) sum += data[i];
 		}
 		EXPECT_EQ(VALUES, count);
 		EXPECT_EQ((uint64_t)VALUES * (VALUES - 1) / 2, sum);

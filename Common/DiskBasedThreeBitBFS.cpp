@@ -11,12 +11,12 @@ namespace {
     void LoadBoolArray(int segment, Store& store, BoolArray& arr) {
         arr.Clear();
         store.Rewind(segment);
-        auto read = store.ReadArray(segment, &arr.Data()[0], arr.Data().size());
-        ensure(read == 0 || read == arr.Data().size());
+        auto read = store.ReadArray(segment, arr.Data(), arr.DataSize());
+        ensure(read == 0 || read == arr.DataSize());
     };
 
     void SaveBoolArray(int segment, Store& store, BoolArray& arr) {
-        store.WriteArray(segment, &arr.Data()[0], arr.Data().size());
+        store.WriteArray(segment, arr.Data(), arr.DataSize());
         arr.Clear();
     };
 
@@ -29,7 +29,7 @@ std::vector<uint64_t> DiskBasedThreeBitBFS(Puzzle& puzzle, std::string initialSt
     const uint64_t SIZE = puzzle.IndexesCount();
     uint64_t SEGMENT_SIZE = 1ui64 << opts.segmentBits;
     const uint64_t SEGMENT_MASK = SEGMENT_SIZE - 1;
-    const int SEGMENTS = (SIZE + SEGMENT_SIZE - 1) / SEGMENT_SIZE;
+    const int SEGMENTS = int((SIZE + SEGMENT_SIZE - 1) / SEGMENT_SIZE);
     if (SEGMENTS == 1 && SEGMENT_SIZE > SIZE) {
         SEGMENT_SIZE = SIZE; // SEGMENT_MASK is still valid
     }
@@ -41,24 +41,11 @@ std::vector<uint64_t> DiskBasedThreeBitBFS(Puzzle& puzzle, std::string initialSt
 
     std::vector<uint64_t> result;
 
-    std::vector<std::string> oldListDirs;
-    std::vector<std::string> curListDirs;
-    std::vector<std::string> newListDirs;
-    std::vector<std::string> crossSegmentDirs1;
-    std::vector<std::string> crossSegmentDirs2;
-    for (const auto& dir : opts.directories) {
-        oldListDirs.push_back(dir + "/old/");
-        curListDirs.push_back(dir + "/cur/");
-        newListDirs.push_back(dir + "/new/");
-        crossSegmentDirs1.push_back(dir + "/xseg1/");
-        crossSegmentDirs2.push_back(dir + "/xseg2/");
-    }
-
-    Store oldStore = Store::CreateMultiFileStore(SEGMENTS, oldListDirs);
-    Store curStore = Store::CreateMultiFileStore(SEGMENTS, curListDirs);
-    Store newStore = Store::CreateMultiFileStore(SEGMENTS, newListDirs);
-    Store currentCrossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, crossSegmentDirs1);
-    Store nextCrossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, crossSegmentDirs2);
+    Store oldStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "store1");
+    Store curStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "store2");
+    Store newStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "store3");
+    Store currentCrossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "xseg1");
+    Store nextCrossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "xseg2");
 
     SegmentReader currentXSegReader(currentCrossSegmentStore);
     Multiplexor mult(nextCrossSegmentStore, SEGMENTS);
@@ -124,8 +111,9 @@ std::vector<uint64_t> DiskBasedThreeBitBFS(Puzzle& puzzle, std::string initialSt
 
             while (true) {
                 auto& vect = currentXSegReader.Read();
-                if (vect.empty()) break;
-                for (uint32_t idx : vect) {
+                if (vect.IsEmpty()) break;
+                for (size_t i = 0; i < vect.Size(); i++) {
+                    uint32_t idx = vect[i];
                     newList.Set(idx);
                 }
             }

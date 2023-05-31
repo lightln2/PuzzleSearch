@@ -27,13 +27,13 @@ namespace {
 
         void Load(int segment, Store& store) {
             array.Clear();
-            auto read = store.ReadArray(segment, &array.Data()[0], array.Data().size());
-            ensure(read == 0 || read == array.Data().size());
+            auto read = store.ReadArray(segment, array.Data(), array.DataSize());
+            ensure(read == 0 || read == array.DataSize());
             store.Delete(segment);
         }
 
         void Save(int segment, Store& store) {
-            store.WriteArray(segment, &array.Data()[0], array.Data().size());
+            store.WriteArray(segment, &array.Data()[0], array.DataSize());
             array.Clear();
         }
 
@@ -50,7 +50,7 @@ std::vector<uint64_t> DiskBasedTwoBitBFS(Puzzle& puzzle, std::string initialStat
     const uint64_t SIZE = puzzle.IndexesCount();
     uint64_t SEGMENT_SIZE = 1ui64 << opts.segmentBits;
     const uint64_t SEGMENT_MASK = SEGMENT_SIZE - 1;
-    const int SEGMENTS = (SIZE + SEGMENT_SIZE - 1) / SEGMENT_SIZE;
+    const int SEGMENTS = int((SIZE + SEGMENT_SIZE - 1) / SEGMENT_SIZE);
     if (SEGMENTS == 1 && SEGMENT_SIZE > SIZE) {
         SEGMENT_SIZE = SIZE; // SEGMENT_MASK is still valid
     }
@@ -64,21 +64,10 @@ std::vector<uint64_t> DiskBasedTwoBitBFS(Puzzle& puzzle, std::string initialStat
 
     std::vector<uint64_t> result;
 
-    std::vector<std::string> arrayDirs1;
-    std::vector<std::string> arrayDirs2;
-    std::vector<std::string> crossSegmentDirs1;
-    std::vector<std::string> crossSegmentDirs2;
-    for (const auto& dir : opts.directories) {
-        arrayDirs1.push_back(dir + "/arr1/");
-        arrayDirs2.push_back(dir + "/arr2/");
-        crossSegmentDirs1.push_back(dir + "/xseg1/");
-        crossSegmentDirs2.push_back(dir + "/xseg2/");
-    }
-
-    Store currentArrStore = Store::CreateMultiFileStore(SEGMENTS, arrayDirs1);
-    Store nextArrStore = Store::CreateMultiFileStore(SEGMENTS, arrayDirs2);
-    Store currentCrossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, crossSegmentDirs1);
-    Store nextCrossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, crossSegmentDirs2);
+    Store currentArrStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "arr1");
+    Store nextArrStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "arr2");
+    Store currentCrossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "xseg1");
+    Store nextCrossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "xseg2");
 
     TwoBitArray array(SEGMENT_SIZE);
 
@@ -120,8 +109,9 @@ std::vector<uint64_t> DiskBasedTwoBitBFS(Puzzle& puzzle, std::string initialStat
 
             while (true) {
                 auto& vect = currentXSegReader.Read();
-                if (vect.empty()) break;
-                for (uint32_t idx : vect) {
+                if (vect.IsEmpty()) break;
+                for (size_t i = 0; i < vect.Size(); i++) {
+                    uint32_t idx = vect[i];
                     int val = array.Get(idx);
                     if (val == OLD) continue;
                     array.Set(idx, CUR);

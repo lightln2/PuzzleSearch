@@ -14,7 +14,7 @@ std::vector<uint64_t> DiskBasedFrontierSearch(Puzzle& puzzle, std::string initia
     const uint64_t SIZE = puzzle.IndexesCount();
     uint64_t SEGMENT_SIZE = 1ui64 << opts.segmentBits;
     const uint64_t SEGMENT_MASK = SEGMENT_SIZE - 1;
-    const int SEGMENTS = (SIZE + SEGMENT_SIZE - 1) / SEGMENT_SIZE;
+    const int SEGMENTS = int((SIZE + SEGMENT_SIZE - 1) / SEGMENT_SIZE);
     if (SEGMENTS == 1 && SEGMENT_SIZE > SIZE) {
         SEGMENT_SIZE = SIZE; // SEGMENT_MASK is still valid
     }
@@ -29,18 +29,9 @@ std::vector<uint64_t> DiskBasedFrontierSearch(Puzzle& puzzle, std::string initia
 
     std::vector<uint64_t> result;
 
-    std::vector<std::string> frontierDirs1;
-    std::vector<std::string> frontierDirs2;
-    std::vector<std::string> crossSegmentDirs;
-    for (const auto& dir : opts.directories) {
-        frontierDirs1.push_back(dir + "/f1/");
-        frontierDirs2.push_back(dir + "/f2/");
-        crossSegmentDirs.push_back(dir + "/xseg/");
-    }
-
-    Store curFrontierStore = Store::CreateMultiFileStore(SEGMENTS, frontierDirs1);
-    Store newFrontierStore = Store::CreateMultiFileStore(SEGMENTS, frontierDirs2);
-    Store crossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, crossSegmentDirs);
+    Store curFrontierStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "frontier1");
+    Store newFrontierStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "frontier2");
+    Store crossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "xseg");
 
     SegmentReader xSegReader(crossSegmentStore);
     Multiplexor mult(crossSegmentStore, SEGMENTS);
@@ -74,10 +65,11 @@ std::vector<uint64_t> DiskBasedFrontierSearch(Puzzle& puzzle, std::string initia
 
     uint64_t total_sz_frontier = 0;
     uint64_t total_sz_xseg = 0;
+    uint64_t nanos_collect = 0;
 
-    std::cerr << "Step: 1; Count: 1" << std::endl;
+    std::cerr << "Step: 0; Count: 1" << std::endl;
 
-    while (true) {
+    while (result.size() <= opts.maxSteps) {
         Timer stepTimer;
         uint64_t totalCount = 0;
 
@@ -93,8 +85,9 @@ std::vector<uint64_t> DiskBasedFrontierSearch(Puzzle& puzzle, std::string initia
 
             while (true) {
                 auto& vect = frontierReader.Read();
-                if (vect.empty()) break;
-                for (uint32_t val : vect) {
+                if (vect.IsEmpty()) break;
+                for (size_t i = 0; i < vect.Size(); i++) {
+                    uint32_t val = vect[i];
                     auto [idx, op] = fnGetIndexAndOp(val);
                     nodes.Add(indexBase | idx, op, fnExpand);
                 }
@@ -118,9 +111,10 @@ std::vector<uint64_t> DiskBasedFrontierSearch(Puzzle& puzzle, std::string initia
 
             while (true) {
                 auto& vect = xSegReader.Read();
-                if (vect.empty()) break;
+                if (vect.IsEmpty()) break;
                 hasData = true;
-                for (uint32_t val : vect) {
+                for (size_t i = 0; i < vect.Size(); i++) {
+                    uint32_t val = vect[i];
                     auto [idx, op] = fnGetIndexAndOp(val);
                     array.Set(idx, op);
                 }
@@ -130,8 +124,9 @@ std::vector<uint64_t> DiskBasedFrontierSearch(Puzzle& puzzle, std::string initia
             if (puzzle.HasOddLengthCycles()) {
                 while (true) {
                     auto& vect = frontierReader.Read();
-                    if (vect.empty()) break;
-                    for (uint32_t val : vect) {
+                    if (vect.IsEmpty()) break;
+                    for (size_t i = 0; i < vect.Size(); i++) {
+                        uint32_t val = vect[i];
                         auto [idx, op] = fnGetIndexAndOp(val);
                         frontierArray.Set(idx);
                     }
@@ -141,13 +136,17 @@ std::vector<uint64_t> DiskBasedFrontierSearch(Puzzle& puzzle, std::string initia
 
             if (!hasData) continue;
 
+            Timer timeCollect;
             uint64_t count = 0;
             array.ScanBitsAndClear([&](uint64_t index, int opBits) {
                 if (puzzle.HasOddLengthCycles() && frontierArray.Get(index)) return;
                 count++;
-                frontierWriter.Add(fnGetValue(index, opBits));
+                if (opBits < OPS_MASK) {
+                    frontierWriter.Add(fnGetValue(uint32_t(index), opBits));
+                }
             });
             frontierWriter.Flush();
+            nanos_collect += timeCollect.Elapsed();
 
             if (puzzle.HasOddLengthCycles()) {
                 frontierArray.Clear();
@@ -162,7 +161,7 @@ std::vector<uint64_t> DiskBasedFrontierSearch(Puzzle& puzzle, std::string initia
         crossSegmentStore.DeleteAll();
         std::swap(curFrontierStore, newFrontierStore);
         std::cerr
-            << "Step: " << result.size()
+            << "Step: " << result.size() - 1
             << "; count: " << totalCount
             << " in " << stepTimer
             << "; size: frontier=" << WithSize(curFrontierStore.TotalLength())
@@ -175,6 +174,7 @@ std::vector<uint64_t> DiskBasedFrontierSearch(Puzzle& puzzle, std::string initia
     std::cerr << "Time: " << timer << std::endl;
     Store::PrintStats();
     ExpandBuffer::PrintStats();
+    std::cerr << "Collect: " << WithTime(nanos_collect) << std::endl;
     std::cerr
         << "Total files: frontier=" << WithSize(total_sz_frontier)
         << "; x-seg=" << WithSize(total_sz_xseg)

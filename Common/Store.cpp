@@ -80,6 +80,17 @@ void Store::PrintStats() {
         << std::endl;
 }
 
+std::vector<std::string> Store::CreatePaths(const std::vector<std::string>& directories, const std::string& path) {
+    std::vector<std::string> paths;
+    for (const auto& dir : directories) {
+        if (dir.ends_with('/'))
+            paths.push_back(dir + path);
+        else
+            paths.push_back(dir + "/" + path);
+    }
+    return paths;
+}
+
 namespace {
     struct Chunk {
         uint64_t offset;
@@ -197,7 +208,9 @@ public:
         file::CreateDirectory(m_Directory);
     }
 
-    virtual ~MultiFileStoreImpl() noexcept { }
+    virtual ~MultiFileStoreImpl() noexcept {
+        file::DeleteDirectory(m_Directory);
+    }
 
     virtual int MaxSegments() const { return (int)m_Files.size(); }
 
@@ -393,4 +406,8 @@ Store Store::CreateSequentialStore(int maxSegments, std::vector<std::string> fil
         stores.emplace_back(CreateSingleFileStoreImpl(maxSegments, filePath));
     }
     return Store(CreateSequentialStoreImpl(std::move(stores)));
+}
+
+Store Store::CreateMultiFileStore(int maxSegments, std::vector<std::string> directories, const std::string& subdir) {
+    return CreateMultiFileStore(maxSegments, Store::CreatePaths(directories, subdir));
 }

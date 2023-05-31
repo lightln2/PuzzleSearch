@@ -100,8 +100,8 @@ int main() {
         //TestCPUvsGPU();
         
         //TestBoolArray();
-        //TestClassicBFS();
-        TestDiskBasedBFS();
+        TestClassicBFS();
+        //TestDiskBasedBFS();
     }
     catch (const std::exception& ex) {
         std::cerr << "Error: " << ex.what() << std::endl;

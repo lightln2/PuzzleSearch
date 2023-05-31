@@ -44,9 +44,9 @@ void TestClassicBFS() {
     */
     {
         SlidingTilePuzzleGpu puzzle(4, 3);
-        //InMemoryClassicBFS(puzzle, initial);
+        InMemoryClassicBFS(puzzle, initial);
         //InMemoryTwoBitBFS(puzzle, initial);
-        InMemoryThreeBitBFS(puzzle, initial);
+        //InMemoryThreeBitBFS(puzzle, initial);
         //InMemoryFrontierSearch(puzzle, initial);
     }
 }
@@ -56,10 +56,12 @@ void TestDiskBasedBFS() {
     std::string initial = "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15";
 
     //SlidingTilePuzzleGpu puzzle(5, 2);
-    SlidingTilePuzzleGpu puzzle(4, 3);
+    SlidingTilePuzzleGpu puzzle(7, 2);
     PuzzleOptions opts;
-    opts.directories = { "c:/temp", "d:/temp"};
+    //opts.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ" };
+    opts.directories = { "c:/temp" };
     opts.segmentBits = 28;
+    //opts.maxSteps = 10;
     //opts.segmentBits = 32;
     //InMemoryClassicBFS(puzzle, initial);
     //DiskBasedThreeBitBFS(puzzle, initial, opts);

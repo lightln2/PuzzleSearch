@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BoolArray.h"
+#include "Buffer.h"
 #include "Store.h"
 
 #include <vector>
@@ -13,11 +13,10 @@ public:
 
     void SetSegment(int segment);
 
-    std::vector<uint32_t>& Read();
-
+    Buffer<uint32_t>& Read();
 
 private:
     Store& m_Store;
     int m_Segment = -1;
-    std::vector<uint32_t> m_Buffer;
+    Buffer<uint32_t> m_Buffer;
 };

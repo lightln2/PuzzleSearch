@@ -10,13 +10,13 @@ namespace {
 
     void LoadBoolArray(int segment, Store& store, BoolArray& arr) {
         arr.Clear();
-        auto read = store.ReadArray(segment, &arr.Data()[0], arr.Data().size());
-        ensure(read == 0 || read == arr.Data().size());
+        auto read = store.ReadArray(segment, arr.Data(), arr.DataSize());
+        ensure(read == 0 || read == arr.DataSize());
         store.Delete(segment);
     };
 
     void SaveBoolArray(int segment, Store& store, BoolArray& arr) {
-        store.WriteArray(segment, &arr.Data()[0], arr.Data().size());
+        store.WriteArray(segment, arr.Data(), arr.DataSize());
         arr.Clear();
     };
 
@@ -42,27 +42,12 @@ std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialSta
 
     std::vector<uint64_t> result;
 
-    std::vector<std::string> closedListDirs1;
-    std::vector<std::string> closedListDirs2;
-    std::vector<std::string> openListDirs1;
-    std::vector<std::string> openListDirs2;
-    std::vector<std::string> crossSegmentDirs1;
-    std::vector<std::string> crossSegmentDirs2;
-    for (const auto& dir : opts.directories) {
-        closedListDirs1.push_back(dir + "/closed/");
-        closedListDirs2.push_back(dir + "/closed2/");
-        openListDirs1.push_back(dir + "/open1/");
-        openListDirs2.push_back(dir + "/open2/");
-        crossSegmentDirs1.push_back(dir + "/xseg1/");
-        crossSegmentDirs2.push_back(dir + "/xseg2/");
-    }
-
-    Store currentClosedListStore = Store::CreateMultiFileStore(SEGMENTS, closedListDirs1);
-    Store nextClosedListStore = Store::CreateMultiFileStore(SEGMENTS, closedListDirs2);
-    Store currentOpenListStore = Store::CreateMultiFileStore(SEGMENTS, openListDirs1);
-    Store nextOpenListStore = Store::CreateMultiFileStore(SEGMENTS, openListDirs2);
-    Store currentCrossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, crossSegmentDirs1);
-    Store nextCrossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, crossSegmentDirs2);
+    Store currentOpenListStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "open1");
+    Store nextOpenListStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "open2");
+    Store currentClosedListStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "closed1");
+    Store nextClosedListStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "closed2");
+    Store currentCrossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "xseg1");
+    Store nextCrossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "xseg2");
 
     SegmentReader currentXSegReader(currentCrossSegmentStore);
     Multiplexor mult(nextCrossSegmentStore, SEGMENTS);
@@ -113,8 +98,9 @@ std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialSta
 
             while (true) {
                 auto& vect = currentXSegReader.Read();
-                if (vect.empty()) break;
-                for (uint32_t idx : vect) {
+                if (vect.IsEmpty()) break;
+                for (size_t i = 0; i < vect.Size(); i++) {
+                    uint32_t idx = vect[i];
                     openList.Set(idx);
                 }
             }
