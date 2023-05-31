@@ -58,11 +58,6 @@ public:
         , OpenList(SegmentSize)
         , NewOpenList(SegmentSize)
     {
-        std::cerr << "DiskBasedClassicBFS"
-            << "; nodes: " << WithDecSep(Puzzle.IndexesCount())
-            << "; segments: " << WithDecSep(Segments)
-            << "; segment size: " << WithDecSep(SegmentSize)
-            << std::endl;
     }
 
     void SetInitialNode(const std::string& initialState) {
@@ -168,6 +163,12 @@ std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialSta
         SEGMENT_SIZE = SIZE; // SEGMENT_MASK is still valid
     }
 
+    std::cerr << "DiskBasedClassicBFS"
+        << "; nodes: " << WithDecSep(SIZE)
+        << "; segments: " << WithDecSep(SEGMENTS)
+        << "; segment size: " << WithDecSep(SEGMENT_SIZE)
+        << std::endl;
+
     std::vector<uint64_t> result;
 
     Store currentOpenListStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "open1");
@@ -176,22 +177,6 @@ std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialSta
     Store nextClosedListStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "closed2");
     Store currentCrossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "xseg1");
     Store nextCrossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "xseg2");
-
-    
-    /*
-    DB_BFS_Solver solver(
-        puzzle,
-        opts,
-        SEGMENTS,
-        SEGMENT_SIZE,
-        SEGMENT_MASK,
-        currentOpenListStore,
-        nextOpenListStore,
-        currentClosedListStore,
-        nextClosedListStore,
-        currentCrossSegmentStore,
-        nextCrossSegmentStore);
-    */
 
     std::vector<std::unique_ptr<DB_BFS_Solver>> solvers;
     for (int i = 0; i < opts.threads; i++) {
@@ -220,16 +205,17 @@ std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialSta
         std::atomic<uint64_t> totalCount{ 0 };
         std::atomic<int> currentSegment{ 0 };
 
+        auto fnProcess = [&](int index) {
+            auto& solver = *(solvers[index]);
+            while (true) {
+                int segment = currentSegment.fetch_add(1);
+                if (segment >= SEGMENTS) break;
+                totalCount += solver.Process(segment);
+            }
+        };
+
         std::vector<std::thread> threads;
         for (int i = 0; i < opts.threads; i++) {
-            auto fnProcess = [&](int index) {
-                auto& solver = *(solvers[index]);
-                while (true) {
-                    int segment = currentSegment.fetch_add(1);
-                    if (segment >= SEGMENTS) break;
-                    totalCount += solver.Process(segment);
-                }
-            };
             threads.emplace_back(fnProcess, i);
         }
         for (auto& thread : threads) thread.join();

@@ -246,7 +246,11 @@ private:
     
     StoreImpl& GetFile(int segment) {
         if (!HasFile(segment)) {
-            m_Files[segment] = std::make_unique<SingleFileStoreImpl>(1, FilePath(segment));
+            m_Mutex.lock();
+            if (!HasFile(segment)) {
+                m_Files[segment] = std::make_unique<SingleFileStoreImpl>(1, FilePath(segment));
+            }
+            m_Mutex.unlock();
         }
         return *m_Files[segment];
     }
@@ -258,6 +262,7 @@ private:
 private:
     std::string m_Directory;
     std::vector<StoreImplRef> m_Files;
+    std::mutex m_Mutex;
 };
 
 class ParallelStoreImpl : public StoreImpl {

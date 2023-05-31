@@ -64,8 +64,8 @@ void TestDiskBasedBFS() {
     opts.threads = 4;
     //opts.maxSteps = 10;
     //opts.segmentBits = 32;
-    DiskBasedClassicBFS(puzzle, initial, opts);
+    //DiskBasedClassicBFS(puzzle, initial, opts);
     //DiskBasedThreeBitBFS(puzzle, initial, opts);
-    //DiskBasedFrontierSearch(puzzle, initial, opts);
+    DiskBasedFrontierSearch(puzzle, initial, opts);
     //DiskBasedSinglePassFrontierSearch(puzzle, initial, opts);
 }
