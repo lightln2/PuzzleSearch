@@ -13,7 +13,10 @@ namespace file {
             CREATE_ALWAYS,
             FILE_ATTRIBUTE_NORMAL,
             NULL);
-        ensure(fd != INVALID_HANDLE_VALUE);
+        if (fd == INVALID_HANDLE_VALUE) {
+            std::cerr << "Cannot open file: " << fileName << std::endl;
+            ensure(fd != INVALID_HANDLE_VALUE);
+        }
         return fd;
     }
 

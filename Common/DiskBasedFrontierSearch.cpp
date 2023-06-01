@@ -4,6 +4,7 @@
 #include "SegmentWriter.h"
 #include "Multiplexor.h"
 #include "Store.h"
+#include "ThreadUtil.h"
 #include "Util.h"
 
 #include <thread>
@@ -11,40 +12,28 @@
 class DB_FS_Solver {
 public:
     DB_FS_Solver(
-        Puzzle& puzzle,
-        PuzzleOptions& opts,
-        int segments,
-        uint64_t segmentSize,
-        uint64_t segmentMask,
-        int operatorsCount,
-        int operatorsMask,
+        SegmentedOptions& sopts,
         Store& curFrontierStore,
         Store& nextFrontierStore,
         Store& crossSegmentStore)
 
-        : Puzzle(puzzle)
-        , Opts(opts)
-        , Segments(segments)
-        , SegmentSize(segmentSize)
-        , SegmentMask(segmentMask)
-        , OperatorsCount(operatorsCount)
-        , OperatorsMask(operatorsMask)
+        : SOpts(sopts)
         , CurFrontierStore(curFrontierStore)
         , NextFrontierStore(nextFrontierStore)
         , CrossSegmentStore(crossSegmentStore)
         , FrontierReader(curFrontierStore)
         , FrontierWriter(nextFrontierStore)
         , CrossSegmentReader(crossSegmentStore)
-        , Mult(crossSegmentStore, Segments)
-        , Expander(puzzle)
-        , Array(OperatorsCount, SegmentSize)
-        , FrontierArray(SegmentSize)
+        , Mult(crossSegmentStore, SOpts.Segments)
+        , Expander(SOpts.Puzzle)
+        , Array(SOpts.OperatorsCount, SOpts.SegmentSize)
+        , FrontierArray(SOpts.SegmentSize)
     {
     }
 
     void SetInitialNode(const std::string& initialState) {
-        auto initialIndex = Puzzle.Parse(initialState);
-        auto [seg, idx] = GetSegIdx(initialIndex);
+        auto initialIndex = SOpts.Puzzle.Parse(initialState);
+        auto [seg, idx] = SOpts.GetSegIdx(initialIndex);
         FrontierWriter.SetSegment(seg);
         FrontierWriter.Add(GetValue(idx, 0));
         FrontierWriter.Flush();
@@ -52,12 +41,12 @@ public:
     }
 
     void Expand(int segment) {
-        uint64_t indexBase = (uint64_t)segment << Opts.segmentBits;
+        uint64_t indexBase = (uint64_t)segment << SOpts.Opts.segmentBits;
 
         FrontierReader.SetSegment(segment);
 
         auto fnExpand = [&](uint64_t child, int op) {
-            auto [seg, idx] = GetSegIdx(child);
+            auto [seg, idx] = SOpts.GetSegIdx(child);
             Mult.Add(seg, GetValue(idx, op));
         };
 
@@ -72,7 +61,7 @@ public:
         }
         Expander.Finish(fnExpand);
 
-        if (!Puzzle.HasOddLengthCycles()) CurFrontierStore.Delete(segment);
+        if (!SOpts.Puzzle.HasOddLengthCycles()) CurFrontierStore.Delete(segment);
     }
 
     void FinishExpand() {
@@ -80,7 +69,7 @@ public:
     }
 
     uint64_t Collect(int segment) {
-        uint64_t indexBase = (uint64_t)segment << Opts.segmentBits;
+        uint64_t indexBase = (uint64_t)segment << SOpts.Opts.segmentBits;
 
         bool hasData = false;
 
@@ -100,7 +89,7 @@ public:
         }
         CrossSegmentStore.Delete(segment);
 
-        if (Puzzle.HasOddLengthCycles()) {
+        if (SOpts.Puzzle.HasOddLengthCycles()) {
             while (true) {
                 auto& vect = FrontierReader.Read();
                 if (vect.IsEmpty()) break;
@@ -117,15 +106,15 @@ public:
 
         uint64_t count = 0;
         Array.ScanBitsAndClear([&](uint64_t index, int opBits) {
-            if (Puzzle.HasOddLengthCycles() && FrontierArray.Get(index)) return;
+            if (SOpts.Puzzle.HasOddLengthCycles() && FrontierArray.Get(index)) return;
             count++;
-            if (opBits < OperatorsMask) {
+            if (opBits < SOpts.OperatorsMask) {
                 FrontierWriter.Add(GetValue(uint32_t(index), opBits));
             }
         });
         FrontierWriter.Flush();
 
-        if (Puzzle.HasOddLengthCycles()) {
+        if (SOpts.Puzzle.HasOddLengthCycles()) {
             FrontierArray.Clear();
         }
 
@@ -133,27 +122,16 @@ public:
     }
 
 private:
-    std::pair<int, uint32_t> GetSegIdx(uint64_t index) {
-        return { int(index >> Opts.segmentBits), uint32_t(index & SegmentMask) };
-    };
-
     std::pair<uint32_t, int> GetIndexAndOp(uint32_t value) {
-        return { value >> OperatorsCount, value & OperatorsMask };
+        return { value >> SOpts.OperatorsCount, value & SOpts.OperatorsMask };
     };
 
     uint32_t GetValue(uint32_t index, int op) {
-        return (index << OperatorsCount) | op;
+        return (index << SOpts.OperatorsCount) | op;
     };
 
 private:
-    Puzzle& Puzzle;
-    PuzzleOptions& Opts;
-    const int Segments;
-    const uint64_t SegmentSize;
-    const uint64_t SegmentMask;
-    const int OperatorsCount;
-    const int OperatorsMask;
-
+    SegmentedOptions SOpts;
     Store& CurFrontierStore;
     Store& NextFrontierStore;
     Store& CrossSegmentStore;
@@ -169,41 +147,23 @@ private:
 
 std::vector<uint64_t> DiskBasedFrontierSearch(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
     Timer timer;
-    const int OPS = puzzle.OperatorsCount();
-    const int OPS_MASK = (1 << OPS) - 1;
-    const uint64_t SIZE = puzzle.IndexesCount();
-    uint64_t SEGMENT_SIZE = 1ui64 << opts.segmentBits;
-    const uint64_t SEGMENT_MASK = SEGMENT_SIZE - 1;
-    const int SEGMENTS = int((SIZE + SEGMENT_SIZE - 1) / SEGMENT_SIZE);
-    if (SEGMENTS == 1 && SEGMENT_SIZE > SIZE) {
-        SEGMENT_SIZE = SIZE; // SEGMENT_MASK is still valid
-    }
+    SegmentedOptions sopts(puzzle, opts);
 
     // classic FrontierSearch stores indexes and used operator bits in a single 4-byte word
-    ensure(opts.segmentBits + OPS <= 32);
+    ensure(opts.segmentBits + sopts.OperatorsCount <= 32);
 
-    std::cerr
-        << "DiskBasedFrontierSearch"
-        << "; nodes: " << WithDecSep(SIZE)
-        << "; segments: " << WithDecSep(SEGMENTS)
-        << "; segment size: " << WithDecSep(SEGMENT_SIZE) << std::endl;
+    sopts.PrintOptions();
 
     std::vector<uint64_t> result;
 
-    Store curFrontierStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "frontier1");
-    Store newFrontierStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "frontier2");
-    Store crossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "xseg");
+    Store curFrontierStore = sopts.MakeStore("frontier1");
+    Store newFrontierStore = sopts.MakeStore("frontier2");
+    Store crossSegmentStore = sopts.MakeStore("xseg");
 
     std::vector<std::unique_ptr<DB_FS_Solver>> solvers;
     for (int i = 0; i < opts.threads; i++) {
         solvers.emplace_back(std::make_unique<DB_FS_Solver>(
-            puzzle,
-            opts,
-            SEGMENTS,
-            SEGMENT_SIZE,
-            SEGMENT_MASK,
-            OPS,
-            OPS_MASK,
+            sopts,
             curFrontierStore,
             newFrontierStore,
             crossSegmentStore
@@ -221,60 +181,21 @@ std::vector<uint64_t> DiskBasedFrontierSearch(Puzzle& puzzle, std::string initia
 
     while (result.size() <= opts.maxSteps) {
         Timer stepTimer;
-        std::atomic<uint64_t> totalCount{ 0 };
+        ParallelExec(opts.threads, sopts.Segments, [&](int thread, int segment) {
+            solvers[thread]->Expand(segment);
+        });
 
-        {
-            std::atomic<int> currentSegment{ 0 };
-
-            auto fnExpand = [&](int index) {
-                auto& solver = *(solvers[index]);
-                while (true) {
-                    int segment = currentSegment.fetch_add(1);
-                    if (segment >= SEGMENTS) break;
-                    solver.Expand(segment);
-                }
-            };
-
-            std::vector<std::thread> threads;
-            for (int i = 0; i < opts.threads; i++) {
-                threads.emplace_back(fnExpand, i);
-            }
-            for (auto& thread : threads) thread.join();
-        }
-
-        {
-            auto fnFinishExpand = [&](int index) {
-                auto& solver = *(solvers[index]);
-                solver.FinishExpand();
-            };
-
-            std::vector<std::thread> threads;
-            for (int i = 0; i < opts.threads; i++) {
-                threads.emplace_back(fnFinishExpand, i);
-            }
-            for (auto& thread : threads) thread.join();
-        }
+        ParallelExec(opts.threads, [&](int thread) {
+            solvers[thread]->FinishExpand();
+        });
 
         uint64_t xstore_size = crossSegmentStore.TotalLength();
 
-        {
-            std::atomic<int> currentSegment{ 0 };
+        std::atomic<uint64_t> totalCount{ 0 };
 
-            auto fnCollect = [&](int index) {
-                auto& solver = *(solvers[index]);
-                while (true) {
-                    int segment = currentSegment.fetch_add(1);
-                    if (segment >= SEGMENTS) break;
-                    totalCount += solver.Collect(segment);
-                }
-            };
-
-            std::vector<std::thread> threads;
-            for (int i = 0; i < opts.threads; i++) {
-                threads.emplace_back(fnCollect, i);
-            }
-            for (auto& thread : threads) thread.join();
-        }
+        ParallelExec(opts.threads, sopts.Segments, [&](int thread, int segment) {
+            totalCount += solvers[thread]->Collect(segment);
+        });
 
         if (totalCount == 0) break;
         result.push_back(totalCount);
@@ -286,7 +207,7 @@ std::vector<uint64_t> DiskBasedFrontierSearch(Puzzle& puzzle, std::string initia
             << "; count: " << totalCount
             << " in " << stepTimer
             << "; size: frontier=" << WithSize(curFrontierStore.TotalLength())
-            << ", x-seg (before)=" << WithSize(xstore_size)
+            << ", x-seg=" << WithSize(xstore_size)
             << std::endl;
         total_sz_frontier += curFrontierStore.TotalLength();
         total_sz_xseg += xstore_size;

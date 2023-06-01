@@ -18,6 +18,7 @@
     <ClCompile Include="DiskBasedSinglePassFrontierSearch.cpp" />
     <ClCompile Include="DiskBasedFrontierSearch.cpp" />
     <ClCompile Include="Puzzle.cpp" />
+    <ClCompile Include="DiskBasedBFS.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Util.h" />
@@ -30,5 +31,6 @@
     <ClInclude Include="SegmentReader.h" />
     <ClInclude Include="SegmentWriter.h" />
     <ClInclude Include="DiskBasedBFS.h" />
+    <ClInclude Include="ThreadUtil.h" />
   </ItemGroup>
 </Project>

@@ -78,6 +78,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BoolArray.h" />
+    <ClCompile Include="DiskBasedBFS.cpp" />
     <ClCompile Include="DiskBasedClassicBFS.cpp" />
     <ClCompile Include="DiskBasedFrontierSearch.cpp" />
     <ClCompile Include="DiskBasedSinglePassFrontierSearch.cpp" />
@@ -105,6 +106,7 @@
     <ClInclude Include="SegmentReader.h" />
     <ClInclude Include="SegmentWriter.h" />
     <ClInclude Include="Store.h" />
+    <ClInclude Include="ThreadUtil.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

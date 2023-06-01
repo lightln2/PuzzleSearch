@@ -4,6 +4,7 @@
 #include "SegmentWriter.h"
 #include "Multiplexor.h"
 #include "Store.h"
+#include "ThreadUtil.h"
 #include "Util.h"
 
 #include <thread>
@@ -28,11 +29,7 @@ namespace {
 class DB_BFS_Solver {
 public:
     DB_BFS_Solver(
-        Puzzle& puzzle,
-        PuzzleOptions& opts,
-        int segments,
-        uint64_t segmentSize,
-        uint64_t segmentMask,
+        SegmentedOptions sopts,
         Store& currentOpenListStore,
         Store& nextOpenListStore,
         Store& currentClosedListStore,
@@ -40,11 +37,7 @@ public:
         Store& currentCrossSegmentStore,
         Store& nextCrossSegmentStore)
         
-        : Puzzle(puzzle)
-        , Opts(opts)
-        , Segments(segments)
-        , SegmentSize(segmentSize)
-        , SegmentMask(segmentMask)
+        : SOpts(sopts)
         , CurrentOpenListStore(currentOpenListStore)
         , NextOpenListStore(nextOpenListStore)
         , CurrentClosedListStore(currentClosedListStore)
@@ -52,24 +45,24 @@ public:
         , CurrentCrossSegmentStore(currentCrossSegmentStore)
         , NextCrossSegmentStore(nextCrossSegmentStore)
         , CurrentXSegReader(currentCrossSegmentStore)
-        , Mult(nextCrossSegmentStore, Segments)
-        , Expander(puzzle)
-        , ClosedList(SegmentSize)
-        , OpenList(SegmentSize)
-        , NewOpenList(SegmentSize)
+        , Mult(nextCrossSegmentStore, SOpts.Segments)
+        , Expander(SOpts.Puzzle)
+        , ClosedList(SOpts.SegmentSize)
+        , OpenList(SOpts.SegmentSize)
+        , NewOpenList(SOpts.SegmentSize)
     {
     }
 
     void SetInitialNode(const std::string& initialState) {
-        auto initialIndex = Puzzle.Parse(initialState);
-        auto [seg, idx] = GetSegIdx(initialIndex);
+        auto initialIndex = SOpts.Puzzle.Parse(initialState);
+        auto [seg, idx] = SOpts.GetSegIdx(initialIndex);
         NewOpenList.Set(idx);
         SaveOpenList(seg);
         std::swap(CurrentOpenListStore, NextOpenListStore);
     }
 
     uint64_t Process(int segment) {
-        uint64_t indexBase = (uint64_t)segment << Opts.segmentBits;
+        uint64_t indexBase = (uint64_t)segment << SOpts.Opts.segmentBits;
         LoadOpenList(segment);
         LoadClosedList(segment);
         CurrentXSegReader.SetSegment(segment);
@@ -88,7 +81,7 @@ public:
         ClosedList.Or(OpenList);
 
         auto fnExpand = [&](uint64_t child, int op) {
-            auto [seg, idx] = GetSegIdx(child);
+            auto [seg, idx] = SOpts.GetSegIdx(child);
             if (seg == segment) NewOpenList.Set(idx);
             else Mult.Add(seg, idx);
         };
@@ -125,17 +118,8 @@ private:
         SaveBoolArray(segment, NextOpenListStore, NewOpenList);
     };
 
-    std::pair<int, uint32_t> GetSegIdx(uint64_t index) {
-        return { int(index >> Opts.segmentBits), uint32_t(index & SegmentMask) };
-    };
-
 private:
-    Puzzle& Puzzle;
-    PuzzleOptions& Opts;
-    const int Segments;
-    const uint64_t SegmentSize;
-    const uint64_t SegmentMask;
-
+    SegmentedOptions SOpts;
     Store& CurrentOpenListStore;
     Store& NextOpenListStore;
     Store& CurrentClosedListStore;
@@ -155,37 +139,22 @@ private:
 std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
     ensure(opts.segmentBits <= 32);
     Timer timer;
-    const uint64_t SIZE = puzzle.IndexesCount();
-    uint64_t SEGMENT_SIZE = 1ui64 << opts.segmentBits;
-    uint64_t SEGMENT_MASK = SEGMENT_SIZE - 1;
-    const int SEGMENTS = int((SIZE + SEGMENT_SIZE - 1) / SEGMENT_SIZE);
-    if (SEGMENTS == 1 && SEGMENT_SIZE > SIZE) {
-        SEGMENT_SIZE = SIZE; // SEGMENT_MASK is still valid
-    }
-
-    std::cerr << "DiskBasedClassicBFS"
-        << "; nodes: " << WithDecSep(SIZE)
-        << "; segments: " << WithDecSep(SEGMENTS)
-        << "; segment size: " << WithDecSep(SEGMENT_SIZE)
-        << std::endl;
+    SegmentedOptions sopts(puzzle, opts);
+    sopts.PrintOptions();
 
     std::vector<uint64_t> result;
 
-    Store currentOpenListStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "open1");
-    Store nextOpenListStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "open2");
-    Store currentClosedListStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "closed1");
-    Store nextClosedListStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "closed2");
-    Store currentCrossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "xseg1");
-    Store nextCrossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "xseg2");
+    Store currentOpenListStore = sopts.MakeStore("open1");
+    Store nextOpenListStore = sopts.MakeStore("open2");
+    Store currentClosedListStore = sopts.MakeStore("closed1");
+    Store nextClosedListStore = sopts.MakeStore("closed2");
+    Store currentCrossSegmentStore = sopts.MakeStore("xseg1");
+    Store nextCrossSegmentStore = sopts.MakeStore("xseg2");
 
     std::vector<std::unique_ptr<DB_BFS_Solver>> solvers;
     for (int i = 0; i < opts.threads; i++) {
         solvers.emplace_back(std::make_unique<DB_BFS_Solver>(
-            puzzle,
-            opts,
-            SEGMENTS,
-            SEGMENT_SIZE,
-            SEGMENT_MASK,
+            sopts,
             currentOpenListStore,
             nextOpenListStore,
             currentClosedListStore,
@@ -202,23 +171,12 @@ std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialSta
 
     while (true) {
         Timer stepTimer;
+
         std::atomic<uint64_t> totalCount{ 0 };
-        std::atomic<int> currentSegment{ 0 };
 
-        auto fnProcess = [&](int index) {
-            auto& solver = *(solvers[index]);
-            while (true) {
-                int segment = currentSegment.fetch_add(1);
-                if (segment >= SEGMENTS) break;
-                totalCount += solver.Process(segment);
-            }
-        };
-
-        std::vector<std::thread> threads;
-        for (int i = 0; i < opts.threads; i++) {
-            threads.emplace_back(fnProcess, i);
-        }
-        for (auto& thread : threads) thread.join();
+        ParallelExec(opts.threads, sopts.Segments, [&](int thread, int segment) {
+            totalCount += solvers[thread]->Process(segment);
+        });
 
         if (totalCount == 0) break;
         result.push_back(totalCount);
