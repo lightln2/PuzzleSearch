@@ -24,7 +24,7 @@ struct SegmentedOptions {
 
     Puzzle& Puzzle;
     PuzzleOptions Opts;
-    uint32_t TotalSize;
+    uint64_t TotalSize;
     int Segments;
     uint64_t SegmentSize;
     uint64_t SegmentMask;

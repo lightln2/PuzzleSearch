@@ -62,6 +62,7 @@
     <ClInclude Include="DiskBasedBFS.h">
       <Filter>DiskBasedBFS</Filter>
     </ClInclude>
+    <ClInclude Include="Array.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Util">

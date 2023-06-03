@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Array.h"
 #include "Util.h"
 
 #include <cstdint>
@@ -12,55 +13,42 @@ class Buffer {
 public:
     Buffer(size_t capacity)
         : m_Size(0)
-        , m_Capacity(capacity)
-        , m_Buffer((T*)malloc(capacity * sizeof(T)))
-    {
-        ensure(m_Buffer != nullptr);
-    }
+        , m_Array(capacity)
+    {}
 
-    Buffer(const Buffer&) = delete;
-    Buffer& operator =(const Buffer&) = delete;
-
-    ~Buffer() { free(m_Buffer); }
-
-    size_t Capacity() const { return m_Capacity; }
+    size_t Capacity() const { return m_Array.Size(); }
 
     void SetCapacity(size_t capacity) {
-        free(m_Buffer);
-        m_Buffer = (T*)malloc(capacity * sizeof(T));
-        ensure(m_Buffer != nullptr);
+        m_Array.SetSize(capacity);
     }
 
     size_t Size() const { return m_Size; }
 
-    void SetSize(size_t size) { CHK(size - 1); m_Size = size; }
+    void SetSize(size_t size) { ensure(m_Size <= Capacity()); m_Size = size; }
 
-    T& operator[] (size_t index) { CHK(index); return m_Buffer[index]; }
+    T& operator[] (size_t index) { return m_Array[index]; }
 
-    const T& operator[] (size_t index) const { CHK(index); return m_Buffer[index]; }
+    const T& operator[] (size_t index) const { return m_Array[index]; }
 
-    void Add(T value) { CHK(m_Size); m_Buffer[m_Size++] = value; }
+    void Add(T value) { m_Array[m_Size++] = value; }
 
     void Clear() { m_Size = 0; }
 
-    bool IsFull() const { CHK(m_Size - 1); return m_Size == m_Capacity; }
+    bool IsFull() const { return m_Size == Capacity(); }
 
     bool IsEmpty() const { return m_Size == 0; }
 
-    T* Buf() { return m_Buffer; }
+    TArray<T>& Array() { return m_Array; }
 
-    const T* Buf() const { return m_Buffer; }
+    const TArray<T>& Array() const { return m_Array; }
 
-    void SetAllZero() { memset(m_Buffer, 0, m_Size * sizeof(T)); }
+    T* Buf() { return m_Array.Buf(); }
 
-    void CHK(size_t index) const {
-#ifdef _DEBUG
-        ensure(index < m_Capacity);
-#endif
-    }
+    const T* Buf() const { return m_Array.Buf(); }
+
+    void SetAllZero() { m_Array.Clear(); }
 
 private:
     size_t m_Size;
-    size_t m_Capacity;
-    T* m_Buffer;
+    TArray<T> m_Array;
 };

@@ -43,7 +43,7 @@ std::vector<uint64_t> DiskBasedSinglePassFrontierSearch(Puzzle& puzzle, std::str
     BoolArray frontierArray(SEGMENT_SIZE);
 
     auto fnGetSegIdx = [&](uint64_t index) {
-        return std::pair<int, uint32_t>(index >> opts.segmentBits, index & SEGMENT_MASK);
+        return std::pair<int, uint32_t>(int(index >> opts.segmentBits), uint32_t(index & SEGMENT_MASK));
     };
 
     auto fnGetIndexAndOp = [&](uint32_t value) {

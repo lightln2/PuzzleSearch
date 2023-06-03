@@ -66,7 +66,7 @@ std::vector<uint64_t> DiskBasedThreeBitBFS(Puzzle& puzzle, std::string initialSt
     };
 
     auto fnGetSegIdx = [&](uint64_t index) {
-        return std::pair<int, uint32_t>(index >> opts.segmentBits, index & SEGMENT_MASK);
+        return std::pair<int, uint32_t>(int(index >> opts.segmentBits), uint32_t(index & SEGMENT_MASK));
     };
 
     ExpandBuffer nodes(puzzle);

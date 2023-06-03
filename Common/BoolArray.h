@@ -58,29 +58,12 @@ class BoolArray {
 public:
     BoolArray() {}
 
-    BoolArray(uint64_t size) { Resize(size); }
-
-    BoolArray(const BoolArray&) = delete;
-    BoolArray& operator=(const BoolArray&) = delete;
-
-    BoolArray(BoolArray&& other) {
-        std::swap(m_Size, other.m_Size);
-        std::swap(m_Values, other.m_Values);
-    }
-    BoolArray& operator=(BoolArray&& other) {
-        std::swap(m_Size, other.m_Size);
-        std::swap(m_Values, other.m_Values);
-        return *this;
-    }
-
-    ~BoolArray() { if (m_Values) free(m_Values); }
+    BoolArray(uint64_t size)
+        : m_Values((size + 63) / 64)
+    { }
 
     void Resize(uint64_t size) {
-        m_Size = (size + 63) / 64;
-        if (m_Values) free(m_Values);
-        m_Values = (uint64_t*)malloc(m_Size * sizeof(uint64_t));
-        ensure(m_Values != nullptr);
-        memset(m_Values, 0, m_Size * sizeof(uint64_t));
+        m_Values.resize((size + 63) / 64);
     }
 
     void Set(uint64_t index) {
@@ -96,20 +79,20 @@ public:
     }
 
     void AndNot(const BoolArray& exclude) {
-        for (uint64_t i = 0; i < m_Size; i++) {
+        for (uint64_t i = 0; i < m_Values.size(); i++) {
             m_Values[i] &= ~exclude.m_Values[i];
         }
     }
 
     void Or(const BoolArray& other) {
-        for (uint64_t i = 0; i < m_Size; i++) {
+        for (uint64_t i = 0; i < m_Values.size(); i++) {
             m_Values[i] |= other.m_Values[i];
         }
     }
 
     uint64_t BitsCount() {
         uint64_t result = 0;
-        for (uint64_t i = 0; i < m_Size; i++) {
+        for (uint64_t i = 0; i < m_Values.size(); i++) {
             result += ::BitsCount(m_Values[i]);
         }
         return result;
@@ -117,7 +100,7 @@ public:
 
     uint64_t AndNotAndCount(const BoolArray& exclude) {
         uint64_t result = 0;
-        for (uint64_t i = 0; i < m_Size; i++) {
+        for (uint64_t i = 0; i < m_Values.size(); i++) {
             uint64_t val = m_Values[i] & ~exclude.m_Values[i];
             m_Values[i] = val;
             result += ::BitsCount(val);
@@ -125,19 +108,19 @@ public:
         return result;
     }
 
-    size_t DataSize() const { return m_Size; }
+    size_t DataSize() const { return m_Values.size(); }
 
-    uint64_t* Data() { return m_Values; }
+    uint64_t* Data() { return &m_Values[0]; }
 
-    const uint64_t* Data() const { return m_Values; }
+    const uint64_t* Data() const { return &m_Values[0]; }
 
     void Clear() {
-        memset(m_Values, 0, m_Size * sizeof(uint64_t));
+        for (size_t i = 0; i < m_Values.size(); i++) m_Values[i] = 0;
     }
 
     template<typename F>
     void ScanBits(F func) {
-        for (size_t i = 0; i < m_Size; ++i) {
+        for (size_t i = 0; i < m_Values.size(); ++i) {
             const uint64_t val = m_Values[i];
             if (val == 0) continue;
             ::ScanBits(val, i * 64, func);
@@ -146,7 +129,7 @@ public:
 
     template<typename F>
     void ScanBitsAndClear(F func) {
-        for (size_t i = 0; i < m_Size; ++i) {
+        for (size_t i = 0; i < m_Values.size(); ++i) {
             const uint64_t val = m_Values[i];
             if (val == 0) continue;
             m_Values[i] = 0;
@@ -155,8 +138,7 @@ public:
     }
 
 private:
-    uint64_t* m_Values = nullptr;
-    size_t m_Size = 0;
+    std::vector<uint64_t> m_Values;
 };
 
 class MultiBitArray {

@@ -83,7 +83,7 @@ std::vector<uint64_t> DiskBasedTwoBitBFS(Puzzle& puzzle, std::string initialStat
     };
 
     auto fnGetSegIdx = [&](uint64_t index) {
-        return std::pair<int, uint32_t>(index >> opts.segmentBits, index & SEGMENT_MASK);
+        return std::pair<int, uint32_t>(int(index >> opts.segmentBits), uint32_t(index & SEGMENT_MASK));
     };
 
     auto initialIndex = puzzle.Parse(initialState);
