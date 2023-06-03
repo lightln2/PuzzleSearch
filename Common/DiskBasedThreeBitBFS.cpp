@@ -23,72 +23,159 @@ namespace {
 
 } // namespace
 
-std::vector<uint64_t> DiskBasedThreeBitBFS(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
-    std::cerr << "DB_3BFS" << std::endl;
-    Timer timer;
-    const uint64_t SIZE = puzzle.IndexesCount();
-    uint64_t SEGMENT_SIZE = 1ui64 << opts.segmentBits;
-    const uint64_t SEGMENT_MASK = SEGMENT_SIZE - 1;
-    const int SEGMENTS = int((SIZE + SEGMENT_SIZE - 1) / SEGMENT_SIZE);
-    if (SEGMENTS == 1 && SEGMENT_SIZE > SIZE) {
-        SEGMENT_SIZE = SIZE; // SEGMENT_MASK is still valid
+class DB_3BitBFS_Solver {
+public:
+    DB_3BitBFS_Solver(
+        SegmentedOptions sopts,
+        Store& oldStore,
+        Store& curStore,
+        Store& newStore,
+        Store& curCrossSegmentStore,
+        Store& nextCrossSegmentStore)
+
+        : SOpts(sopts)
+        , OldStore(oldStore)
+        , CurStore(curStore)
+        , NewStore(newStore)
+        , CurCrossSegmentStore(curCrossSegmentStore)
+        , NextCrossSegmentStore(nextCrossSegmentStore)
+        , CrossSegmentReader(curCrossSegmentStore)
+        , Mult(nextCrossSegmentStore, SOpts.Segments)
+        , Expander(SOpts.Puzzle)
+        , OldList(SOpts.SegmentSize)
+        , CurList(SOpts.SegmentSize)
+        , NewList(SOpts.SegmentSize)
+    {
     }
 
-    std::cerr
-        << "total: " << WithDecSep(SIZE)
-        << "; segments: " << WithDecSep(SEGMENTS)
-        << "; segment size: " << WithDecSep(SEGMENT_SIZE) << std::endl;
+    void SetInitialNode(const std::string& initialState) {
+        auto initialIndex = SOpts.Puzzle.Parse(initialState);
+        auto [seg, idx] = SOpts.GetSegIdx(initialIndex);
+        NewList.Set(idx);
+        Save(seg);
+        auto fnExpandCrossSegment = [&](uint64_t child, int op) {
+            auto [s, idx] = SOpts.GetSegIdx(child);
+            if (s == seg) return;
+            Mult.Add(s, idx);
+        };
+        Expander.Add(initialIndex, 0, fnExpandCrossSegment);
+        Expander.Finish(fnExpandCrossSegment);
+        Mult.FlushAllSegments();
+        std::swap(OldStore, CurStore);
+        std::swap(CurStore, NewStore);
+        std::swap(CurCrossSegmentStore, NextCrossSegmentStore);
+    }
+
+    uint64_t Process(int segment) {
+        uint64_t totalCount = 0;
+
+        uint64_t indexBase = (uint64_t)segment << SOpts.Opts.segmentBits;
+
+        LoadOld(segment);
+        LoadCur(segment);
+        CrossSegmentReader.SetSegment(segment);
+
+        while (true) {
+            auto& vect = CrossSegmentReader.Read();
+            if (vect.IsEmpty()) break;
+            for (size_t i = 0; i < vect.Size(); i++) {
+                uint32_t idx = vect[i];
+                NewList.Set(idx);
+            }
+        }
+        CurCrossSegmentStore.Delete(segment);
+
+        auto fnExpandInSegment = [&](uint64_t child, int op) {
+            auto [seg, idx] = SOpts.GetSegIdx(child);
+            if (seg != segment) return;
+            NewList.Set(idx);
+        };
+
+        CurList.ScanBits([&](uint64_t index) {
+            Expander.Add(indexBase | index, 0, fnExpandInSegment);
+        });
+        Expander.Finish(fnExpandInSegment);
+
+        NewList.AndNot(CurList);
+        NewList.AndNot(OldList);
+
+        auto fnExpandCrossSegment = [&](uint64_t child, int op) {
+            auto [seg, idx] = SOpts.GetSegIdx(child);
+            if (seg == segment) return;
+            Mult.Add(seg, idx);
+        };
+        NewList.ScanBits([&](uint64_t index) {
+            Expander.Add(indexBase | index, 0, fnExpandCrossSegment);
+        });
+        Expander.Finish(fnExpandCrossSegment);
+
+        uint64_t count = NewList.BitsCount();
+        Save(segment);
+
+        return count;
+    }
+
+    void FinishProcess() {
+        Mult.FlushAllSegments();
+    }
+
+private:
+    void LoadOld(int segment) {
+        LoadBoolArray(segment, OldStore, OldList);
+        OldStore.Delete(segment);
+    };
+    void LoadCur(int segment) {
+        LoadBoolArray(segment, CurStore, CurList);
+    };
+    void Save(int segment) {
+        SaveBoolArray(segment, NewStore, NewList);
+    };
+
+private:
+    SegmentedOptions SOpts;
+    Store& OldStore;
+    Store& CurStore;
+    Store& NewStore;
+    Store& CurCrossSegmentStore;
+    Store& NextCrossSegmentStore;
+    SegmentReader CrossSegmentReader;
+    Multiplexor Mult;
+    ExpandBuffer Expander;
+
+    BoolArray OldList;
+    BoolArray CurList;
+    BoolArray NewList;
+};
+
+
+std::vector<uint64_t> DiskBasedThreeBitBFS(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
+    std::cerr << "DiskBased ThreeBit BFS" << std::endl;
+
+    ensure(opts.segmentBits <= 32);
+    Timer timer;
+    SegmentedOptions sopts(puzzle, opts);
+    sopts.PrintOptions();
 
     std::vector<uint64_t> result;
 
-    Store oldStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "store1");
-    Store curStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "store2");
-    Store newStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "store3");
-    Store currentCrossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "xseg1");
-    Store nextCrossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "xseg2");
+    Store oldStore = sopts.MakeStore("store1");
+    Store curStore = sopts.MakeStore("store2");
+    Store newStore = sopts.MakeStore("store3");
+    Store curCrossSegmentStore = sopts.MakeStore("xseg1");
+    Store nextCrossSegmentStore = sopts.MakeStore("xseg2");
 
-    SegmentReader currentXSegReader(currentCrossSegmentStore);
-    Multiplexor mult(nextCrossSegmentStore, SEGMENTS);
-
-    BoolArray oldList(SEGMENT_SIZE);
-    BoolArray curList(SEGMENT_SIZE);
-    BoolArray newList(SEGMENT_SIZE);
-
-    auto fnLoadOld = [&](int segment) {
-        LoadBoolArray(segment, oldStore, oldList);
-        oldStore.Delete(segment);
-    };
-    auto fnLoadCur = [&](int segment) {
-        LoadBoolArray(segment, curStore, curList);
-    };
-    auto fnSave = [&](int segment) {
-        SaveBoolArray(segment, newStore, newList);
-    };
-
-    auto fnGetSegIdx = [&](uint64_t index) {
-        return std::pair<int, uint32_t>(int(index >> opts.segmentBits), uint32_t(index & SEGMENT_MASK));
-    };
-
-    ExpandBuffer nodes(puzzle);
-
-    auto initialIndex = puzzle.Parse(initialState);
-    auto [seg, idx] = fnGetSegIdx(initialIndex);
-    newList.Set(idx);
-    fnSave(seg);
-    // expand cross-segment
-    {
-        auto fnExpandCrossSegment = [&](uint64_t child, int op) {
-            auto [s, idx] = fnGetSegIdx(child);
-            if (s == seg) return;
-            mult.Add(s, idx);
-        };
-        nodes.Add(initialIndex, 0, fnExpandCrossSegment);
-        nodes.Finish(fnExpandCrossSegment);
-        mult.FlushAllSegments();
+    std::vector<std::unique_ptr<DB_3BitBFS_Solver>> solvers;
+    for (int i = 0; i < opts.threads; i++) {
+        solvers.emplace_back(std::make_unique<DB_3BitBFS_Solver>(
+            sopts,
+            oldStore,
+            curStore,
+            newStore,
+            curCrossSegmentStore,
+            nextCrossSegmentStore));
     }
-    std::swap(oldStore, curStore);
-    std::swap(curStore, newStore);
-    std::swap(currentCrossSegmentStore, nextCrossSegmentStore);
+
+    solvers[0]->SetInitialNode(initialState);
 
     result.push_back(1);
 
@@ -100,54 +187,7 @@ std::vector<uint64_t> DiskBasedThreeBitBFS(Puzzle& puzzle, std::string initialSt
 
     while (true) {
         Timer stepTimer;
-        uint64_t totalCount = 0;
 
-        for (int segment = 0; segment < SEGMENTS; segment++) {
-            uint64_t indexBase = (uint64_t)segment << opts.segmentBits;
-
-            fnLoadOld(segment);
-            fnLoadCur(segment);
-            currentXSegReader.SetSegment(segment);
-
-            while (true) {
-                auto& vect = currentXSegReader.Read();
-                if (vect.IsEmpty()) break;
-                for (size_t i = 0; i < vect.Size(); i++) {
-                    uint32_t idx = vect[i];
-                    newList.Set(idx);
-                }
-            }
-            currentCrossSegmentStore.Delete(segment);
-
-            auto fnExpandInSegment = [&](uint64_t child, int op) {
-                auto [seg, idx] = fnGetSegIdx(child);
-                if (seg != segment) return;
-                newList.Set(idx);
-            };
-
-            curList.ScanBits([&](uint64_t index) {
-                nodes.Add(indexBase | index, 0, fnExpandInSegment);
-            });
-            nodes.Finish(fnExpandInSegment);
-
-            newList.AndNot(curList);
-            newList.AndNot(oldList);
-
-            auto fnExpandCrossSegment = [&](uint64_t child, int op) {
-                auto [seg, idx] = fnGetSegIdx(child);
-                if (seg == segment) return;
-                mult.Add(seg, idx);
-            };
-            newList.ScanBits([&](uint64_t index) {
-                nodes.Add(indexBase | index, 0, fnExpandCrossSegment);
-            });
-            nodes.Finish(fnExpandCrossSegment);
-
-            mult.FlushAllSegments();
-
-            totalCount += newList.BitsCount();
-            fnSave(segment);
-        }
 
         if (totalCount == 0) break;
         result.push_back(totalCount);

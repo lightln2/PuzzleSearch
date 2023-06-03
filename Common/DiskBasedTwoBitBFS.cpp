@@ -4,6 +4,7 @@
 #include "SegmentWriter.h"
 #include "Multiplexor.h"
 #include "Store.h"
+#include "ThreadUtil.h"
 #include "Util.h"
 
 namespace {
@@ -44,115 +45,159 @@ namespace {
 
 } // namespace
 
-std::vector<uint64_t> DiskBasedTwoBitBFS(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
-    std::cerr << "2BIT_BFS" << std::endl;
-    Timer timer;
-    const uint64_t SIZE = puzzle.IndexesCount();
-    uint64_t SEGMENT_SIZE = 1ui64 << opts.segmentBits;
-    const uint64_t SEGMENT_MASK = SEGMENT_SIZE - 1;
-    const int SEGMENTS = int((SIZE + SEGMENT_SIZE - 1) / SEGMENT_SIZE);
-    if (SEGMENTS == 1 && SEGMENT_SIZE > SIZE) {
-        SEGMENT_SIZE = SIZE; // SEGMENT_MASK is still valid
+class DB_2BitBFS_Solver {
+public:
+    static int UNVISITED, OLD, CUR, NEXT;
+public:
+    DB_2BitBFS_Solver(
+        SegmentedOptions sopts,
+        Store& curArrStore,
+        Store& nextArrStore,
+        Store& curCrossSegmentStore,
+        Store& nextCrossSegmentStore)
+
+        : SOpts(sopts)
+        , CurArrStore(curArrStore)
+        , NextArrStore(nextArrStore)
+        , CurCrossSegmentStore(curCrossSegmentStore)
+        , NextCrossSegmentStore(nextCrossSegmentStore)
+        , CrossSegmentReader(curCrossSegmentStore)
+        , Mult(nextCrossSegmentStore, SOpts.Segments)
+        , Expander(SOpts.Puzzle)
+        , Array(SOpts.SegmentSize)
+    {
     }
 
-    int UNVISITED = 0, OLD = 1, CUR = 2, NEXT = 3;
+    void SetInitialNode(const std::string& initialState) {
+        auto initialIndex = SOpts.Puzzle.Parse(initialState);
+        auto [seg, idx] = SOpts.GetSegIdx(initialIndex);
+        Array.Set(idx, CUR);
+        Save(seg);
+        std::swap(CurArrStore, NextArrStore);
+    }
 
-    std::cerr
-        << "total: " << WithDecSep(SIZE)
-        << "; segments: " << WithDecSep(SEGMENTS)
-        << "; segment size: " << WithDecSep(SEGMENT_SIZE) << std::endl;
+    uint64_t Process(int segment) {
+        uint64_t indexBase = (uint64_t)segment << SOpts.Opts.segmentBits;
+
+        Load(segment);
+        CrossSegmentReader.SetSegment(segment);
+
+        while (true) {
+            auto& vect = CrossSegmentReader.Read();
+            if (vect.IsEmpty()) break;
+            for (size_t i = 0; i < vect.Size(); i++) {
+                uint32_t idx = vect[i];
+                int val = Array.Get(idx);
+                if (val == OLD) continue;
+                Array.Set(idx, CUR);
+            }
+        }
+        CurCrossSegmentStore.Delete(segment);
+
+        auto fnExpand = [&](uint64_t child, int op) {
+            auto [seg, idx] = SOpts.GetSegIdx(child);
+            if (seg == segment) {
+                if (Array.Get(idx) == UNVISITED) {
+                    Array.Set(idx, NEXT);
+                }
+            }
+            else Mult.Add(seg, idx);
+        };
+
+        uint64_t count = 0;
+
+        for (uint64_t i = 0; i < SOpts.SegmentSize; i++) {
+            int val = Array.Get(i);
+            if (val != CUR) continue;
+            count++;
+            Array.Set(i, OLD);
+            Expander.Add(indexBase | i, 0, fnExpand);
+        }
+        Expander.Finish(fnExpand);
+
+        Save(segment);
+
+        return count;
+    }
+
+    void FinishProcess() {
+        Mult.FlushAllSegments();
+    }
+
+private:
+    void Load(int segment) {
+        Array.Load(segment, CurArrStore);
+    };
+
+    void Save(int segment) {
+        Array.Save(segment, NextArrStore);
+    };
+
+private:
+    SegmentedOptions SOpts;
+    Store& CurArrStore;
+    Store& NextArrStore;
+    Store& CurCrossSegmentStore;
+    Store& NextCrossSegmentStore;
+    SegmentReader CrossSegmentReader;
+    Multiplexor Mult;
+    ExpandBuffer Expander;
+
+    TwoBitArray Array;
+};
+
+int DB_2BitBFS_Solver::UNVISITED = 0;
+int DB_2BitBFS_Solver::OLD = 1;
+int DB_2BitBFS_Solver::CUR = 2;
+int DB_2BitBFS_Solver::NEXT = 3;
+
+
+std::vector<uint64_t> DiskBasedTwoBitBFS(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
+    std::cerr << "DiskBaset TwoBit BFS" << std::endl;
+    Timer timer;
+    ensure(opts.segmentBits <= 32);
+    SegmentedOptions sopts(puzzle, opts);
+    sopts.PrintOptions();
 
     std::vector<uint64_t> result;
 
-    Store currentArrStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "arr1");
-    Store nextArrStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "arr2");
-    Store currentCrossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "xseg1");
-    Store nextCrossSegmentStore = Store::CreateMultiFileStore(SEGMENTS, opts.directories, "xseg2");
+    Store currentArrStore = sopts.MakeStore("arr1");
+    Store nextArrStore = sopts.MakeStore("arr2");
+    Store currentCrossSegmentStore = sopts.MakeStore("xseg1");
+    Store nextCrossSegmentStore = sopts.MakeStore("xseg2");
 
-    TwoBitArray array(SEGMENT_SIZE);
+    std::vector<std::unique_ptr<DB_2BitBFS_Solver>> solvers;
+    for (int i = 0; i < opts.threads; i++) {
+        solvers.emplace_back(std::make_unique<DB_2BitBFS_Solver>(
+            sopts,
+            currentArrStore,
+            nextArrStore,
+            currentCrossSegmentStore,
+            nextCrossSegmentStore));
+    }
 
-    SegmentReader currentXSegReader(currentCrossSegmentStore);
-    Multiplexor mult(nextCrossSegmentStore, SEGMENTS);
-
-    auto fnLoad = [&](int segment) {
-        array.Load(segment, currentArrStore);
-    };
-
-    auto fnSave = [&](int segment) {
-        array.Save(segment, nextArrStore);
-    };
-
-    auto fnGetSegIdx = [&](uint64_t index) {
-        return std::pair<int, uint32_t>(int(index >> opts.segmentBits), uint32_t(index & SEGMENT_MASK));
-    };
-
-    auto initialIndex = puzzle.Parse(initialState);
-    auto [seg, idx] = fnGetSegIdx(initialIndex);
-    array.Set(idx, CUR);
-    fnSave(seg);
-    std::swap(currentArrStore, nextArrStore);
-
-    ExpandBuffer nodes(puzzle);
+    solvers[0]->SetInitialNode(initialState);
 
     uint64_t total_sz_arr = 0;
     uint64_t total_sz_xseg = 0;
 
     while (true) {
         Timer stepTimer;
-        uint64_t totalCount = 0;
+        std::atomic<uint64_t> totalCount{ 0 };
 
-        for (int segment = 0; segment < SEGMENTS; segment++) {
-            uint64_t indexBase = (uint64_t)segment << opts.segmentBits;
+        ParallelExec(opts.threads, sopts.Segments, [&](int thread, int segment) {
+            totalCount += solvers[thread]->Process(segment);
+        });
 
-            fnLoad(segment);
-            currentXSegReader.SetSegment(segment);
-
-            while (true) {
-                auto& vect = currentXSegReader.Read();
-                if (vect.IsEmpty()) break;
-                for (size_t i = 0; i < vect.Size(); i++) {
-                    uint32_t idx = vect[i];
-                    int val = array.Get(idx);
-                    if (val == OLD) continue;
-                    array.Set(idx, CUR);
-                }
-            }
-            currentCrossSegmentStore.Delete(segment);
-
-            auto fnExpand = [&](uint64_t child, int op) {
-                auto [seg, idx] = fnGetSegIdx(child);
-                if (seg == segment) {
-                    if (array.Get(idx) == UNVISITED) {
-                        array.Set(idx, NEXT);
-                    }
-                }
-                else mult.Add(seg, idx);
-            };
-
-            uint64_t count = 0;
-
-            for (uint64_t i = 0; i < SEGMENT_SIZE; i++) {
-                int val = array.Get(i);
-                if (val != CUR) continue;
-                count++;
-                array.Set(i, OLD);
-                nodes.Add(indexBase | i, 0, fnExpand);
-            }
-            nodes.Finish(fnExpand);
-
-            mult.FlushAllSegments();
-
-            fnSave(segment);
-
-            totalCount += count;
-
-        }
+        ParallelExec(opts.threads, [&](int thread) {
+            solvers[thread]->FinishProcess();
+        });
 
         if (totalCount == 0) break;
         result.push_back(totalCount);
-        std::swap(CUR, NEXT);
         currentArrStore.DeleteAll();
         currentCrossSegmentStore.DeleteAll();
+        std::swap(DB_2BitBFS_Solver::CUR, DB_2BitBFS_Solver::NEXT);
         std::swap(currentArrStore, nextArrStore);
         std::swap(currentCrossSegmentStore, nextCrossSegmentStore);
         std::cerr

@@ -91,14 +91,16 @@ public:
         });
         Expander.Finish(fnExpand);
 
-        Mult.FlushAllSegments();
-
         NewOpenList.AndNot(ClosedList);
 
         SaveOpenList(segment);
         SaveClosedList(segment);
 
         return totalCount;
+    }
+
+    void FinishProcess() {
+        Mult.FlushAllSegments();
     }
 
 private:
@@ -176,6 +178,10 @@ std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialSta
 
         ParallelExec(opts.threads, sopts.Segments, [&](int thread, int segment) {
             totalCount += solvers[thread]->Process(segment);
+        });
+
+        ParallelExec(opts.threads, [&](int thread) {
+            solvers[thread]->FinishProcess();
         });
 
         if (totalCount == 0) break;
