@@ -83,26 +83,7 @@ __device__ void GpuPermutationUnrank(uint64_t index, int* arr, int size) {
 }
 
 
-__global__ void kernel_test(uint64_t* indexes, int size, int count) {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i >= count) return;
-    int arr[16];
-    GpuPermutationUnrank(indexes[i], arr, size);
-    int temp = arr[size - 1];
-    arr[size - 1] = arr[size - 2];
-    arr[size - 2] = temp;
-    indexes[i] = GpuPermutationRank(arr, size);
-}
-
-
-void TestGpuPermutationRankUnrank(uint64_t* indexes, uint64_t* gpuBuffer, int size, int count) {
-    int threadsPerBlock = 256;
-    int blocksPerGrid = (count + threadsPerBlock - 1) / threadsPerBlock;
-    ERR(cudaMemcpy(gpuBuffer, indexes, count * sizeof(int64_t), cudaMemcpyHostToDevice));
-    kernel_test<<<blocksPerGrid, threadsPerBlock>>>(gpuBuffer, size, count);
-    ERR(cudaGetLastError());
-    ERR(cudaMemcpy(indexes, gpuBuffer, count * sizeof(int64_t), cudaMemcpyDeviceToHost));
-}
+/* *** SLIDING TILE PUZLE *** */
 
 constexpr int OP_UP = 0, OP_LEFT = 1, OP_RIGHT = 2, OP_DOWN = 3;
 constexpr uint64_t INVALID_INDEX = std::numeric_limits<uint64_t>::max();

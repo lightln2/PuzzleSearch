@@ -77,7 +77,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="BoolArray.h" />
+    <ClCompile Include="BitArray.h" />
     <ClCompile Include="DiskBasedBFS.cpp" />
     <ClCompile Include="DiskBasedClassicBFS.cpp" />
     <ClCompile Include="DiskBasedFrontierSearch.cpp" />

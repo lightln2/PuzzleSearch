@@ -1,4 +1,4 @@
-#include "BoolArray.h"
+#include "BitArray.h"
 #include "DiskBasedBFS.h"
 #include "SegmentReader.h"
 #include "SegmentWriter.h"
@@ -39,7 +39,7 @@ namespace {
         }
 
     private:
-        BoolArray array;
+        BitArray array;
     };
 
 

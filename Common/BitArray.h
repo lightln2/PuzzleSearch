@@ -54,11 +54,23 @@ __forceinline void ScanBits(uint64_t val, uint64_t baseIndex, int bits, F func) 
     }
 }
 
-class BoolArray {
-public:
-    BoolArray() {}
+template<int BITS, typename F>
+__forceinline void ScanNBits(uint64_t val, uint64_t baseIndex, F func) {
+    static constexpr uint64_t MASK = (1ui64 << BITS) - 1;
+    unsigned long bitIndex;
+    while (_BitScanForward64(&bitIndex, val)) {
+        auto pos = bitIndex / BITS;
+        auto offset = pos * BITS;
+        func(baseIndex | pos, int((val >> offset) & MASK));
+        val &= ~(MASK << offset);
+    }
+}
 
-    BoolArray(uint64_t size)
+class BitArray {
+public:
+    BitArray() {}
+
+    BitArray(uint64_t size)
         : m_Values((size + 63) / 64)
     { }
 
@@ -78,13 +90,13 @@ public:
         return m_Values[index / 64] & (1ui64 << (index & 63));
     }
 
-    void AndNot(const BoolArray& exclude) {
+    void AndNot(const BitArray& exclude) {
         for (uint64_t i = 0; i < m_Values.size(); i++) {
             m_Values[i] &= ~exclude.m_Values[i];
         }
     }
 
-    void Or(const BoolArray& other) {
+    void Or(const BitArray& other) {
         for (uint64_t i = 0; i < m_Values.size(); i++) {
             m_Values[i] |= other.m_Values[i];
         }
@@ -98,7 +110,7 @@ public:
         return result;
     }
 
-    uint64_t AndNotAndCount(const BoolArray& exclude) {
+    uint64_t AndNotAndCount(const BitArray& exclude) {
         uint64_t result = 0;
         for (uint64_t i = 0; i < m_Values.size(); i++) {
             uint64_t val = m_Values[i] & ~exclude.m_Values[i];
@@ -141,36 +153,31 @@ private:
     std::vector<uint64_t> m_Values;
 };
 
+template <int BITS>
 class MultiBitArray {
-private:
-    static int RoundBits(int bits) {
-        static int round[] = {-1, 1, 2, 4, 4, 8, 8, 8, 8, 16, 16, 16, 16, 16, 16, 16, 16};
-        ensure(bits > 0 && bits <= 16);
-        return round[bits];
-    }
+    static_assert(BITS > 0 && BITS <= 16);
+    static_assert((BITS & (BITS - 1)) == 0);
+    static constexpr int VALS_PER_WORD = 64 / BITS;
 
 public:
-    MultiBitArray(int bits, uint64_t size)
-        : m_Bits(RoundBits(bits))
-        , m_Array(m_Bits * size)
+    MultiBitArray(uint64_t size)
+        : m_Array(size * BITS)
     {}
 
     void Set(uint64_t index, int bit) {
-        m_Array.Set(index * m_Bits + bit);
+        m_Array.Set((index * BITS) | bit);
     }
 
     template<typename F>
     void ScanBitsAndClear(F func) {
-        int bits_per_word = 64 / m_Bits;
         for (uint64_t i = 0; i < m_Array.DataSize(); i++) {
             auto val = m_Array.Data()[i];
             m_Array.Data()[i] = 0;
             if (val == 0) continue;
-            ::ScanBits(val, i * bits_per_word, m_Bits, func);
+            ::ScanNBits<BITS>(val, i * VALS_PER_WORD, func);
         }
     }
 
 private:
-    int m_Bits;
-    BoolArray m_Array;
+    BitArray m_Array;
 };

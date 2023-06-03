@@ -1,5 +1,5 @@
 #include "InMemoryBFS.h"
-#include "BoolArray.h"
+#include "BitArray.h"
 
 #include <optional>
 
@@ -62,8 +62,8 @@ std::vector<uint64_t> InMemoryFrontierSearch(Puzzle& puzzle, std::string initial
     FourBitArray current(SIZE);
     FourBitArray next(SIZE);
 
-    BoolArray currentExclude(puzzle.HasOddLengthCycles() ? SIZE : 0);
-    BoolArray nextExclude(puzzle.HasOddLengthCycles() ? SIZE : 0);
+    BitArray currentExclude(puzzle.HasOddLengthCycles() ? SIZE : 0);
+    BitArray nextExclude(puzzle.HasOddLengthCycles() ? SIZE : 0);
 
     ExpandBuffer nodes(puzzle);
 

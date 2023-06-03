@@ -5,7 +5,7 @@
 #include <immintrin.h>
 #include <vector>
 
-class FastBoolArray {
+class FastBitArray {
 public:
     void Resize(uint64_t size) {
         m_Values.resize((size + 63) / 64, 0);

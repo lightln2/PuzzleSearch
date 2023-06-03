@@ -1,13 +1,13 @@
 #include "pch.h"
 
-#include "../Common/BoolArray.h"
+#include "../Common/BitArray.h"
 #include "../Common/Util.h"
 
-TEST(BoolArrayTests, TestBoolArray) {
+TEST(BitArrayTests, TestBitArray) {
     constexpr int TRY = 2;
     constexpr uint64_t MAX = 1ui64 << 32;
     constexpr int INC = 13;
-    BoolArray ba(MAX);
+    BitArray ba(MAX);
     uint64_t totalNanos = 0;
     for (int t = 0; t < TRY; t++) {
         Timer t1;

@@ -1,5 +1,5 @@
 #include "InMemoryBFS.h"
-#include "BoolArray.h"
+#include "BitArray.h"
 
 namespace {
 

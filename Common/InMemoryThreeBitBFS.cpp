@@ -1,14 +1,14 @@
 #include "InMemoryBFS.h"
-#include "BoolArray.h"
+#include "BitArray.h"
 
 std::vector<uint64_t> InMemoryThreeBitBFS(Puzzle& puzzle, std::string initialState) {
     Timer timer;
     const auto SIZE = puzzle.IndexesCount();
     std::vector<uint64_t> result;
 
-    BoolArray listOld(SIZE);
-    BoolArray listCur(SIZE);
-    BoolArray listNew(SIZE);
+    BitArray listOld(SIZE);
+    BitArray listCur(SIZE);
+    BitArray listNew(SIZE);
 
     auto initialIndex = puzzle.Parse(initialState);
     listCur.Set(initialIndex);

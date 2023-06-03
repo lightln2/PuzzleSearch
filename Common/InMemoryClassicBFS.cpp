@@ -1,14 +1,14 @@
 #include "InMemoryBFS.h"
-#include "BoolArray.h"
+#include "BitArray.h"
 
 std::vector<uint64_t> InMemoryClassicBFS(Puzzle& puzzle, std::string initialState) {
     Timer timer;
     const auto SIZE = puzzle.IndexesCount();
     std::vector<uint64_t> result;
 
-    BoolArray closedList(SIZE);
-    BoolArray openList(SIZE);
-    BoolArray newOpenList(SIZE);
+    BitArray closedList(SIZE);
+    BitArray openList(SIZE);
+    BitArray newOpenList(SIZE);
     auto initialIndex = puzzle.Parse(initialState);
     openList.Set(initialIndex);
     closedList.Set(initialIndex);

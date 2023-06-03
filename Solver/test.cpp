@@ -1,4 +1,4 @@
-#include "../Common/BoolArray.h"
+#include "../Common/BitArray.h"
 #include "../Common/Util.h"
 
 #include "../Common/InMemoryBFS.h"
@@ -6,11 +6,11 @@
 #include "../ClassicBFS/SlidingTilePuzzleSimple.h"
 #include "../Common/DiskBasedBFS.h"
 
-void TestBoolArray() {
+void TestBitArray() {
     constexpr int TRY = 10;
     constexpr uint64_t MAX = 1ui64 << 32;
     constexpr int INC = 13;
-    BoolArray ba(MAX);
+    BitArray ba(MAX);
     uint64_t totalNanos = 0;
     for (int t = 0; t < TRY; t++) {
         Timer t1;
@@ -53,6 +53,7 @@ void TestClassicBFS() {
 
 
 void TestDiskBasedBFS() {
+
     std::string initial = "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15";
 
     //SlidingTilePuzzleGpu puzzle(5, 2);

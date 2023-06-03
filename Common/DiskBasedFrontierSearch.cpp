@@ -1,4 +1,4 @@
-#include "BoolArray.h"
+#include "BitArray.h"
 #include "DiskBasedBFS.h"
 #include "SegmentReader.h"
 #include "SegmentWriter.h"
@@ -9,6 +9,7 @@
 
 #include <thread>
 
+template<int BITS>
 class DB_FS_Solver {
 public:
     DB_FS_Solver(
@@ -26,7 +27,7 @@ public:
         , CrossSegmentReader(crossSegmentStore)
         , Mult(crossSegmentStore, SOpts.Segments)
         , Expander(SOpts.Puzzle)
-        , Array(SOpts.OperatorsCount, SOpts.SegmentSize)
+        , Array(SOpts.SegmentSize)
         , FrontierArray(SOpts.SegmentSize)
     {
     }
@@ -141,11 +142,12 @@ private:
     Multiplexor Mult;
     ExpandBuffer Expander;
 
-    MultiBitArray Array;
-    BoolArray FrontierArray;
+    MultiBitArray<BITS> Array;
+    BitArray FrontierArray;
 };
 
-std::vector<uint64_t> DiskBasedFrontierSearch(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
+template <int BITS>
+std::vector<uint64_t> DiskBasedFrontierSearchInternal(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
     Timer timer;
     SegmentedOptions sopts(puzzle, opts);
 
@@ -160,9 +162,9 @@ std::vector<uint64_t> DiskBasedFrontierSearch(Puzzle& puzzle, std::string initia
     Store newFrontierStore = sopts.MakeStore("frontier2");
     Store crossSegmentStore = sopts.MakeStore("xseg");
 
-    std::vector<std::unique_ptr<DB_FS_Solver>> solvers;
+    std::vector<std::unique_ptr<DB_FS_Solver<BITS>>> solvers;
     for (int i = 0; i < opts.threads; i++) {
-        solvers.emplace_back(std::make_unique<DB_FS_Solver>(
+        solvers.emplace_back(std::make_unique<DB_FS_Solver<BITS>>(
             sopts,
             curFrontierStore,
             newFrontierStore,
@@ -222,4 +224,19 @@ std::vector<uint64_t> DiskBasedFrontierSearch(Puzzle& puzzle, std::string initia
         << "; x-seg=" << WithSize(total_sz_xseg)
         << std::endl;
     return result;
+}
+
+std::vector<uint64_t> DiskBasedFrontierSearch(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
+    int bits = puzzle.OperatorsCount();
+    ensure(bits > 0 && bits <= 16);
+    if (bits == 1) 
+        return DiskBasedFrontierSearchInternal<1>(puzzle, initialState, opts);
+    else if (bits == 2)
+        return DiskBasedFrontierSearchInternal<2>(puzzle, initialState, opts);
+    else if (bits <= 4)
+        return DiskBasedFrontierSearchInternal<4>(puzzle, initialState, opts);
+    else if (bits <= 8)
+        return DiskBasedFrontierSearchInternal<8>(puzzle, initialState, opts);
+    else
+        return DiskBasedFrontierSearchInternal<16>(puzzle, initialState, opts);
 }

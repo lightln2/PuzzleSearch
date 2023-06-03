@@ -85,7 +85,7 @@ void MTFrontierSearch4x3() {
 }
 
 
-void TestBoolArray();
+void TestBitArray();
 void TestClassicBFS();
 void TestDiskBasedBFS();
 
@@ -99,7 +99,7 @@ int main() {
 
         //TestCPUvsGPU();
         
-        //TestBoolArray();
+        //TestBitArray();
         //TestClassicBFS();
         TestDiskBasedBFS();
     }

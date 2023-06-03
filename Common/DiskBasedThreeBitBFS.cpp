@@ -1,21 +1,22 @@
-#include "BoolArray.h"
+#include "BitArray.h"
 #include "DiskBasedBFS.h"
 #include "SegmentReader.h"
 #include "SegmentWriter.h"
 #include "Multiplexor.h"
 #include "Store.h"
+#include "ThreadUtil.h"
 #include "Util.h"
 
 namespace {
 
-    void LoadBoolArray(int segment, Store& store, BoolArray& arr) {
+    void LoadBitArray(int segment, Store& store, BitArray& arr) {
         arr.Clear();
         store.Rewind(segment);
         auto read = store.ReadArray(segment, arr.Data(), arr.DataSize());
         ensure(read == 0 || read == arr.DataSize());
     };
 
-    void SaveBoolArray(int segment, Store& store, BoolArray& arr) {
+    void SaveBitArray(int segment, Store& store, BitArray& arr) {
         store.WriteArray(segment, arr.Data(), arr.DataSize());
         arr.Clear();
     };
@@ -121,14 +122,14 @@ public:
 
 private:
     void LoadOld(int segment) {
-        LoadBoolArray(segment, OldStore, OldList);
+        LoadBitArray(segment, OldStore, OldList);
         OldStore.Delete(segment);
     };
     void LoadCur(int segment) {
-        LoadBoolArray(segment, CurStore, CurList);
+        LoadBitArray(segment, CurStore, CurList);
     };
     void Save(int segment) {
-        SaveBoolArray(segment, NewStore, NewList);
+        SaveBitArray(segment, NewStore, NewList);
     };
 
 private:
@@ -142,9 +143,9 @@ private:
     Multiplexor Mult;
     ExpandBuffer Expander;
 
-    BoolArray OldList;
-    BoolArray CurList;
-    BoolArray NewList;
+    BitArray OldList;
+    BitArray CurList;
+    BitArray NewList;
 };
 
 
@@ -188,25 +189,34 @@ std::vector<uint64_t> DiskBasedThreeBitBFS(Puzzle& puzzle, std::string initialSt
     while (true) {
         Timer stepTimer;
 
+        std::atomic<uint64_t> totalCount{ 0 };
+
+        ParallelExec(opts.threads, sopts.Segments, [&](int thread, int segment) {
+            totalCount += solvers[thread]->Process(segment);
+        });
+
+        ParallelExec(opts.threads, [&](int thread) {
+            solvers[thread]->FinishProcess();
+        });
 
         if (totalCount == 0) break;
         result.push_back(totalCount);
         oldStore.DeleteAll();
-        currentCrossSegmentStore.DeleteAll();
+        curCrossSegmentStore.DeleteAll();
         std::swap(oldStore, curStore);
         std::swap(curStore, newStore);
-        std::swap(currentCrossSegmentStore, nextCrossSegmentStore);
+        std::swap(curCrossSegmentStore, nextCrossSegmentStore);
         std::cerr
             << "Step: " << result.size()
-            << "; count: " << totalCount
+            << "; count: " << WithDecSep(totalCount)
             << " in " << stepTimer
             << "; size: old=" << WithSize(oldStore.TotalLength())
             << ", cur=" << WithSize(curStore.TotalLength())
-            << ", x-seg=" << WithSize(currentCrossSegmentStore.TotalLength())
+            << ", x-seg=" << WithSize(curCrossSegmentStore.TotalLength())
             << std::endl;
         total_sz_old += oldStore.TotalLength();
         total_sz_cur += curStore.TotalLength();
-        total_sz_xseg += currentCrossSegmentStore.TotalLength();
+        total_sz_xseg += curCrossSegmentStore.TotalLength();
     }
 
     std::cerr << "Time: " << timer << std::endl;

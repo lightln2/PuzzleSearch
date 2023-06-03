@@ -1,4 +1,4 @@
-#include "BoolArray.h"
+#include "BitArray.h"
 #include "DiskBasedBFS.h"
 #include "SegmentReader.h"
 #include "SegmentWriter.h"
@@ -7,6 +7,7 @@
 #include "ThreadUtil.h"
 #include "Util.h"
 
+template<int BITS>
 class DB_SPFS_Solver {
 public:
     DB_SPFS_Solver(
@@ -26,7 +27,7 @@ public:
         , CrossSegmentReader(curCrossSegmentStore)
         , Mult(nextCrossSegmentStore, SOpts.Segments)
         , Expander(SOpts.Puzzle)
-        , Array(SOpts.OperatorsCount, SOpts.SegmentSize)
+        , Array(SOpts.SegmentSize)
         , FrontierArray(SOpts.SegmentSize)
     {
     }
@@ -145,11 +146,12 @@ private:
     Multiplexor Mult;
     ExpandBuffer Expander;
 
-    MultiBitArray Array;
-    BoolArray FrontierArray;
+    MultiBitArray<BITS> Array;
+    BitArray FrontierArray;
 };
 
-std::vector<uint64_t> DiskBasedSinglePassFrontierSearch(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
+template<int BITS>
+std::vector<uint64_t> DiskBasedSinglePassFrontierSearchInt(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
     Timer timer;
     std::cerr << "DiskBasedSinglePassFrontierSearch" << std::endl;
 
@@ -167,9 +169,9 @@ std::vector<uint64_t> DiskBasedSinglePassFrontierSearch(Puzzle& puzzle, std::str
     Store curCrossSegmentStore = sopts.MakeStore("xseg1");
     Store nextCrossSegmentStore = sopts.MakeStore("xseg2");
 
-    std::vector<std::unique_ptr<DB_SPFS_Solver>> solvers;
+    std::vector<std::unique_ptr<DB_SPFS_Solver<BITS>>> solvers;
     for (int i = 0; i < opts.threads; i++) {
-        solvers.emplace_back(std::make_unique<DB_SPFS_Solver>(
+        solvers.emplace_back(std::make_unique<DB_SPFS_Solver<BITS>>(
             sopts,
             curFrontierStore,
             newFrontierStore,
@@ -225,4 +227,19 @@ std::vector<uint64_t> DiskBasedSinglePassFrontierSearch(Puzzle& puzzle, std::str
         << "; x-seg=" << WithSize(total_sz_xseg)
         << std::endl;
     return result;
+}
+
+std::vector<uint64_t> DiskBasedSinglePassFrontierSearch(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
+    int bits = puzzle.OperatorsCount();
+    ensure(bits > 0 && bits <= 16);
+    if (bits == 1)
+        return DiskBasedSinglePassFrontierSearchInt<1>(puzzle, initialState, opts);
+    else if (bits == 2)
+        return DiskBasedSinglePassFrontierSearchInt<2>(puzzle, initialState, opts);
+    else if (bits <= 4)
+        return DiskBasedSinglePassFrontierSearchInt<4>(puzzle, initialState, opts);
+    else if (bits <= 8)
+        return DiskBasedSinglePassFrontierSearchInt<8>(puzzle, initialState, opts);
+    else
+        return DiskBasedSinglePassFrontierSearchInt<16>(puzzle, initialState, opts);
 }

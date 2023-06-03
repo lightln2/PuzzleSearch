@@ -1,4 +1,4 @@
-#include "BoolArray.h"
+#include "BitArray.h"
 #include "DiskBasedBFS.h"
 #include "SegmentReader.h"
 #include "SegmentWriter.h"
@@ -11,14 +11,14 @@
 
 namespace {
 
-    void LoadBoolArray(int segment, Store& store, BoolArray& arr) {
+    void LoadBitArray(int segment, Store& store, BitArray& arr) {
         arr.Clear();
         auto read = store.ReadArray(segment, arr.Data(), arr.DataSize());
         ensure(read == 0 || read == arr.DataSize());
         store.Delete(segment);
     };
 
-    void SaveBoolArray(int segment, Store& store, BoolArray& arr) {
+    void SaveBitArray(int segment, Store& store, BitArray& arr) {
         store.WriteArray(segment, arr.Data(), arr.DataSize());
         arr.Clear();
     };
@@ -105,19 +105,19 @@ public:
 
 private:
     void LoadClosedList(int segment) {
-        LoadBoolArray(segment, CurrentClosedListStore, ClosedList);
+        LoadBitArray(segment, CurrentClosedListStore, ClosedList);
     }
 
     void SaveClosedList(int segment) {
-        SaveBoolArray(segment, NextClosedListStore, ClosedList);
+        SaveBitArray(segment, NextClosedListStore, ClosedList);
     };
 
     void LoadOpenList(int segment) {
-        LoadBoolArray(segment, CurrentOpenListStore, OpenList);
+        LoadBitArray(segment, CurrentOpenListStore, OpenList);
     };
 
     void SaveOpenList(int segment) {
-        SaveBoolArray(segment, NextOpenListStore, NewOpenList);
+        SaveBitArray(segment, NextOpenListStore, NewOpenList);
     };
 
 private:
@@ -132,9 +132,9 @@ private:
     Multiplexor Mult;
     ExpandBuffer Expander;
 
-    BoolArray ClosedList;
-    BoolArray OpenList;
-    BoolArray NewOpenList;
+    BitArray ClosedList;
+    BitArray OpenList;
+    BitArray NewOpenList;
 };
 
 

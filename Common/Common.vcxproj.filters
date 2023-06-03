@@ -3,7 +3,7 @@
   <ItemGroup>
     <ClCompile Include="File.cpp" />
     <ClCompile Include="Store.cpp" />
-    <ClCompile Include="BoolArray.h" />
+    <ClCompile Include="BitArray.h" />
     <ClCompile Include="Multiplexor.cpp" />
     <ClCompile Include="SegmentReader.cpp" />
     <ClCompile Include="SegmentWriter.cpp" />
