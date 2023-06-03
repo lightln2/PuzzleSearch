@@ -20,18 +20,25 @@ namespace {
 
 }
 
+SlidingTilePuzzleGpu::Exec::Exec()
+    : stream(CreateCudaStream())
+    , gpuSrc(CreateGPUBuffer(MAX_INDEXES_BUFFER))
+    , gpuDst(CreateGPUBuffer(MAX_INDEXES_BUFFER * 4))
+{}
+
+SlidingTilePuzzleGpu::Exec::~Exec()
+{
+    DestroyCudaStream(stream);
+    DestroyGPUBuffer(gpuSrc);
+    DestroyGPUBuffer(gpuDst);
+}
+
+
 SlidingTilePuzzleGpu::SlidingTilePuzzleGpu(int width, int height)
     : m_Width(width)
     , m_Height(height)
     , m_Size(width* height)
 {
-    gpuSrc = CreateGPUBuffer(MAX_INDEXES_BUFFER);
-    gpuDst = CreateGPUBuffer(MAX_INDEXES_BUFFER * 4);
-}
-
-SlidingTilePuzzleGpu::~SlidingTilePuzzleGpu() {
-    DestroyGPUBuffer(gpuSrc);
-    DestroyGPUBuffer(gpuDst);
 }
 
 uint64_t SlidingTilePuzzleGpu::IndexesCount() const {
@@ -80,11 +87,25 @@ void SlidingTilePuzzleGpu::Expand(
     for (uint64_t i = 0; i < indexes.size(); i++) {
         indexes[i] = (indexes[i] * 16) | usedOperatorBits[i];
     }
+
     m_Mutex.lock();
-    CopyToGpu(&indexes[0], gpuSrc, indexes.size());
-    GpuSlidingTilePuzzleSimpleExpand(gpuSrc, gpuDst, m_Width, m_Size, indexes.size());
-    CopyFromGpu(gpuDst, &expandedIndexes[0], indexes.size() * 4);
+    if (m_FreeStreams.empty()) {
+        m_Streams.emplace_back(std::make_unique<Exec>());
+        m_FreeStreams.push_back(m_Streams.back().get());
+        std::cerr << "added new stream: " << m_Streams.size() << std::endl;
+    }
+    auto* stream = m_FreeStreams.back();
+    m_FreeStreams.pop_back();
     m_Mutex.unlock();
+
+    CopyToGpu(&indexes[0], stream->gpuSrc, indexes.size(), stream->stream);
+    GpuSlidingTilePuzzleSimpleExpand(stream->gpuSrc, stream->gpuDst, m_Width, m_Size, indexes.size(), stream->stream);
+    CopyFromGpu(stream->gpuDst, &expandedIndexes[0], indexes.size() * 4, stream->stream);
+
+    m_Mutex.lock();
+    m_FreeStreams.push_back(stream);
+    m_Mutex.unlock();
+
     for (int i = 0; i < expandedIndexes.size(); i++) {
         auto val = expandedIndexes[i];
         expandedOperators[i] = val & 15;

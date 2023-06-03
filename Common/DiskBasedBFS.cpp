@@ -13,6 +13,7 @@ SegmentedOptions::SegmentedOptions(class Puzzle& puzzle, PuzzleOptions& opts)
     }
     OperatorsCount = puzzle.OperatorsCount();
     OperatorsMask = (1 << OperatorsCount) - 1;
+    HasOddLengthCycles = puzzle.HasOddLengthCycles();
 }
 
 Store SegmentedOptions::MakeStore(std::string suffix) {

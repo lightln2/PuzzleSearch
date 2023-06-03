@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GPU.h"
 #include "../Common/Puzzle.h"
 
 #include <cstdint>
@@ -7,9 +8,16 @@
 #include <string>
 
 class SlidingTilePuzzleGpu : public Puzzle {
+private:
+    struct Exec {
+        CuStream stream;
+        uint64_t* gpuSrc;
+        uint64_t* gpuDst;
+        Exec();
+        ~Exec();
+    };
 public:
     SlidingTilePuzzleGpu(int width, int height);
-    ~SlidingTilePuzzleGpu();
 
     virtual int OperatorsCount() const { return 4; }
 
@@ -31,7 +39,7 @@ private:
     int m_Width;
     int m_Height;
     int m_Size;
-    uint64_t* gpuSrc;
-    uint64_t* gpuDst;
     std::mutex m_Mutex;
+    std::vector<std::unique_ptr<Exec>> m_Streams;
+    std::vector<Exec*> m_FreeStreams;
 };

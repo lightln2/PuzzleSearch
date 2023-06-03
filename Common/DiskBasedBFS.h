@@ -30,6 +30,7 @@ struct SegmentedOptions {
     uint64_t SegmentMask;
     int OperatorsCount;
     int OperatorsMask;
+    bool HasOddLengthCycles;
 };
 
 std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialState, PuzzleOptions opts = {});

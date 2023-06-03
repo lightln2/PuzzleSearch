@@ -9,7 +9,7 @@
 
 class Puzzle {
 public:
-    static constexpr size_t MAX_INDEXES_BUFFER = 1 * 1024 * 1024;
+    static constexpr size_t MAX_INDEXES_BUFFER = 2 * 1024 * 1024;
     static constexpr uint64_t INVALID_INDEX = uint64_t(-1);
 
 public:

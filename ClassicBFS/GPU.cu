@@ -1,3 +1,5 @@
+#include "GPU.h"
+
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 
@@ -20,12 +22,25 @@ void DestroyGPUBuffer(uint64_t* gpuBuffer) {
     ERR(cudaFree(gpuBuffer));
 }
 
-void CopyToGpu(uint64_t* buffer, uint64_t* gpuBuffer, size_t count) {
-    ERR(cudaMemcpy(gpuBuffer, buffer, count * sizeof(uint64_t), cudaMemcpyHostToDevice));
+CuStream CreateCudaStream() {
+    cudaStream_t stream;
+    ERR(cudaStreamCreate(&stream));
+    return (CuStream)stream;
 }
 
-void CopyFromGpu(uint64_t* gpuBuffer, uint64_t* buffer, size_t count) {
+void DestroyCudaStream(CuStream stream) {
+    ERR(cudaStreamDestroy(cudaStream_t(stream)));
+}
+
+void CopyToGpu(uint64_t* buffer, uint64_t* gpuBuffer, size_t count, CuStream stream) {
+    ERR(cudaMemcpy(gpuBuffer, buffer, count * sizeof(uint64_t), cudaMemcpyHostToDevice));
+    //ERR(cudaMemcpyAsync(gpuBuffer, buffer, count * sizeof(uint64_t), cudaMemcpyHostToDevice, cudaStream_t(stream)));
+}
+
+void CopyFromGpu(uint64_t* gpuBuffer, uint64_t* buffer, size_t count, CuStream stream) {
     ERR(cudaMemcpy(buffer, gpuBuffer, count * sizeof(int64_t), cudaMemcpyDeviceToHost));
+    //ERR(cudaMemcpyAsync(buffer, gpuBuffer, count * sizeof(int64_t), cudaMemcpyDeviceToHost, cudaStream_t(stream)));
+    //ERR(cudaStreamSynchronize(cudaStream_t(stream)));
 }
 
 
@@ -161,10 +176,24 @@ void GpuSlidingTilePuzzleSimpleExpand(
     uint64_t* gpuExpanded,
     int width,
     int size,
-    uint64_t count)
+    uint64_t count,
+    CuStream stream)
 {
     auto threadsPerBlock = 256;
-    auto blocksPerGrid = (count + threadsPerBlock - 1) / threadsPerBlock;
-    kernel_sliding_tile_simple<<<blocksPerGrid, threadsPerBlock >>> (gpuIndexes, gpuExpanded, width, size, count);
+    auto blocksPerGrid = uint32_t((count + threadsPerBlock - 1) / threadsPerBlock);
+    /*
+    kernel_sliding_tile_simple<<<blocksPerGrid, threadsPerBlock, 0, cudaStream_t(stream) >>> (
+        gpuIndexes,
+        gpuExpanded,
+        width,
+        size,
+        count);
+    */
+    kernel_sliding_tile_simple << <blocksPerGrid, threadsPerBlock>> > (
+        gpuIndexes,
+        gpuExpanded,
+        width,
+        size,
+        count);
     ERR(cudaGetLastError());
 }

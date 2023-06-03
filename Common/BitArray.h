@@ -168,6 +168,10 @@ public:
         m_Array.Set((index * BITS) | bit);
     }
 
+    uint64_t* Data() { return m_Array.Data(); }
+    const uint64_t* Data() const { return m_Array.Data(); }
+    size_t DataSize() const { return m_Array.DataSize(); }
+
     template<typename F>
     void ScanBitsAndClear(F func) {
         for (uint64_t i = 0; i < m_Array.DataSize(); i++) {
@@ -180,4 +184,42 @@ public:
 
 private:
     BitArray m_Array;
+};
+
+template<int BITS>
+class IndexedArray {
+    static constexpr size_t STEP = 1024;
+public:
+    IndexedArray(uint64_t size)
+        : m_Array(size)
+        , m_Index((m_Array.DataSize() + STEP - 1)/ STEP)
+    {}
+
+    void Set(uint64_t index, int bit) {
+        m_Array.Set(index, bit);
+        m_Index.Set((index * BITS) / (64 * STEP));
+    }
+
+    uint64_t* Data() { return m_Array.Data(); }
+    const uint64_t* Data() const { return m_Array.Data(); }
+    size_t DataSize() const { return m_Array.DataSize(); }
+
+    template<typename F>
+    void ScanBitsAndClear(F func) {
+        uint64_t* ptr = Data();
+        uint64_t arrSize = DataSize();
+        m_Index.ScanBitsAndClear([&](uint64_t index) {
+            uint64_t offset = index * STEP;
+            for (size_t i = offset; i < std::min(arrSize, offset + STEP); i++) {
+                uint64_t val = ptr[i];
+                if (val == 0) continue;
+                ptr[i] = 0;
+                ::ScanNBits<BITS>(val, i * (64 / BITS), func);
+            }
+        });
+    }
+
+private:
+    MultiBitArray<BITS> m_Array;
+    BitArray m_Index;
 };

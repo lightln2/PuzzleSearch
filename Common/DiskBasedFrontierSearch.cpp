@@ -62,7 +62,7 @@ public:
         }
         Expander.Finish(fnExpand);
 
-        if (!SOpts.Puzzle.HasOddLengthCycles()) CurFrontierStore.Delete(segment);
+        if (!SOpts.HasOddLengthCycles) CurFrontierStore.Delete(segment);
     }
 
     void FinishExpand() {
@@ -90,7 +90,7 @@ public:
         }
         CrossSegmentStore.Delete(segment);
 
-        if (SOpts.Puzzle.HasOddLengthCycles()) {
+        if (SOpts.HasOddLengthCycles) {
             while (true) {
                 auto& vect = FrontierReader.Read();
                 if (vect.IsEmpty()) break;
@@ -107,7 +107,7 @@ public:
 
         uint64_t count = 0;
         Array.ScanBitsAndClear([&](uint64_t index, int opBits) {
-            if (SOpts.Puzzle.HasOddLengthCycles() && FrontierArray.Get(index)) return;
+            if (SOpts.HasOddLengthCycles && FrontierArray.Get(index)) return;
             count++;
             if (opBits < SOpts.OperatorsMask) {
                 FrontierWriter.Add(GetValue(uint32_t(index), opBits));
@@ -115,7 +115,7 @@ public:
         });
         FrontierWriter.Flush();
 
-        if (SOpts.Puzzle.HasOddLengthCycles()) {
+        if (SOpts.HasOddLengthCycles) {
             FrontierArray.Clear();
         }
 
@@ -142,7 +142,7 @@ private:
     Multiplexor Mult;
     ExpandBuffer Expander;
 
-    MultiBitArray<BITS> Array;
+    IndexedArray<BITS> Array;
     BitArray FrontierArray;
 };
 
