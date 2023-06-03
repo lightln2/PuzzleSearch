@@ -1,36 +1,77 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="Util.cpp" />
     <ClCompile Include="File.cpp" />
     <ClCompile Include="Store.cpp" />
     <ClCompile Include="BoolArray.h" />
-    <ClCompile Include="InMemoryClassicBFS.cpp" />
-    <ClCompile Include="InMemoryTwoBitBFS.cpp" />
-    <ClCompile Include="InMemoryThreeBitBFS.cpp" />
-    <ClCompile Include="InMemoryFrontierSearch.cpp" />
     <ClCompile Include="Multiplexor.cpp" />
     <ClCompile Include="SegmentReader.cpp" />
     <ClCompile Include="SegmentWriter.cpp" />
-    <ClCompile Include="DiskBasedClassicBFS.cpp" />
-    <ClCompile Include="DiskBasedTwoBitBFS.cpp" />
-    <ClCompile Include="DiskBasedThreeBitBFS.cpp" />
-    <ClCompile Include="DiskBasedSinglePassFrontierSearch.cpp" />
-    <ClCompile Include="DiskBasedFrontierSearch.cpp" />
     <ClCompile Include="Puzzle.cpp" />
-    <ClCompile Include="DiskBasedBFS.cpp" />
+    <ClCompile Include="Util.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
+    <ClCompile Include="InMemoryClassicBFS.cpp">
+      <Filter>InMemoryBFS</Filter>
+    </ClCompile>
+    <ClCompile Include="InMemoryFrontierSearch.cpp">
+      <Filter>InMemoryBFS</Filter>
+    </ClCompile>
+    <ClCompile Include="InMemoryThreeBitBFS.cpp">
+      <Filter>InMemoryBFS</Filter>
+    </ClCompile>
+    <ClCompile Include="InMemoryTwoBitBFS.cpp">
+      <Filter>InMemoryBFS</Filter>
+    </ClCompile>
+    <ClCompile Include="DiskBasedBFS.cpp">
+      <Filter>DiskBasedBFS</Filter>
+    </ClCompile>
+    <ClCompile Include="DiskBasedClassicBFS.cpp">
+      <Filter>DiskBasedBFS</Filter>
+    </ClCompile>
+    <ClCompile Include="DiskBasedFrontierSearch.cpp">
+      <Filter>DiskBasedBFS</Filter>
+    </ClCompile>
+    <ClCompile Include="DiskBasedSinglePassFrontierSearch.cpp">
+      <Filter>DiskBasedBFS</Filter>
+    </ClCompile>
+    <ClCompile Include="DiskBasedThreeBitBFS.cpp">
+      <Filter>DiskBasedBFS</Filter>
+    </ClCompile>
+    <ClCompile Include="DiskBasedTwoBitBFS.cpp">
+      <Filter>DiskBasedBFS</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Util.h" />
     <ClInclude Include="File.h" />
     <ClInclude Include="Buffer.h" />
     <ClInclude Include="Store.h" />
     <ClInclude Include="Puzzle.h" />
     <ClInclude Include="Multiplexor.h" />
-    <ClInclude Include="InMemoryBFS.h" />
     <ClInclude Include="SegmentReader.h" />
     <ClInclude Include="SegmentWriter.h" />
-    <ClInclude Include="DiskBasedBFS.h" />
-    <ClInclude Include="ThreadUtil.h" />
+    <ClInclude Include="Util.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="ThreadUtil.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="InMemoryBFS.h">
+      <Filter>InMemoryBFS</Filter>
+    </ClInclude>
+    <ClInclude Include="DiskBasedBFS.h">
+      <Filter>DiskBasedBFS</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Util">
+      <UniqueIdentifier>{9388ce25-741f-43b2-8889-0ea4add731cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="InMemoryBFS">
+      <UniqueIdentifier>{11d0e5d4-1f98-4689-b85b-650b080ac86f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DiskBasedBFS">
+      <UniqueIdentifier>{19f5899c-17d2-432d-9798-155c0bd308e9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>
