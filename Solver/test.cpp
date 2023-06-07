@@ -59,14 +59,15 @@ void TestDiskBasedBFS() {
     //SlidingTilePuzzleGpu puzzle(5, 2);
     SlidingTilePuzzleGpu puzzle(7, 2);
     PuzzleOptions opts;
-    opts.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ" };
-    //opts.directories = { "c:/temp", "d:/temp"};
-    opts.segmentBits = 28;
+    //opts.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ" };
+    opts.directories = { "c:/PUZ", "d:/PUZ"};
+    opts.segmentBits = 32;
     opts.threads = 4;
     //opts.maxSteps = 23;
     //opts.segmentBits = 32;
     //DiskBasedClassicBFS(puzzle, initial, opts);
     //DiskBasedThreeBitBFS(puzzle, initial, opts);
-    DiskBasedFrontierSearch(puzzle, initial, opts);
+    //DiskBasedFrontierSearch(puzzle, initial, opts);
     //DiskBasedSinglePassFrontierSearch(puzzle, initial, opts);
+    DiskBasedFrontierSearch2(puzzle, initial, opts);
 }

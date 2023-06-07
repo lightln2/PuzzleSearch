@@ -25,12 +25,12 @@ public:
     TArray(const TArray&) = delete;
     TArray& operator =(const TArray&) = delete;
 
-    TArray(TArray&& other) {
+    TArray(TArray&& other) noexcept {
         std::swap(m_Buffer, other.m_Buffer);
         std::swap(m_Size, other.m_Size);
     }
 
-    TArray& operator =(TArray&& other) {
+    TArray& operator =(TArray&& other) noexcept {
         std::swap(m_Buffer, other.m_Buffer);
         std::swap(m_Size, other.m_Size);
         return *this;

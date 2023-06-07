@@ -20,3 +20,21 @@ private:
     int m_Segment = -1;
     Buffer<uint32_t> m_Buffer;
 };
+
+class OpBitsWriter {
+    static constexpr size_t BUFSIZE = 2 * 1024 * 1024;
+
+public:
+    OpBitsWriter(Store& store);
+
+    void SetSegment(int segment);
+
+    void Add(uint8_t value);
+
+    void Flush();
+
+private:
+    Store& m_Store;
+    int m_Segment = -1;
+    Buffer<uint8_t> m_Buffer;
+};

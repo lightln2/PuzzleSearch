@@ -41,6 +41,9 @@
     <ClCompile Include="DiskBasedTwoBitBFS.cpp">
       <Filter>DiskBasedBFS</Filter>
     </ClCompile>
+    <ClCompile Include="DiskBasedFrontierSearch2.cpp">
+      <Filter>DiskBasedBFS</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="File.h" />
