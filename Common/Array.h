@@ -48,22 +48,15 @@ public:
         memset(m_Buffer, 0, size * sizeof(T));
     }
 
-    T& operator[] (size_t index) noexcept { CHK(index); return m_Buffer[index]; }
+    T& operator[] (size_t index) noexcept { assert(index < m_Size); return m_Buffer[index]; }
 
-    const T& operator[] (size_t index) const noexcept { CHK(index); return m_Buffer[index]; }
+    const T& operator[] (size_t index) const noexcept { assert(index < m_Size); return m_Buffer[index]; }
 
     T* Buf() { return m_Buffer; }
 
     const T* Buf() const { return m_Buffer; }
 
     void Clear() { memset(m_Buffer, 0, m_Size * sizeof(T)); }
-
-private:
-    void CHK(size_t index) const {
-#ifdef _DEBUG
-        ensure(index < m_Size);
-#endif
-    }
 
 private:
     size_t m_Size;
