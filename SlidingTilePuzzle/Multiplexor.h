@@ -6,11 +6,11 @@
 #include <vector>
 #include <optional>
 
-class Multiplexor {
+class SimpleMultiplexor {
     static constexpr size_t BUFFER_SIZE = 4 * 1024 * 1024;
     static constexpr size_t SMALL_BUFFER_SIZE = 8 * 1024;
 public:
-    Multiplexor(int maxSegments, SegmentedFile& file)
+    SimpleMultiplexor(int maxSegments, SegmentedFile& file)
         : m_Segments(maxSegments)
         , m_Writer(file, maxSegments)
     {

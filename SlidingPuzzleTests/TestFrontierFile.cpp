@@ -71,7 +71,7 @@ TEST(TestFrontierFile, TestMultiplexor) {
 	constexpr int COUNTS = 5 * 1000 * 1000;
 
 	SegmentedFile file(SEGMENTS, "./testexpandedmultiplexor");
-	Multiplexor mult(SEGMENTS, file);
+	SimpleMultiplexor mult(SEGMENTS, file);
 	for (int i = 0; i < SEGMENTS * COUNTS; i++) {
 		mult.Add(i % SEGMENTS, i);
 	}

@@ -140,7 +140,7 @@ private:
     Store& CurCrossSegmentStore;
     Store& NextCrossSegmentStore;
     SegmentReader CrossSegmentReader;
-    Multiplexor Mult;
+    SimpleMultiplexor Mult;
     ExpandBuffer Expander;
 
     BitArray OldList;

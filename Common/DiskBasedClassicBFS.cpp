@@ -129,7 +129,7 @@ private:
     Store& CurrentCrossSegmentStore;
     Store& NextCrossSegmentStore;
     SegmentReader CurrentXSegReader;
-    Multiplexor Mult;
+    SimpleMultiplexor Mult;
     ExpandBuffer Expander;
 
     BitArray ClosedList;

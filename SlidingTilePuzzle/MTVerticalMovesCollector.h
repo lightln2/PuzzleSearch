@@ -56,6 +56,6 @@ private:
     }
 
 private:
-    Multiplexor m_Mult;
+    SimpleMultiplexor m_Mult;
     MTVerticalMoves<width, height>& m_VerticalMoves;
 };

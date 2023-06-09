@@ -139,7 +139,7 @@ private:
     SegmentReader FrontierReader;
     SegmentWriter FrontierWriter;
     SegmentReader CrossSegmentReader;
-    Multiplexor Mult;
+    SimpleMultiplexor Mult;
     ExpandBuffer Expander;
 
     IndexedArray<BITS> Array;

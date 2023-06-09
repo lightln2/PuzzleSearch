@@ -105,7 +105,7 @@ TEST(StoreTests, TestMultiplexor) {
 
 	auto store = Store::CreateSequentialStore(SEGMENTS, { "./f1" });
 	SegmentReader reader(store);
-	Multiplexor mp(store, SEGMENTS);
+	SimpleMultiplexor mp(store, SEGMENTS);
 
 	for (uint32_t j = 0; j < VALUES; j++) {
 		for (int i = 0; i < SEGMENTS; i++) {

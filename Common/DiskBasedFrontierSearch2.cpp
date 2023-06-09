@@ -38,7 +38,7 @@ public:
             CrossSegmentReaders.emplace_back(std::make_unique<SegmentReader>(store));
         }
         for (auto& store : NextCrossSegmentStores) {
-            Mults.emplace_back(std::make_unique<Multiplexor>(store, SOpts.Segments));
+            Mults.emplace_back(std::make_unique<SimpleMultiplexor>(store, SOpts.Segments));
         }
     }
 
@@ -164,7 +164,7 @@ private:
     OpBitsReader OpBitsReader;
     OpBitsWriter OpBitsWriter;
     std::vector<std::unique_ptr<SegmentReader>> CrossSegmentReaders;
-    std::vector<std::unique_ptr<Multiplexor>> Mults;
+    std::vector<std::unique_ptr<SimpleMultiplexor>> Mults;
     ExpandBuffer Expander;
 
     MultiBitArray<BITS> Array;
@@ -266,15 +266,13 @@ std::vector<uint64_t> DiskBasedFrontierSearch2Int(Puzzle& puzzle, std::string in
 
 std::vector<uint64_t> DiskBasedFrontierSearch2(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
     int bits = puzzle.OperatorsCount();
-    ensure(bits > 0 && bits <= 16);
+    ensure(bits > 0 && bits <= 8);
     if (bits == 1)
         return DiskBasedFrontierSearch2Int<1>(puzzle, initialState, opts);
     else if (bits == 2)
         return DiskBasedFrontierSearch2Int<2>(puzzle, initialState, opts);
     else if (bits <= 4)
         return DiskBasedFrontierSearch2Int<4>(puzzle, initialState, opts);
-    else if (bits <= 8)
-        return DiskBasedFrontierSearch2Int<8>(puzzle, initialState, opts);
     else
-        return DiskBasedFrontierSearch2Int<16>(puzzle, initialState, opts);
+        return DiskBasedFrontierSearch2Int<8>(puzzle, initialState, opts);
 }

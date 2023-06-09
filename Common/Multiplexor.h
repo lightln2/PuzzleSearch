@@ -5,11 +5,11 @@
 
 #include <vector>
 
-class Multiplexor {
+class SimpleMultiplexor {
     static constexpr size_t BUFSIZE = 16 * 1024;
 
 public:
-    Multiplexor(Store& store, int segmentsCount);
+    SimpleMultiplexor(Store& store, int segmentsCount);
 
     void Add(int segment, uint32_t value);
 

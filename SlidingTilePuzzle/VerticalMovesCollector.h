@@ -87,7 +87,7 @@ private:
     }
 
 private:
-    Multiplexor m_MultUp;
-    Multiplexor m_MultDown;
+    SimpleMultiplexor m_MultUp;
+    SimpleMultiplexor m_MultDown;
     VerticalMoves<width, height>& m_VerticalMoves;
 };
