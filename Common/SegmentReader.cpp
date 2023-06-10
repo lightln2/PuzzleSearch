@@ -58,3 +58,26 @@ Buffer<uint32_t>& CrossSegmentReader::Read(int op) {
 void CrossSegmentReader::Delete(int segment) {
     m_StoreSet.Delete(segment);
 }
+
+FrontierReader::FrontierReader(Store& store)
+    : m_Store(store)
+    , m_IndexBuffer(BUFSIZE)
+    , m_OpsBuffer(BUFSIZE)
+{}
+
+void FrontierReader::SetSegment(int segment) {
+    m_Segment = segment;
+    m_Store.Rewind(segment);
+}
+
+void FrontierReader::Delete(int segment) {
+    m_Store.Delete(segment);
+}
+
+FrontierReader::FrontierBuffer FrontierReader::Read() {
+    m_Store.Read(m_Segment, m_IndexBuffer);
+    m_Store.Read(m_Segment, m_OpsBuffer);
+    ensure(m_IndexBuffer.Size() == m_OpsBuffer.Size());
+    return { m_IndexBuffer, m_OpsBuffer };
+}
+

@@ -58,3 +58,30 @@ private:
     int m_Segment = -1;
     Buffer<uint32_t> m_Buffer;
 };
+
+class FrontierReader {
+    static constexpr size_t BUFSIZE = 2 * 1024 * 1024;
+public:
+    struct FrontierBuffer {
+        Buffer<uint32_t>& Indexes;
+        Buffer<uint8_t>& OpBits;
+
+        bool IsEmpty() const { return Indexes.IsEmpty(); }
+        size_t Size() const { return Indexes.Size(); }
+    };
+
+public:
+    FrontierReader(Store& store);
+
+    void SetSegment(int segment);
+
+    void Delete(int segment);
+
+    FrontierBuffer Read();
+
+private:
+    Store& m_Store;
+    int m_Segment = -1;
+    Buffer<uint32_t> m_IndexBuffer;
+    Buffer<uint8_t> m_OpsBuffer;
+};

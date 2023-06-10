@@ -40,3 +40,27 @@ void OpBitsWriter::Flush() {
     m_Store.Write(m_Segment, m_Buffer);
     m_Buffer.Clear();
 }
+
+FrontierWriter::FrontierWriter(Store& store)
+    : m_Store(store)
+    , m_IndexBuffer(BUFSIZE)
+    , m_OpsBuffer(BUFSIZE)
+{}
+
+void FrontierWriter::SetSegment(int segment) {
+    ensure(m_IndexBuffer.IsEmpty());
+    m_Segment = segment;
+}
+
+void FrontierWriter::Add(uint32_t value, int opBits) {
+    m_IndexBuffer.Add(value);
+    m_OpsBuffer.Add(uint8_t(opBits));
+    if (m_IndexBuffer.IsFull()) Flush();
+}
+
+void FrontierWriter::Flush() {
+    m_Store.Write(m_Segment, m_IndexBuffer);
+    m_Store.Write(m_Segment, m_OpsBuffer);
+    m_IndexBuffer.Clear();
+    m_OpsBuffer.Clear();
+}
