@@ -16,7 +16,7 @@ Store::Store(StoreImplRef impl)
     : m_Impl(std::move(impl))
 {}
 
-int Store::MaxSegments() {
+int Store::MaxSegments() const {
     return m_Impl->MaxSegments();
 }
 

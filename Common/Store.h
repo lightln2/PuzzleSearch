@@ -54,7 +54,7 @@ private:
     Store(StoreImplRef impl);
 
 public:
-    int MaxSegments();
+    int MaxSegments() const;
     bool HasData(int segment) const;
     uint64_t Length(int segment) const;
     uint64_t TotalLength() const;
@@ -121,3 +121,48 @@ private:
     static std::atomic<uint64_t> m_StatWriteNanos;
     static std::atomic<uint64_t> m_StatWriteBytes;
 };
+
+struct StoreSet {
+    std::vector<Store> Stores;
+
+    int MaxSegments() const { return Stores[0].MaxSegments(); }
+
+    uint64_t TotalLength() const {
+        uint64_t total = 0;
+        for (const auto& store : Stores) {
+            total += store.TotalLength();
+        }
+        return total;
+    }
+
+    void Rewind(int segment) {
+        for (auto& store : Stores) {
+            store.Rewind(segment);
+        }
+    }
+
+    void RewindAll() {
+        for (auto& store : Stores) {
+            store.RewindAll();
+        }
+    }
+
+    void Delete(int segment) {
+        for (auto& store : Stores) {
+            store.Delete(segment);
+        }
+    }
+
+    void DeleteAll() {
+        for (auto& store : Stores) {
+            store.DeleteAll();
+        }
+    }
+
+    void Swap(StoreSet& other) {
+        for (int i = 0; i < Stores.size(); i++) {
+            std::swap(Stores[i], other.Stores[i]);
+        }
+    }
+};
+

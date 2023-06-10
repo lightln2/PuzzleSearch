@@ -13,6 +13,8 @@ public:
 
     void SetSegment(int segment);
 
+    void Delete(int segment);
+
     Buffer<uint32_t>& Read();
 
 private:
@@ -29,10 +31,30 @@ public:
 
     void SetSegment(int segment);
 
+    void Delete(int segment);
+
     Buffer<uint8_t>& Read();
 
 private:
     Store& m_Store;
     int m_Segment = -1;
     Buffer<uint8_t> m_Buffer;
+};
+
+class CrossSegmentReader {
+    static constexpr size_t BUFSIZE = 2 * 1024 * 1024;
+
+public:
+    CrossSegmentReader(StoreSet& storeSet);
+
+    void SetSegment(int segment);
+
+    Buffer<uint32_t>& Read(int op);
+
+    void Delete(int segment);
+
+private:
+    StoreSet& m_StoreSet;
+    int m_Segment = -1;
+    Buffer<uint32_t> m_Buffer;
 };

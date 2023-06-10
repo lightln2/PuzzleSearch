@@ -30,3 +30,19 @@ void SimpleMultiplexor::Flush(int segment) {
     len = 0;
 }
 
+Multiplexor::Multiplexor(StoreSet& storeSet, int segmentsCount)
+{
+    for (auto& store : storeSet.Stores) {
+        m_Mults.emplace_back(SimpleMultiplexor(store, segmentsCount));
+    }
+}
+
+void Multiplexor::Add(int op, int segment, uint32_t value) {
+    m_Mults[op].Add(segment, value);
+}
+
+void Multiplexor::FlushAllSegments() {
+    for (auto& mult : m_Mults) {
+        mult.FlushAllSegments();
+    }
+}

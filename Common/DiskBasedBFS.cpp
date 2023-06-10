@@ -20,6 +20,14 @@ Store SegmentedOptions::MakeStore(std::string suffix) {
     return Store::CreateMultiFileStore(Segments, Opts.directories, suffix);
 }
 
+StoreSet SegmentedOptions::MakeStoreSet(std::string suffix, int count) {
+    StoreSet storeSet;
+    for (int i = 0; i < count; i++) {
+        storeSet.Stores.emplace_back(MakeStore(suffix + "_" + std::to_string(i) + "_"));
+    }
+    return storeSet;
+}
+
 void SegmentedOptions::PrintOptions() {
     std::cerr << "DiskBasedClassicBFS"
         << "; nodes: " << WithDecSep(TotalSize)

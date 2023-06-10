@@ -16,6 +16,7 @@ struct PuzzleOptions {
 struct SegmentedOptions {
     SegmentedOptions(Puzzle& puzzle, PuzzleOptions& opts);
     Store MakeStore(std::string suffix);
+    StoreSet MakeStoreSet(std::string suffix, int count);
     void PrintOptions();
 
     __forceinline std::pair<int, uint32_t> GetSegIdx(uint64_t index) {

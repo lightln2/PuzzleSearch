@@ -11,6 +11,10 @@ void SegmentReader::SetSegment(int segment) {
     m_Store.Rewind(segment);
 }
 
+void SegmentReader::Delete(int segment) {
+    m_Store.Delete(segment);
+}
+
 Buffer<uint32_t>& SegmentReader::Read() {
     m_Store.Read(m_Segment, m_Buffer);
     return m_Buffer;
@@ -26,7 +30,31 @@ void OpBitsReader::SetSegment(int segment) {
     m_Store.Rewind(segment);
 }
 
+void OpBitsReader::Delete(int segment) {
+    m_Store.Delete(segment);
+}
+
 Buffer<uint8_t>& OpBitsReader::Read() {
     m_Store.Read(m_Segment, m_Buffer);
     return m_Buffer;
+}
+
+
+CrossSegmentReader::CrossSegmentReader(StoreSet& storeSet)
+    : m_StoreSet(storeSet)
+    , m_Buffer(BUFSIZE)
+{}
+
+void CrossSegmentReader::SetSegment(int segment) {
+    m_Segment = segment;
+    m_StoreSet.Rewind(segment);
+}
+
+Buffer<uint32_t>& CrossSegmentReader::Read(int op) {
+    m_StoreSet.Stores[op].Read(m_Segment, m_Buffer);
+    return m_Buffer;
+}
+
+void CrossSegmentReader::Delete(int segment) {
+    m_StoreSet.Delete(segment);
 }

@@ -23,3 +23,18 @@ private:
     std::vector<uint32_t> m_Lengths;
     std::vector<uint32_t> m_Buffers;
 };
+
+
+class Multiplexor {
+    static constexpr size_t BUFSIZE = 16 * 1024;
+
+public:
+    Multiplexor(StoreSet& storeSet, int segmentsCount);
+
+    void Add(int op, int segment, uint32_t value);
+
+    void FlushAllSegments();
+
+private:
+    std::vector<SimpleMultiplexor> m_Mults;
+};
