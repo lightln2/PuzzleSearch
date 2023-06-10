@@ -195,6 +195,7 @@ std::vector<uint64_t> DiskBasedOptFrontierSearchInt(Puzzle& puzzle, std::string 
     uint64_t total_sz_frontier = 0;
     uint64_t total_sz_xseg = 0;
     uint64_t nanos_collect = 0;
+    uint64_t max_size = 0;
 
     std::cerr << "Step: 0; Count: 1" << std::endl;
 
@@ -214,6 +215,7 @@ std::vector<uint64_t> DiskBasedOptFrontierSearchInt(Puzzle& puzzle, std::string 
         if (totalCount == 0) break;
         result.push_back(totalCount);
         fnSwapStores();
+        max_size = std::max(max_size, curFrontierStore.TotalLength() + curOpBitsStore.TotalLength() + curCrossSegmentStores.TotalLength());
         std::cerr
             << "Step: " << result.size() - 1
             << "; count: " << WithDecSep(totalCount)
@@ -230,9 +232,10 @@ std::vector<uint64_t> DiskBasedOptFrontierSearchInt(Puzzle& puzzle, std::string 
     ExpandBuffer::PrintStats();
     std::cerr << "Collect: " << WithTime(nanos_collect) << std::endl;
     std::cerr
-        << "Total files: frontier=" << WithSize(total_sz_frontier)
+        << "Files sizes: frontier=" << WithSize(total_sz_frontier)
         << "; x-seg=" << WithSize(total_sz_xseg)
         << std::endl;
+    std::cerr << "Max size: " << WithSize(max_size) << std::endl;
     return result;
 }
 

@@ -98,12 +98,13 @@ int main() {
         //MTFrontierSearch();
 
         //TestCPUvsGPU();
-        
+
         //TestBitArray();
         //TestClassicBFS();
         TestDiskBasedBFS();
     }
     catch (const std::exception& ex) {
         std::cerr << "Error: " << ex.what() << std::endl;
+        throw;
     }
 }
