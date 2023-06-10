@@ -50,6 +50,9 @@ public:
     static Store CreateMultiFileStore(int maxSegments,
                                       std::vector<std::string> directories,
                                       const std::string& subdir);
+    static Store CreateSingleFileStore(int maxSegments,
+                                      std::vector<std::string> directories,
+                                      const std::string& file);
 private:
     Store(StoreImplRef impl);
 

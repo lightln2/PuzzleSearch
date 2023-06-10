@@ -416,3 +416,7 @@ Store Store::CreateSequentialStore(int maxSegments, std::vector<std::string> fil
 Store Store::CreateMultiFileStore(int maxSegments, std::vector<std::string> directories, const std::string& subdir) {
     return CreateMultiFileStore(maxSegments, Store::CreatePaths(directories, subdir));
 }
+
+Store Store::CreateSingleFileStore(int maxSegments, std::vector<std::string> directories, const std::string& file) {
+    return CreateSingleFileStore(maxSegments, Store::CreatePaths(directories, file));
+}

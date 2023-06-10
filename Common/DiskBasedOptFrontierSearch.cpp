@@ -47,6 +47,7 @@ public:
     }
 
     uint64_t Expand(int segment) {
+        Timer timerExpand;
         uint64_t indexBase = (uint64_t)segment << SOpts.Opts.segmentBits;
 
         bool hasData = false;
@@ -92,6 +93,9 @@ public:
 
         FrontierReader.Delete(segment);
 
+        m_NanosExpand += timerExpand.Elapsed();
+        Timer timerCollect;
+
         auto fnExpandCrossSegment = [&](uint64_t child, int op) {
             auto [seg, idx] = SOpts.GetSegIdx(child);
             if (seg == segment) return;
@@ -113,6 +117,8 @@ public:
 
         if (SOpts.HasOddLengthCycles) FrontierArray.Clear();
 
+        m_NanosCollect += timerCollect.Elapsed();
+
         return count;
     }
 
@@ -120,6 +126,10 @@ public:
         Mult.FlushAllSegments();
     }
 
+    static void PrintStats() {
+        std::cerr << "Expand: " << WithTime(m_NanosExpand) <<
+            "; Collect: " << WithTime(m_NanosCollect) << std::endl;
+    }
 private:
     SegmentedOptions SOpts;
     CompressedFrontierReader FrontierReader;
@@ -128,9 +138,20 @@ private:
     CompressedMultiplexor Mult;
     ExpandBuffer Expander;
 
+    //MultiBitArray<BITS> Array;
     IndexedArray<BITS> Array;
     BitArray FrontierArray;
+
+private:
+    static std::atomic<uint64_t> m_NanosExpand;
+    static std::atomic<uint64_t> m_NanosCollect;
 };
+
+template<int BITS>
+std::atomic<uint64_t> DB_OptFS_Solver<BITS>::m_NanosExpand{ 0 };
+template<int BITS>
+std::atomic<uint64_t> DB_OptFS_Solver<BITS>::m_NanosCollect{ 0 };
+
 
 template<int BITS>
 std::vector<uint64_t> DiskBasedOptFrontierSearchInt(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
@@ -210,6 +231,7 @@ std::vector<uint64_t> DiskBasedOptFrontierSearchInt(Puzzle& puzzle, std::string 
     Store::PrintStats();
     ExpandBuffer::PrintStats();
     StreamVInt::PrintStats();
+    DB_OptFS_Solver<BITS>::PrintStats();
     std::cerr << "Collect: " << WithTime(nanos_collect) << std::endl;
     std::cerr
         << "Files sizes: frontier=" << WithSize(total_sz_frontier)
