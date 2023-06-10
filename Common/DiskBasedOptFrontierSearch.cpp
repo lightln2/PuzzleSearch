@@ -124,11 +124,11 @@ private:
     SegmentedOptions SOpts;
     CompressedFrontierReader FrontierReader;
     CompressedFrontierWriter FrontierWriter;
-    CrossSegmentReader CrossSegmentReader;
-    Multiplexor Mult;
+    CompressedCrossSegmentReader CrossSegmentReader;
+    CompressedMultiplexor Mult;
     ExpandBuffer Expander;
 
-    MultiBitArray<BITS> Array;
+    IndexedArray<BITS> Array;
     BitArray FrontierArray;
 };
 

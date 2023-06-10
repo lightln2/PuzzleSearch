@@ -57,3 +57,25 @@ private:
     Buffer<uint8_t> m_CompressedBuffer;
     Buffer<uint8_t> m_OutputBuffer;
 };
+
+class CompressedCrossSegmentReader {
+    static constexpr size_t BUFSIZE = 2 * 1024 * 1024;
+
+public:
+    CompressedCrossSegmentReader(StoreSet& storeSet);
+
+    void SetSegment(int segment);
+
+    Buffer<uint32_t>& Read(int op);
+
+    void Delete(int segment);
+
+private:
+    StoreSet& m_StoreSet;
+    int m_Segment = -1;
+    int m_LastOp = -1;
+    Buffer<uint8_t> m_InputBuffer;
+    size_t m_InputPos;
+    Buffer<uint32_t> m_IndexBuffer;
+};
+

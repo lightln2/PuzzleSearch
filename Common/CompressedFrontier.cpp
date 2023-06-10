@@ -71,3 +71,31 @@ void CompressedFrontierWriter::FlushBuffer() {
     m_Store.Write(m_Segment, m_OutputBuffer);
     m_OutputBuffer.Clear();
 }
+
+CompressedCrossSegmentReader::CompressedCrossSegmentReader(StoreSet& storeSet)
+    : m_StoreSet(storeSet)
+    , m_InputBuffer(BUFSIZE)
+    , m_IndexBuffer(StreamVInt::MAX_INDEXES_COUNT)
+    , m_InputPos(0)
+{}
+
+void CompressedCrossSegmentReader::SetSegment(int segment) {
+    m_Segment = segment;
+    m_StoreSet.Rewind(segment);
+}
+
+Buffer<uint32_t>& CompressedCrossSegmentReader::Read(int op) {
+    if (m_InputPos == m_InputBuffer.Size()) {
+        m_StoreSet.Stores[op].Read(m_Segment, m_InputBuffer);
+        m_InputPos = 0;
+        m_LastOp = op;
+    }
+    ensure(m_LastOp == op);
+    m_IndexBuffer.Clear();
+    m_InputPos = StreamVInt::Decode(m_InputPos, m_InputBuffer, m_IndexBuffer);
+    return m_IndexBuffer;
+}
+
+void CompressedCrossSegmentReader::Delete(int segment) {
+    m_StoreSet.Delete(segment);
+}
