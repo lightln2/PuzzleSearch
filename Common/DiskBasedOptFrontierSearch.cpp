@@ -2,6 +2,7 @@
 #include "DiskBasedBFS.h"
 #include "SegmentReader.h"
 #include "SegmentWriter.h"
+#include "CompressedFrontier.h"
 #include "Multiplexor.h"
 #include "Store.h"
 #include "ThreadUtil.h"
@@ -121,8 +122,8 @@ public:
 
 private:
     SegmentedOptions SOpts;
-    FrontierReader FrontierReader;
-    FrontierWriter FrontierWriter;
+    CompressedFrontierReader FrontierReader;
+    CompressedFrontierWriter FrontierWriter;
     CrossSegmentReader CrossSegmentReader;
     Multiplexor Mult;
     ExpandBuffer Expander;
@@ -208,6 +209,7 @@ std::vector<uint64_t> DiskBasedOptFrontierSearchInt(Puzzle& puzzle, std::string 
     std::cerr << "Time: " << timer << std::endl;
     Store::PrintStats();
     ExpandBuffer::PrintStats();
+    StreamVInt::PrintStats();
     std::cerr << "Collect: " << WithTime(nanos_collect) << std::endl;
     std::cerr
         << "Files sizes: frontier=" << WithSize(total_sz_frontier)

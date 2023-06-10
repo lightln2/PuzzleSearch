@@ -41,6 +41,8 @@
     <ClCompile Include="DiskBasedOptFrontierSearch.cpp">
       <Filter>DiskBasedBFS</Filter>
     </ClCompile>
+    <ClCompile Include="StreamVInt.cpp" />
+    <ClCompile Include="CompressedFrontier.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="File.h" />
@@ -63,6 +65,8 @@
       <Filter>DiskBasedBFS</Filter>
     </ClInclude>
     <ClInclude Include="Array.h" />
+    <ClInclude Include="StreamVInt.h" />
+    <ClInclude Include="CompressedFrontier.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Util">

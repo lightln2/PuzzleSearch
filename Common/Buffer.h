@@ -48,6 +48,14 @@ public:
 
     void SetAllZero() { m_Array.Clear(); }
 
+    bool CanAppend(const Buffer<T>& buf) { return Size() + buf.Size() <= Capacity(); }
+
+    void Append(const Buffer<T>& buf) {
+        ensure(CanAppend(buf));
+        memcpy(Buf() + Size(), buf.Buf(), buf.Size() * sizeof(T));
+        m_Size += buf.Size();
+    }
+
 private:
     size_t m_Size;
     TArray<T> m_Array;

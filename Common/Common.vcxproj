@@ -78,6 +78,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BitArray.h" />
+    <ClCompile Include="CompressedFrontier.cpp" />
     <ClCompile Include="DiskBasedBFS.cpp" />
     <ClCompile Include="DiskBasedClassicBFS.cpp" />
     <ClCompile Include="DiskBasedFrontierSearch.cpp" />
@@ -94,11 +95,13 @@
     <ClCompile Include="SegmentReader.cpp" />
     <ClCompile Include="SegmentWriter.cpp" />
     <ClCompile Include="Store.cpp" />
+    <ClCompile Include="StreamVInt.cpp" />
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Array.h" />
     <ClInclude Include="Buffer.h" />
+    <ClInclude Include="CompressedFrontier.h" />
     <ClInclude Include="DiskBasedBFS.h" />
     <ClInclude Include="File.h" />
     <ClInclude Include="InMemoryBFS.h" />
@@ -107,6 +110,7 @@
     <ClInclude Include="SegmentReader.h" />
     <ClInclude Include="SegmentWriter.h" />
     <ClInclude Include="Store.h" />
+    <ClInclude Include="StreamVInt.h" />
     <ClInclude Include="ThreadUtil.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>
