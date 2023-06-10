@@ -81,11 +81,10 @@
     <ClCompile Include="DiskBasedBFS.cpp" />
     <ClCompile Include="DiskBasedClassicBFS.cpp" />
     <ClCompile Include="DiskBasedFrontierSearch.cpp" />
-    <ClCompile Include="DiskBasedSinglePassFrontierSearch.cpp" />
     <ClCompile Include="DiskBasedThreeBitBFS.cpp" />
     <ClCompile Include="DiskBasedTwoBitBFS.cpp" />
     <ClCompile Include="File.cpp" />
-    <ClCompile Include="DiskBasedFrontierSearch2.cpp" />
+    <ClCompile Include="DiskBasedOptFrontierSearch.cpp" />
     <ClCompile Include="InMemoryClassicBFS.cpp" />
     <ClCompile Include="InMemoryFrontierSearch.cpp" />
     <ClCompile Include="InMemoryThreeBitBFS.cpp" />

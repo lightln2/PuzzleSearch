@@ -8,9 +8,9 @@
 #include "Util.h"
 
 template<int BITS>
-class DB_FS2_Solver {
+class DB_OptFS_Solver {
 public:
-    DB_FS2_Solver(
+    DB_OptFS_Solver(
         SegmentedOptions& sopts,
         Store& curFrontierStore,
         Store& nextFrontierStore,
@@ -148,7 +148,7 @@ private:
 };
 
 template<int BITS>
-std::vector<uint64_t> DiskBasedFrontierSearch2Int(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
+std::vector<uint64_t> DiskBasedOptFrontierSearchInt(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
     Timer timer;
     std::cerr << "DiskBasedFrontierSearch2" << std::endl;
 
@@ -176,9 +176,9 @@ std::vector<uint64_t> DiskBasedFrontierSearch2Int(Puzzle& puzzle, std::string in
         curCrossSegmentStores.Swap(nextCrossSegmentStores);
     };
 
-    std::vector<std::unique_ptr<DB_FS2_Solver<BITS>>> solvers;
+    std::vector<std::unique_ptr<DB_OptFS_Solver<BITS>>> solvers;
     for (int i = 0; i < opts.threads; i++) {
-        solvers.emplace_back(std::make_unique<DB_FS2_Solver<BITS>>(
+        solvers.emplace_back(std::make_unique<DB_OptFS_Solver<BITS>>(
             sopts,
             curFrontierStore,
             newFrontierStore,
@@ -236,15 +236,15 @@ std::vector<uint64_t> DiskBasedFrontierSearch2Int(Puzzle& puzzle, std::string in
     return result;
 }
 
-std::vector<uint64_t> DiskBasedFrontierSearch2(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
+std::vector<uint64_t> DiskBasedOptFrontierSearch(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
     int bits = puzzle.OperatorsCount();
     ensure(bits > 0 && bits <= 8);
     if (bits == 1)
-        return DiskBasedFrontierSearch2Int<1>(puzzle, initialState, opts);
+        return DiskBasedOptFrontierSearchInt<1>(puzzle, initialState, opts);
     else if (bits == 2)
-        return DiskBasedFrontierSearch2Int<2>(puzzle, initialState, opts);
+        return DiskBasedOptFrontierSearchInt<2>(puzzle, initialState, opts);
     else if (bits <= 4)
-        return DiskBasedFrontierSearch2Int<4>(puzzle, initialState, opts);
+        return DiskBasedOptFrontierSearchInt<4>(puzzle, initialState, opts);
     else
-        return DiskBasedFrontierSearch2Int<8>(puzzle, initialState, opts);
+        return DiskBasedOptFrontierSearchInt<8>(puzzle, initialState, opts);
 }

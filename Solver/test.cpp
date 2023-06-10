@@ -68,6 +68,5 @@ void TestDiskBasedBFS() {
     //DiskBasedClassicBFS(puzzle, initial, opts);
     //DiskBasedThreeBitBFS(puzzle, initial, opts);
     //DiskBasedFrontierSearch(puzzle, initial, opts);
-    //DiskBasedSinglePassFrontierSearch(puzzle, initial, opts);
-    DiskBasedFrontierSearch2(puzzle, initial, opts);
+    DiskBasedOptFrontierSearch(puzzle, initial, opts);
 }

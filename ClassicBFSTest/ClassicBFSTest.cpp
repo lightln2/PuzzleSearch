@@ -222,52 +222,27 @@ TEST(SlidingTile_DiskBased_GPU, FrontierSearch_5x2_7seg_4th) {
     EXPECT_EQ(ToString(result), ST5x2);
 }
 
-TEST(SlidingTile_DiskBased_GPU, SPFS_5x2_1seg) {
+TEST(SlidingTile_DiskBased_GPU, OptFrontierSearch_5x2_1seg) {
     SlidingTilePuzzleGpu puzzle(5, 2);
     PuzzleOptions opts;
     opts.segmentBits = 22;
-    auto result = DiskBasedSinglePassFrontierSearch(puzzle, "0 1 2 3 4 5 6 7 8 9", opts);
+    auto result = DiskBasedOptFrontierSearch(puzzle, "0 1 2 3 4 5 6 7 8 9", opts);
     EXPECT_EQ(ToString(result), ST5x2);
 }
 
-TEST(SlidingTile_DiskBased_GPU, SPFS_5x2_7seg) {
+TEST(SlidingTile_DiskBased_GPU, OptFrontierSearch_5x2_7seg) {
     SlidingTilePuzzleGpu puzzle(5, 2);
     PuzzleOptions opts;
     opts.segmentBits = 19;
-    auto result = DiskBasedSinglePassFrontierSearch(puzzle, "0 1 2 3 4 5 6 7 8 9", opts);
+    auto result = DiskBasedOptFrontierSearch(puzzle, "0 1 2 3 4 5 6 7 8 9", opts);
     EXPECT_EQ(ToString(result), ST5x2);
 }
 
-TEST(SlidingTile_DiskBased_GPU, SPFS_5x2_7seg_4th) {
+TEST(SlidingTile_DiskBased_GPU, OptFrontierSearch_5x2_7seg_4th) {
     SlidingTilePuzzleGpu puzzle(5, 2);
     PuzzleOptions opts;
     opts.segmentBits = 19;
     opts.threads = 4;
-    auto result = DiskBasedSinglePassFrontierSearch(puzzle, "0 1 2 3 4 5 6 7 8 9", opts);
-    EXPECT_EQ(ToString(result), ST5x2);
-}
-
-TEST(SlidingTile_DiskBased_GPU, FrontierSearch2_5x2_1seg) {
-    SlidingTilePuzzleGpu puzzle(5, 2);
-    PuzzleOptions opts;
-    opts.segmentBits = 22;
-    auto result = DiskBasedFrontierSearch2(puzzle, "0 1 2 3 4 5 6 7 8 9", opts);
-    EXPECT_EQ(ToString(result), ST5x2);
-}
-
-TEST(SlidingTile_DiskBased_GPU, FrontierSearch2_5x2_7seg) {
-    SlidingTilePuzzleGpu puzzle(5, 2);
-    PuzzleOptions opts;
-    opts.segmentBits = 19;
-    auto result = DiskBasedFrontierSearch2(puzzle, "0 1 2 3 4 5 6 7 8 9", opts);
-    EXPECT_EQ(ToString(result), ST5x2);
-}
-
-TEST(SlidingTile_DiskBased_GPU, FrontierSearch2_5x2_7seg_4th) {
-    SlidingTilePuzzleGpu puzzle(5, 2);
-    PuzzleOptions opts;
-    opts.segmentBits = 19;
-    opts.threads = 4;
-    auto result = DiskBasedFrontierSearch2(puzzle, "0 1 2 3 4 5 6 7 8 9", opts);
+    auto result = DiskBasedOptFrontierSearch(puzzle, "0 1 2 3 4 5 6 7 8 9", opts);
     EXPECT_EQ(ToString(result), ST5x2);
 }
