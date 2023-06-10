@@ -58,7 +58,6 @@ public:
         auto [seg, idx] = SOpts.GetSegIdx(initialIndex);
         NewOpenList.Set(idx);
         SaveOpenList(seg);
-        std::swap(CurrentOpenListStore, NextOpenListStore);
     }
 
     uint64_t Process(int segment) {
@@ -75,7 +74,7 @@ public:
                 OpenList.Set(idx);
             }
         }
-        CurrentCrossSegmentStore.Delete(segment);
+        CurrentXSegReader.Delete(segment);
 
         uint64_t totalCount = OpenList.AndNotAndCount(ClosedList);
         ClosedList.Or(OpenList);
@@ -153,6 +152,15 @@ std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialSta
     Store currentCrossSegmentStore = sopts.MakeStore("xseg1");
     Store nextCrossSegmentStore = sopts.MakeStore("xseg2");
 
+    auto fnSwapStores = [&]() {
+        currentOpenListStore.DeleteAll();
+        currentClosedListStore.DeleteAll();
+        currentCrossSegmentStore.DeleteAll();
+        std::swap(currentOpenListStore, nextOpenListStore);
+        std::swap(currentClosedListStore, nextClosedListStore);
+        std::swap(currentCrossSegmentStore, nextCrossSegmentStore);
+    };
+
     std::vector<std::unique_ptr<DB_BFS_Solver>> solvers;
     for (int i = 0; i < opts.threads; i++) {
         solvers.emplace_back(std::make_unique<DB_BFS_Solver>(
@@ -166,6 +174,7 @@ std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialSta
     }
     
     solvers[0]->SetInitialNode(initialState);
+    fnSwapStores();
 
     uint64_t total_sz_open = 0;
     uint64_t total_sz_closed = 0;
@@ -186,12 +195,7 @@ std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialSta
 
         if (totalCount == 0) break;
         result.push_back(totalCount);
-        currentOpenListStore.DeleteAll();
-        currentClosedListStore.DeleteAll();
-        currentCrossSegmentStore.DeleteAll();
-        std::swap(currentOpenListStore, nextOpenListStore);
-        std::swap(currentClosedListStore, nextClosedListStore);
-        std::swap(currentCrossSegmentStore, nextCrossSegmentStore);
+        fnSwapStores();
         std::cerr 
             << "Step: " << result.size() 
             << "; count: " << totalCount

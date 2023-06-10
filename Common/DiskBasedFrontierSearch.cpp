@@ -19,9 +19,6 @@ public:
         Store& crossSegmentStore)
 
         : SOpts(sopts)
-        , CurFrontierStore(curFrontierStore)
-        , NextFrontierStore(nextFrontierStore)
-        , CrossSegmentStore(crossSegmentStore)
         , FrontierReader(curFrontierStore)
         , FrontierWriter(nextFrontierStore)
         , CrossSegmentReader(crossSegmentStore)
@@ -38,7 +35,6 @@ public:
         FrontierWriter.SetSegment(seg);
         FrontierWriter.Add(GetValue(idx, 0));
         FrontierWriter.Flush();
-        std::swap(CurFrontierStore, NextFrontierStore);
     }
 
     void Expand(int segment) {
@@ -62,7 +58,7 @@ public:
         }
         Expander.Finish(fnExpand);
 
-        if (!SOpts.HasOddLengthCycles) CurFrontierStore.Delete(segment);
+        if (!SOpts.HasOddLengthCycles) FrontierReader.Delete(segment);
     }
 
     void FinishExpand() {
@@ -88,7 +84,7 @@ public:
                 Array.Set(idx, op);
             }
         }
-        CrossSegmentStore.Delete(segment);
+        CrossSegmentReader.Delete(segment);
 
         if (SOpts.HasOddLengthCycles) {
             while (true) {
@@ -100,7 +96,7 @@ public:
                     FrontierArray.Set(idx);
                 }
             }
-            CurFrontierStore.Delete(segment);
+            FrontierReader.Delete(segment);
         }
 
         if (!hasData) return 0;
@@ -133,9 +129,6 @@ private:
 
 private:
     SegmentedOptions SOpts;
-    Store& CurFrontierStore;
-    Store& NextFrontierStore;
-    Store& CrossSegmentStore;
     SegmentReader FrontierReader;
     SegmentWriter FrontierWriter;
     SegmentReader CrossSegmentReader;
@@ -173,6 +166,7 @@ std::vector<uint64_t> DiskBasedFrontierSearchInternal(Puzzle& puzzle, std::strin
     }
 
     solvers[0]->SetInitialNode(initialState);
+    std::swap(curFrontierStore, newFrontierStore);
     result.push_back(1);
 
     uint64_t total_sz_frontier = 0;
