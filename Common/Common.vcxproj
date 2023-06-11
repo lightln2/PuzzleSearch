@@ -82,6 +82,7 @@
     <ClCompile Include="DiskBasedBFS.cpp" />
     <ClCompile Include="DiskBasedClassicBFS.cpp" />
     <ClCompile Include="DiskBasedFrontierSearch.cpp" />
+    <ClCompile Include="DiskBasedOptThreeBitBFS.cpp" />
     <ClCompile Include="DiskBasedThreeBitBFS.cpp" />
     <ClCompile Include="DiskBasedTwoBitBFS.cpp" />
     <ClCompile Include="File.cpp" />
@@ -92,6 +93,7 @@
     <ClCompile Include="InMemoryTwoBitBFS.cpp" />
     <ClCompile Include="Multiplexor.cpp" />
     <ClCompile Include="Puzzle.cpp" />
+    <ClCompile Include="SectorMap.cpp" />
     <ClCompile Include="SegmentReader.cpp" />
     <ClCompile Include="SegmentWriter.cpp" />
     <ClCompile Include="Store.cpp" />
@@ -107,6 +109,7 @@
     <ClInclude Include="InMemoryBFS.h" />
     <ClInclude Include="Multiplexor.h" />
     <ClInclude Include="Puzzle.h" />
+    <ClInclude Include="SectorMap.h" />
     <ClInclude Include="SegmentReader.h" />
     <ClInclude Include="SegmentWriter.h" />
     <ClInclude Include="Store.h" />

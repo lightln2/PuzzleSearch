@@ -18,6 +18,7 @@ SegmentedOptions::SegmentedOptions(class Puzzle& puzzle, PuzzleOptions& opts)
 
 Store SegmentedOptions::MakeStore(std::string suffix) {
     return Store::CreateMultiFileStore(Segments, Opts.directories, suffix);
+    //return Store::CreateSingleFileStore(Segments, Opts.directories, suffix);
 }
 
 StoreSet SegmentedOptions::MakeStoreSet(std::string suffix, int count) {
@@ -29,7 +30,7 @@ StoreSet SegmentedOptions::MakeStoreSet(std::string suffix, int count) {
 }
 
 void SegmentedOptions::PrintOptions() {
-    std::cerr << "DiskBasedClassicBFS"
+    std::cerr
         << "; nodes: " << WithDecSep(TotalSize)
         << "; segments: " << WithDecSep(Segments)
         << "; segment size: " << WithDecSep(SegmentSize)

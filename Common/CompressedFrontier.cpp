@@ -72,6 +72,72 @@ void CompressedFrontierWriter::FlushBuffer() {
     m_OutputBuffer.Clear();
 }
 
+
+CompressedSegmentReader::CompressedSegmentReader(Store& store)
+    : m_Store(store)
+    , m_InputBuffer(BUFSIZE)
+    , m_IndexBuffer(StreamVInt::MAX_INDEXES_COUNT)
+    , m_InputPos(0)
+{}
+
+void CompressedSegmentReader::SetSegment(int segment) {
+    m_Segment = segment;
+    m_Store.Rewind(segment);
+}
+
+void CompressedSegmentReader::Delete(int segment) {
+    m_Store.Delete(segment);
+}
+
+Buffer<uint32_t>& CompressedSegmentReader::Read() {
+    if (m_InputPos == m_InputBuffer.Size()) {
+        m_Store.Read(m_Segment, m_InputBuffer);
+        m_InputPos = 0;
+    }
+    m_IndexBuffer.Clear();
+    m_InputPos = StreamVInt::Decode(m_InputPos, m_InputBuffer, m_IndexBuffer);
+    return m_IndexBuffer;
+}
+
+CompressedSegmentWriter::CompressedSegmentWriter(Store& store)
+    : m_Store(store)
+    , m_IndexBuffer(StreamVInt::MAX_INDEXES_COUNT)
+    , m_CompressedBuffer(StreamVInt::MAX_BUFFER_SIZE)
+    , m_OutputBuffer(BUFSIZE)
+{}
+
+void CompressedSegmentWriter::SetSegment(int segment) {
+    m_Segment = segment;
+    ensure(m_IndexBuffer.IsEmpty());
+    ensure(m_CompressedBuffer.IsEmpty());
+}
+
+void CompressedSegmentWriter::Flush() {
+    if (!m_IndexBuffer.IsEmpty()) FlushData();
+    if (!m_OutputBuffer.IsEmpty()) FlushBuffer();
+}
+
+void CompressedSegmentWriter::Add(uint32_t index) {
+    m_IndexBuffer.Add(index);
+    if (m_IndexBuffer.IsFull()) {
+        FlushData();
+    }
+}
+
+void CompressedSegmentWriter::FlushData() {
+    StreamVInt::Encode(m_IndexBuffer, m_CompressedBuffer);
+    m_IndexBuffer.Clear();
+    if (!m_OutputBuffer.CanAppend(m_CompressedBuffer)) FlushBuffer();
+    m_OutputBuffer.Append(m_CompressedBuffer);
+    m_CompressedBuffer.Clear();
+}
+
+void CompressedSegmentWriter::FlushBuffer() {
+    m_Store.Write(m_Segment, m_OutputBuffer);
+    m_OutputBuffer.Clear();
+}
+
+
 CompressedCrossSegmentReader::CompressedCrossSegmentReader(StoreSet& storeSet)
     : m_StoreSet(storeSet)
     , m_InputBuffer(BUFSIZE)

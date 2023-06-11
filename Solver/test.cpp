@@ -64,5 +64,6 @@ void TestDiskBasedBFS() {
     opts.threads = 4;
     //opts.maxSteps = 50;
     //DiskBasedFrontierSearch(puzzle, initial, opts);
-    DiskBasedOptFrontierSearch(puzzle, initial, opts);
+    //DiskBasedOptFrontierSearch(puzzle, initial, opts);
+    DiskBasedOptThreeBitBFS(puzzle, initial, opts);
 }

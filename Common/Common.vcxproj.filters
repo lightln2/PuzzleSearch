@@ -43,6 +43,10 @@
     </ClCompile>
     <ClCompile Include="StreamVInt.cpp" />
     <ClCompile Include="CompressedFrontier.cpp" />
+    <ClCompile Include="SectorMap.cpp" />
+    <ClCompile Include="DiskBasedOptThreeBitBFS.cpp">
+      <Filter>DiskBasedBFS</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="File.h" />
@@ -67,6 +71,7 @@
     <ClInclude Include="Array.h" />
     <ClInclude Include="StreamVInt.h" />
     <ClInclude Include="CompressedFrontier.h" />
+    <ClInclude Include="SectorMap.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Util">

@@ -8,23 +8,24 @@
 #include "ThreadUtil.h"
 #include "Util.h"
 
-template<int BITS>
-class DB_OptFS_Solver {
+class DB_Opt3BitBFS_Solver {
 public:
-    DB_OptFS_Solver(
+    DB_Opt3BitBFS_Solver(
         SegmentedOptions& sopts,
+        Store& oldFrontierStore,
         Store& curFrontierStore,
-        Store& nextFrontierStore,
+        Store& newFrontierStore,
         StoreSet& curCrossSegmentStores,
         StoreSet& nextCrossSegmentStores)
 
         : SOpts(sopts)
-        , FrontierReader(curFrontierStore)
-        , FrontierWriter(nextFrontierStore)
+        , OldFrontierReader(oldFrontierStore)
+        , CurFrontierReader(curFrontierStore)
+        , FrontierWriter(newFrontierStore)
         , CrossSegmentReader(curCrossSegmentStores)
         , Mult(nextCrossSegmentStores, sopts.Segments)
-        , Array(SOpts.SegmentSize)
-        , FrontierArray(SOpts.HasOddLengthCycles ? SOpts.SegmentSize : 0)
+        , NextArray(SOpts.SegmentSize)
+        , CurArray(SOpts.HasOddLengthCycles ? SOpts.SegmentSize : 0)
         , Expander(SOpts.Puzzle)
     { }
 
@@ -32,7 +33,7 @@ public:
         auto initialIndex = SOpts.Puzzle.Parse(initialState);
         auto [seg, idx] = SOpts.GetSegIdx(initialIndex);
         FrontierWriter.SetSegment(seg);
-        FrontierWriter.Add(idx, 0);
+        FrontierWriter.Add(idx);
         FrontierWriter.Flush();
 
         auto fnExpandCrossSegment = [&](uint64_t child, int op) {
@@ -47,13 +48,13 @@ public:
     }
 
     uint64_t Expand(int segment) {
-        Timer timerExpand;
         uint64_t indexBase = (uint64_t)segment << SOpts.Opts.segmentBits;
 
         bool hasData = false;
 
         CrossSegmentReader.SetSegment(segment);
-        FrontierReader.SetSegment(segment);
+        OldFrontierReader.SetSegment(segment);
+        CurFrontierReader.SetSegment(segment);
         FrontierWriter.SetSegment(segment);
 
         for (int op = 0; op < SOpts.OperatorsCount; op++) {
@@ -63,7 +64,7 @@ public:
                 hasData = true;
                 for (size_t i = 0; i < vect.Size(); i++) {
                     uint32_t idx = vect[i];
-                    Array.Set(idx, op);
+                    NextArray.Set(idx);
                 }
             }
         }
@@ -72,18 +73,17 @@ public:
         auto fnExpandInSegment = [&](uint64_t child, int op) {
             auto [seg, idx] = SOpts.GetSegIdx(child);
             if (seg != segment) return;
-            Array.Set(idx, op);
+            NextArray.Set(idx);
         };
 
         while (true) {
-            auto vect = FrontierReader.Read();
+            auto& vect = CurFrontierReader.Read();
             if (vect.IsEmpty()) break;
             hasData = true;
             for (size_t i = 0; i < vect.Size(); i++) {
-                uint32_t idx = vect.Indexes[i];
-                uint8_t opBits = vect.OpBits[i];
-                Expander.Add(indexBase | idx, opBits, fnExpandInSegment);
-                if (SOpts.HasOddLengthCycles) FrontierArray.Set(idx);
+                uint32_t idx = vect[i];
+                Expander.Add(indexBase | idx, 0, fnExpandInSegment);
+                if (SOpts.HasOddLengthCycles) CurArray.Set(idx);
             }
         }
 
@@ -91,10 +91,17 @@ public:
 
         Expander.Finish(fnExpandInSegment);
 
-        FrontierReader.Delete(segment);
+        while (true) {
+            auto& vect = OldFrontierReader.Read();
+            if (vect.IsEmpty()) break;
+            hasData = true;
+            for (size_t i = 0; i < vect.Size(); i++) {
+                uint32_t idx = vect[i];
+                NextArray.Clear(idx);
+            }
+        }
 
-        m_NanosExpand += timerExpand.Elapsed();
-        Timer timerCollect;
+        OldFrontierReader.Delete(segment);
 
         auto fnExpandCrossSegment = [&](uint64_t child, int op) {
             auto [seg, idx] = SOpts.GetSegIdx(child);
@@ -104,20 +111,16 @@ public:
 
         uint64_t count = 0;
 
-        Array.ScanBitsAndClear([&](uint64_t index, int opBits) {
-            if (SOpts.HasOddLengthCycles && FrontierArray.Get(index)) return;
+        NextArray.ScanBitsAndClear([&](uint64_t index) {
+            if (SOpts.HasOddLengthCycles && CurArray.Get(index)) return;
             count++;
-            if (opBits < SOpts.OperatorsMask) {
-                Expander.Add(indexBase | index, opBits, fnExpandCrossSegment);
-                FrontierWriter.Add(uint32_t(index), opBits);
-            }
+            Expander.Add(indexBase | index, 0, fnExpandCrossSegment);
+            FrontierWriter.Add(uint32_t(index));
         });
         Expander.Finish(fnExpandCrossSegment);
         FrontierWriter.Flush();
 
-        if (SOpts.HasOddLengthCycles) FrontierArray.Clear();
-
-        m_NanosCollect += timerCollect.Elapsed();
+        if (SOpts.HasOddLengthCycles) CurArray.Clear();
 
         return count;
     }
@@ -126,62 +129,49 @@ public:
         Mult.FlushAllSegments();
     }
 
-    static void PrintStats() {
-        std::cerr << "Expand: " << WithTime(m_NanosExpand) <<
-            "; Collect: " << WithTime(m_NanosCollect) << std::endl;
-    }
 private:
     SegmentedOptions SOpts;
-    CompressedFrontierReader FrontierReader;
-    CompressedFrontierWriter FrontierWriter;
+    CompressedSegmentReader OldFrontierReader;
+    CompressedSegmentReader CurFrontierReader;
+    CompressedSegmentWriter FrontierWriter;
     CompressedCrossSegmentReader CrossSegmentReader;
     CompressedMultiplexor Mult;
     ExpandBuffer Expander;
 
-    //MultiBitArray<BITS> Array;
-    IndexedArray<BITS> Array;
-    BitArray FrontierArray;
-
-private:
-    static std::atomic<uint64_t> m_NanosExpand;
-    static std::atomic<uint64_t> m_NanosCollect;
+    BitArray CurArray;
+    BitArray NextArray;
 };
 
-template<int BITS>
-std::atomic<uint64_t> DB_OptFS_Solver<BITS>::m_NanosExpand{ 0 };
-template<int BITS>
-std::atomic<uint64_t> DB_OptFS_Solver<BITS>::m_NanosCollect{ 0 };
-
-
-template<int BITS>
-std::vector<uint64_t> DiskBasedOptFrontierSearchInt(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
+std::vector<uint64_t> DiskBasedOptThreeBitBFS(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
     Timer timer;
-    std::cerr << "DiskBasedFrontierSearch2" << std::endl;
+    std::cerr << "DiskBasedOptThreeBitBFS" << std::endl;
 
     SegmentedOptions sopts(puzzle, opts);
 
     ensure(opts.segmentBits <= 32);
-    ensure(sopts.OperatorsCount <= 8);
 
     sopts.PrintOptions();
 
     std::vector<uint64_t> result;
 
-    Store curFrontierStore = sopts.MakeStore("frontier1");
-    Store newFrontierStore = sopts.MakeStore("frontier2");
+    Store oldFrontierStore = sopts.MakeStore("frontier1");
+    Store curFrontierStore = sopts.MakeStore("frontier2");
+    Store newFrontierStore = sopts.MakeStore("frontier3");
     StoreSet curCrossSegmentStores = sopts.MakeStoreSet("xseg1", sopts.OperatorsCount);
     StoreSet nextCrossSegmentStores = sopts.MakeStoreSet("xseg2", sopts.OperatorsCount);
 
     auto fnSwapStores = [&]() {
-        curFrontierStore.DeleteAll();
+        oldFrontierStore.DeleteAll();
+        std::swap(oldFrontierStore, curFrontierStore);
         std::swap(curFrontierStore, newFrontierStore);
         curCrossSegmentStores.Swap(nextCrossSegmentStores);
     };
 
-    std::vector<std::unique_ptr<DB_OptFS_Solver<BITS>>> solvers;
+    std::vector<std::unique_ptr<DB_Opt3BitBFS_Solver>> solvers;
     for (int i = 0; i < opts.threads; i++) {
-        solvers.emplace_back(std::make_unique<DB_OptFS_Solver<BITS>>(
+        solvers.emplace_back(std::make_unique<DB_Opt3BitBFS_Solver>(
             sopts,
+            oldFrontierStore,
             curFrontierStore,
             newFrontierStore,
             curCrossSegmentStores,
@@ -206,11 +196,11 @@ std::vector<uint64_t> DiskBasedOptFrontierSearchInt(Puzzle& puzzle, std::string 
 
         ParallelExec(opts.threads, sopts.Segments, [&](int thread, int segment) {
             totalCount += solvers[thread]->Expand(segment);
-        });
+            });
 
         ParallelExec(opts.threads, [&](int thread) {
             solvers[thread]->FinishExpand();
-        });
+            });
 
         if (totalCount == 0) break;
         result.push_back(totalCount);
@@ -231,7 +221,6 @@ std::vector<uint64_t> DiskBasedOptFrontierSearchInt(Puzzle& puzzle, std::string 
     Store::PrintStats();
     ExpandBuffer::PrintStats();
     StreamVInt::PrintStats();
-    DB_OptFS_Solver<BITS>::PrintStats();
     std::cerr << "Collect: " << WithTime(nanos_collect) << std::endl;
     std::cerr
         << "Files sizes: frontier=" << WithSize(total_sz_frontier)
@@ -239,17 +228,4 @@ std::vector<uint64_t> DiskBasedOptFrontierSearchInt(Puzzle& puzzle, std::string 
         << std::endl;
     std::cerr << "Max size: " << WithSize(max_size) << std::endl;
     return result;
-}
-
-std::vector<uint64_t> DiskBasedOptFrontierSearch(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
-    int bits = puzzle.OperatorsCount();
-    ensure(bits > 0 && bits <= 8);
-    if (bits == 1)
-        return DiskBasedOptFrontierSearchInt<1>(puzzle, initialState, opts);
-    else if (bits == 2)
-        return DiskBasedOptFrontierSearchInt<2>(puzzle, initialState, opts);
-    else if (bits <= 4)
-        return DiskBasedOptFrontierSearchInt<4>(puzzle, initialState, opts);
-    else
-        return DiskBasedOptFrontierSearchInt<8>(puzzle, initialState, opts);
 }

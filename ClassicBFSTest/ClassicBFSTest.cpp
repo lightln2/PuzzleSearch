@@ -246,3 +246,28 @@ TEST(SlidingTile_DiskBased_GPU, OptFrontierSearch_5x2_7seg_4th) {
     auto result = DiskBasedOptFrontierSearch(puzzle, "0 1 2 3 4 5 6 7 8 9", opts);
     EXPECT_EQ(ToString(result), ST5x2);
 }
+
+TEST(SlidingTile_DiskBased_GPU, Opt3BitBFS_5x2_1seg) {
+    SlidingTilePuzzleGpu puzzle(5, 2);
+    PuzzleOptions opts;
+    opts.segmentBits = 22;
+    auto result = DiskBasedOptThreeBitBFS(puzzle, "0 1 2 3 4 5 6 7 8 9", opts);
+    EXPECT_EQ(ToString(result), ST5x2);
+}
+
+TEST(SlidingTile_DiskBased_GPU, Opt3BitBFS_5x2_7seg) {
+    SlidingTilePuzzleGpu puzzle(5, 2);
+    PuzzleOptions opts;
+    opts.segmentBits = 19;
+    auto result = DiskBasedOptThreeBitBFS(puzzle, "0 1 2 3 4 5 6 7 8 9", opts);
+    EXPECT_EQ(ToString(result), ST5x2);
+}
+
+TEST(SlidingTile_DiskBased_GPU, Opt3BitBFS_5x2_7seg_4th) {
+    SlidingTilePuzzleGpu puzzle(5, 2);
+    PuzzleOptions opts;
+    opts.segmentBits = 19;
+    opts.threads = 4;
+    auto result = DiskBasedOptThreeBitBFS(puzzle, "0 1 2 3 4 5 6 7 8 9", opts);
+    EXPECT_EQ(ToString(result), ST5x2);
+}
