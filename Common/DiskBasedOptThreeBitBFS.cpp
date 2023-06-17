@@ -205,11 +205,12 @@ std::vector<uint64_t> DiskBasedOptThreeBitBFS(Puzzle& puzzle, std::string initia
         if (totalCount == 0) break;
         result.push_back(totalCount);
         fnSwapStores();
-        max_size = std::max(max_size, curFrontierStore.TotalLength() + curCrossSegmentStores.TotalLength());
+        max_size = std::max(max_size, curFrontierStore.TotalLength() + oldFrontierStore.TotalLength() + curCrossSegmentStores.TotalLength());
         std::cerr
             << "Step: " << result.size() - 1
             << "; count: " << WithDecSep(totalCount)
             << " in " << stepTimer
+            << "; size: old frontier=" << WithSize(oldFrontierStore.TotalLength())
             << "; size: frontier=" << WithSize(curFrontierStore.TotalLength())
             << ", x-seg=" << WithSize(curCrossSegmentStores.TotalLength())
             << std::endl;
