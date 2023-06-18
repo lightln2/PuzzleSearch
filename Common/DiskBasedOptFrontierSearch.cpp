@@ -22,7 +22,8 @@ public:
         , FrontierReader(curFrontierStore)
         , FrontierWriter(nextFrontierStore)
         , CrossSegmentReader(curCrossSegmentStores)
-        , Mult(nextCrossSegmentStores, sopts.Segments)
+        //, Mult(nextCrossSegmentStores, sopts.Segments)
+        , Mult(nextCrossSegmentStores, sopts.OperatorsCount, sopts.Segments, 16, 12, 16ui64 * 1024 * 1024)
         , Array(SOpts.SegmentSize)
         , FrontierArray(SOpts.HasOddLengthCycles ? SOpts.SegmentSize : 0)
         , Expander(SOpts.Puzzle)
@@ -135,7 +136,8 @@ private:
     CompressedFrontierReader FrontierReader;
     CompressedFrontierWriter FrontierWriter;
     CompressedCrossSegmentReader CrossSegmentReader;
-    CompressedMultiplexor Mult;
+    //CompressedMultiplexor Mult;
+    SmartMultiplexor Mult;
     ExpandBuffer Expander;
 
     //MultiBitArray<BITS> Array;

@@ -2,8 +2,8 @@
 
 SectorMap::SectorMap(int sectorSizeBits, int sectorsCount)
     : m_SectorSizeBits(sectorSizeBits)
-    , m_SectorSize(1ui64 << sectorSizeBits)
     , m_SectorsCount(sectorsCount)
+    , m_SectorSize(1ui64 << sectorSizeBits)
     , m_Buffer(sectorsCount * m_SectorSize)
     , m_NextSectorList(sectorsCount, 0)
     , m_FreeList({0, sectorsCount - 1})
@@ -16,7 +16,7 @@ SectorMap::SectorMap(int sectorSizeBits, int sectorsCount)
 
 void SectorMap::Free(SectorMap::LinkedList& list) {
     if (list.head == -1) return;
-    ensure(list.tail != -1);
+    assert(list.tail != -1);
     if (m_FreeList.head == -1) {
         m_FreeList.head = list.head;
     }
@@ -24,6 +24,7 @@ void SectorMap::Free(SectorMap::LinkedList& list) {
         Next(m_FreeList.tail) = list.head;
     }
     m_FreeList.tail = list.tail;
+    list.head = list.tail = -1;
 }
 
 void SectorMap::GetFreeSector(SectorMap::LinkedList& list) {
@@ -35,6 +36,6 @@ void SectorMap::GetFreeSector(SectorMap::LinkedList& list) {
         Next(list.tail) = m_FreeList.head;
     }
     list.tail = m_FreeList.head;
-    Next(list.tail) = -1;
     m_FreeList.head = Next(m_FreeList.head);
+    Next(list.tail) = -1;
 }

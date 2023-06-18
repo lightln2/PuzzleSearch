@@ -37,6 +37,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FileTests.cpp" />
+    <ClCompile Include="MultiplexorTests.cpp" />
     <ClCompile Include="StoreTests.cpp" />
     <ClCompile Include="StreamVIntTests.cpp" />
     <ClCompile Include="TestBoolArray.cpp" />

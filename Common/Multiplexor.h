@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Util.h"
+#include "SectorMap.h"
 #include "Store.h"
 
 #include <vector>
@@ -72,4 +73,65 @@ public:
 private:
     Buffer<uint8_t> m_CompressedBuffer;
     std::vector<CompressedMultiplexorPart> m_Mults;
+};
+
+class SmartMultiplexorPart {
+
+public:
+    SmartMultiplexorPart(
+        Store& store,
+        int segmentsCount,
+        int mapSectorSizeBits,
+        int smallSectorValsBits,
+        size_t largeBufferSize);
+
+    void Add(int segment, uint32_t value);
+
+    void FlushAllSegments();
+
+private:
+    void FlushBuffer(int segment);
+    void FlushFile(int segment);
+
+    void FlushAllBuffers();
+    void FlushAllFiles();
+
+private:
+    Store& m_Store;
+    SectorMap m_Map;
+
+    size_t m_SegmentsCount;
+    int m_SmallSectorValsBits;
+    size_t m_SmallSectorSize;
+    size_t m_MaxSectorsCount;
+
+    std::vector<SectorFile> m_Files;
+    Buffer<uint32_t> m_SmallBuffer;
+    std::vector<int> m_BufLengths;
+    Buffer<uint8_t> m_LargeBuffer;
+    Buffer<uint8_t> m_EncodeBuffer;
+};
+
+class SmartMultiplexor {
+public:
+    SmartMultiplexor(
+        StoreSet& storeSet,
+        int maxOpBits,
+        int segmentsCount,
+        int mapSectorSizeBits,
+        int smallSectorValsBits,
+        size_t largeBufferSize);
+
+    void Add(int op, int segment, uint32_t value);
+
+    void FlushAllSegments();
+
+private:
+    StoreSet& m_StoreSet;
+    std::vector<std::unique_ptr<SmartMultiplexorPart>> m_Mults;
+
+    size_t m_SegmentsCount;
+    int m_MapSectotSizeBits;
+    int m_SmallSectorValsBits;
+    size_t m_LargeBufferSize;
 };
