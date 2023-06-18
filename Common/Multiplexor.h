@@ -83,7 +83,8 @@ public:
         int segmentsCount,
         int mapSectorSizeBits,
         int smallSectorValsBits,
-        size_t largeBufferSize);
+        Buffer<uint8_t>& largeBuffer,
+        Buffer<uint8_t>& encodeBuffer);
 
     void Add(int segment, uint32_t value);
 
@@ -92,9 +93,7 @@ public:
 private:
     void FlushBuffer(int segment);
     void FlushFile(int segment);
-
     void FlushAllBuffers();
-    void FlushAllFiles();
 
 private:
     Store& m_Store;
@@ -108,8 +107,11 @@ private:
     std::vector<SectorFile> m_Files;
     Buffer<uint32_t> m_SmallBuffer;
     std::vector<int> m_BufLengths;
-    Buffer<uint8_t> m_LargeBuffer;
-    Buffer<uint8_t> m_EncodeBuffer;
+    Buffer<uint8_t>& m_LargeBuffer;
+    Buffer<uint8_t>& m_EncodeBuffer;
+
+    // list of files in order of creation
+    DblLinkedListInt m_UsedList;
 };
 
 class SmartMultiplexor {
@@ -133,5 +135,7 @@ private:
     size_t m_SegmentsCount;
     int m_MapSectotSizeBits;
     int m_SmallSectorValsBits;
-    size_t m_LargeBufferSize;
+
+    Buffer<uint8_t> m_LargeBuffer;
+    Buffer<uint8_t> m_EncodeBuffer;
 };

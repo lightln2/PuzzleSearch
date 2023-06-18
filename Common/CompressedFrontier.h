@@ -104,7 +104,7 @@ private:
 
 
 class CompressedCrossSegmentReader {
-    static constexpr size_t BUFSIZE = 2 * 1024 * 1024;
+    static constexpr size_t BUFSIZE = 16 * 1024 * 1024;
 
 public:
     CompressedCrossSegmentReader(StoreSet& storeSet);

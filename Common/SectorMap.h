@@ -111,3 +111,65 @@ private:
     size_t m_SectorsCount;
     size_t m_LastPtr;
 };
+
+class DblLinkedListInt {
+public:
+    DblLinkedListInt(int size) 
+        : m_Next(size, -1)
+        , m_Prev(size, -1)
+    {}
+
+    int head() const { return m_Head; }
+    int tail() const { return m_Tail; }
+    int& next(int index) { return m_Next[index]; }
+    const int& next(int index) const { return m_Next[index]; }
+    int& prev(int index) { return m_Prev[index]; }
+    const int& prev(int index) const { return m_Prev[index]; }
+
+    void add(int val) {
+        assert(val >= 0 && val < m_Next.size());
+        if (m_Head == -1) {
+            assert(m_Tail == -1);
+            m_Head = m_Tail = val;
+        }
+        else {
+            prev(val) = m_Tail;
+            next(m_Tail) = val;
+            m_Tail = val;
+        }
+    }
+
+    void remove(int val) {
+        assert(val >= 0 && val < m_Next.size());
+        if (m_Head == val && m_Tail == val) {
+            m_Head = m_Tail = -1;
+        }
+        else if (m_Tail == val) {
+            m_Tail = prev(m_Tail);
+        }
+        else if (m_Head == val) {
+            m_Head = next(m_Head);
+        }
+        else {
+            next(prev(val)) = next(val);
+            prev(next(val)) = prev(val);
+        }
+    }
+
+    void remove_head() { remove(m_Head); }
+
+    void clear() { m_Head = m_Tail = -1; }
+
+    void print() {
+        std::cerr << m_Head;
+        for (int i = m_Head; i != m_Tail; i = next(i)) {
+            std::cerr << " -> " << next(i);
+        }
+        std::cerr << std::endl;
+    }
+private:
+    int m_Head = -1;
+    int m_Tail = -1;
+    std::vector<int> m_Next;
+    std::vector<int> m_Prev;
+};

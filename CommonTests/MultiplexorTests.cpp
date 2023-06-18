@@ -52,9 +52,9 @@ TEST(TestSectorMap, GetFreeSectors) {
     EXPECT_EQ(map.HasFreeSectors(), true);
 
     map.Free(list2);
-    EXPECT_EQ(map.Next(0), -1);
+    EXPECT_EQ(map.Next(0), 2);
     EXPECT_EQ(map.Next(1), 0);
-    EXPECT_EQ(map.Next(2), 1);
+    EXPECT_EQ(map.Next(2), -1);
     EXPECT_EQ(map.HasFreeSectors(), true);
 }
 

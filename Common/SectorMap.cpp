@@ -15,15 +15,18 @@ SectorMap::SectorMap(int sectorSizeBits, int sectorsCount)
 }
 
 void SectorMap::Free(SectorMap::LinkedList& list) {
+    // return sectors to the beginning of the list so that memory is cache is reused
     if (list.head == -1) return;
     assert(list.tail != -1);
+
     if (m_FreeList.head == -1) {
-        m_FreeList.head = list.head;
+        m_FreeList.tail = list.tail;
     }
     else {
-        Next(m_FreeList.tail) = list.head;
+        Next(list.tail) = m_FreeList.head;
     }
-    m_FreeList.tail = list.tail;
+    m_FreeList.head = list.head;
+
     list.head = list.tail = -1;
 }
 

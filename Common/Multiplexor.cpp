@@ -103,18 +103,20 @@ SmartMultiplexorPart::SmartMultiplexorPart(
     int segmentsCount,
     int mapSectorSizeBits,
     int smallSectorValsBits,
-    size_t largeBufferSize)
+    Buffer<uint8_t>& largeBuffer,
+    Buffer<uint8_t>& encodeBuffer)
     : m_Store(store)
-    , m_Map(mapSectorSizeBits, segmentsCount)
+    , m_Map(mapSectorSizeBits, std::max(segmentsCount, 4))
     , m_Files(segmentsCount, {m_Map})
     , m_SegmentsCount(segmentsCount)
     , m_SmallSectorValsBits(smallSectorValsBits)
     , m_SmallSectorSize(1ui64 << smallSectorValsBits)
     , m_SmallBuffer(m_SegmentsCount << smallSectorValsBits)
     , m_BufLengths(segmentsCount, 0)
-    , m_LargeBuffer(largeBufferSize)
-    , m_EncodeBuffer(StreamVInt::MAX_BUFFER_SIZE)
-    , m_MaxSectorsCount((largeBufferSize + m_Map.GetSectorSize() - 1) / m_Map.GetSectorSize())
+    , m_LargeBuffer(largeBuffer)
+    , m_EncodeBuffer(encodeBuffer)
+    , m_MaxSectorsCount((largeBuffer.Capacity() + m_Map.GetSectorSize() - 1) / m_Map.GetSectorSize())
+    , m_UsedList(segmentsCount)
 {
     ensure(m_SmallSectorSize <= StreamVInt::MAX_INDEXES_COUNT);
 }
@@ -139,15 +141,19 @@ void SmartMultiplexorPart::FlushBuffer(int segment) {
         FlushFile(segment);
     }
     if (!file.CanWriteWithoutExpand(compressed) && !m_Map.HasFreeSectors()) {
-        //
-        // TODO: make linked list of files, and only flush the oldest one
-        //
-        FlushFile(segment);
-        if (!m_Map.HasFreeSectors()) {
-            std::cerr << "no free sectors" << std::endl;
-            FlushAllFiles();
-        }
+        ensure(m_UsedList.head() != -1);
+        //std::cerr 
+        //    << "Flushing old file: seg=" << m_UsedList.head()
+        //    << "; size=" << m_Files[m_UsedList.head()].TotalSize()
+        //    << std::endl;
+        FlushFile(m_UsedList.head());
+        ensure(m_Map.HasFreeSectors());
     }
+
+    if (m_Files[segment].IsEmpty()) {
+        m_UsedList.add(segment);
+    }
+
     m_Files[segment].Write(&m_EncodeBuffer[0], compressed);
     len = 0;
 }
@@ -158,17 +164,12 @@ void SmartMultiplexorPart::FlushFile(int segment) {
     size_t size = file.Read(&m_LargeBuffer[0], m_LargeBuffer.Capacity());
     file.Clear();
     m_Store.WriteArray(segment, &m_LargeBuffer[0], size);
+    m_UsedList.remove(segment);
 }
 
 void SmartMultiplexorPart::FlushAllBuffers() {
     for (size_t i = 0; i < m_BufLengths.size(); i++) {
         FlushBuffer(i);
-        FlushFile(i);
-    }
-}
-
-void SmartMultiplexorPart::FlushAllFiles() {
-    for (size_t i = 0; i < m_Files.size(); i++) {
         FlushFile(i);
     }
 }
@@ -189,8 +190,10 @@ SmartMultiplexor::SmartMultiplexor(
     , m_SegmentsCount(segmentsCount)
     , m_MapSectotSizeBits(mapSectorSizeBits)
     , m_SmallSectorValsBits(smallSectorValsBits)
-    , m_LargeBufferSize(largeBufferSize)
-{}
+    , m_LargeBuffer(largeBufferSize)
+    , m_EncodeBuffer(StreamVInt::MAX_BUFFER_SIZE)
+{
+}
 
 void SmartMultiplexor::Add(int op, int segment, uint32_t value) {
     if (!m_Mults[op].get()) {
@@ -199,7 +202,8 @@ void SmartMultiplexor::Add(int op, int segment, uint32_t value) {
             m_SegmentsCount,
             m_MapSectotSizeBits,
             m_SmallSectorValsBits,
-            m_LargeBufferSize
+            m_LargeBuffer,
+            m_EncodeBuffer
         );
     }
     m_Mults[op]->Add(segment, value);
