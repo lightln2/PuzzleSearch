@@ -21,7 +21,6 @@ void PuzzleGpu::Expand(
     std::vector<int>& expandedOperators)
 {
     auto ops = OperatorsCount();
-    auto opsExp = 1ui64 << ops;
     if (expandedIndexes.capacity() < MAX_INDEXES_BUFFER * ops) {
         expandedIndexes.reserve(MAX_INDEXES_BUFFER * ops);
     }
@@ -34,7 +33,7 @@ void PuzzleGpu::Expand(
     expandedOperators.resize(indexes.size() * ops);
 
     for (uint64_t i = 0; i < indexes.size(); i++) {
-        indexes[i] = (indexes[i] * opsExp) | usedOperatorBits[i];
+        indexes[i] = (indexes[i] << ops) | usedOperatorBits[i];
     }
 
     m_Mutex.lock();
