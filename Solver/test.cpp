@@ -56,14 +56,15 @@ void TestDiskBasedBFS() {
 
     std::string initial = "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15";
 
+    //SlidingTilePuzzleSimple puzzle(4, 4);
     SlidingTilePuzzleGpu puzzle(4, 3);
     PuzzleOptions opts;
-    //opts.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ" };
+    //opts.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ", "h:/PUZ2"};
     opts.directories = { "c:/PUZ", "d:/PUZ"};
     opts.segmentBits = 32;
     opts.threads = 4;
-    //opts.maxSteps = 50;
+    //opts.maxSteps = 26;
     //DiskBasedFrontierSearch(puzzle, initial, opts);
-    //DiskBasedOptFrontierSearch(puzzle, initial, opts);
-    DiskBasedOptThreeBitBFS(puzzle, initial, opts);
+    DiskBasedOptFrontierSearch(puzzle, initial, opts);
+    //DiskBasedOptThreeBitBFS(puzzle, initial, opts);
 }
