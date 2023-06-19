@@ -2,7 +2,6 @@
 
 #include "../ClassicBFS/PermutationMap.h"
 #include "../SlidingTilePuzzle/Util.h"
-#include "../ClassicBFS/GPU.h"
 
 #include <string>
 #include <sstream>

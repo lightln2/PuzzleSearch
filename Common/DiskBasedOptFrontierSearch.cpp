@@ -246,6 +246,8 @@ std::vector<uint64_t> DiskBasedOptFrontierSearchInt(Puzzle& puzzle, std::string 
 std::vector<uint64_t> DiskBasedOptFrontierSearch(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
     int bits = puzzle.OperatorsCount();
     ensure(bits > 0 && bits <= 8);
+    // TODO: op bits compression is currently supported for 4-bit values
+    ensure(bits <= 4);
     if (bits == 1)
         return DiskBasedOptFrontierSearchInt<1>(puzzle, initialState, opts);
     else if (bits == 2)

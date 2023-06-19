@@ -1,21 +1,10 @@
 #pragma once
 
-#include "GPU.h"
-#include "../Common/Puzzle.h"
+#include "PuzzleGpu.h"
 
-#include <cstdint>
-#include <mutex>
 #include <string>
 
-class SlidingTilePuzzleGpu : public Puzzle {
-private:
-    struct Exec {
-        CuStream stream;
-        uint64_t* gpuSrc;
-        uint64_t* gpuDst;
-        Exec();
-        ~Exec();
-    };
+class SlidingTilePuzzleGpu : public PuzzleGpu {
 public:
     SlidingTilePuzzleGpu(int width, int height);
 
@@ -29,17 +18,15 @@ public:
 
     virtual uint64_t Parse(std::string state);
 
-    virtual void Expand(
-        std::vector<uint64_t>& indexes,
-        std::vector<int>& usedOperatorBits,
-        std::vector<uint64_t>& expandedIndexes,
-        std::vector<int>& expandedOperators);
+protected:
+    virtual void ExpandGpu(
+        uint64_t* gpuIndexes,
+        uint64_t* gpuExpanded,
+        uint64_t count,
+        CuStream stream);
 
 private:
     int m_Width;
     int m_Height;
     int m_Size;
-    std::mutex m_Mutex;
-    std::vector<std::unique_ptr<Exec>> m_Streams;
-    std::vector<Exec*> m_FreeStreams;
 };

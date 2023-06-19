@@ -4,14 +4,31 @@
     <ClCompile Include="PermutationMap.cpp" />
     <ClCompile Include="SlidingTilePuzzleSimple.cpp" />
     <ClCompile Include="SlidingTilePuzzleGpu.cpp" />
+    <ClCompile Include="PuzzleGpu.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PermutationMap.h" />
-    <ClInclude Include="GPU.h" />
     <ClInclude Include="SlidingTilePuzzleSimple.h" />
     <ClInclude Include="SlidingTilePuzzleGpu.h" />
+    <ClInclude Include="PuzzleGpu.h" />
+    <ClInclude Include="GPU.h">
+      <Filter>Gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="SlidingPuzzleGpu.h">
+      <Filter>Gpu</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="Gpu.cu" />
+    <CudaCompile Include="Gpu.cu">
+      <Filter>Gpu</Filter>
+    </CudaCompile>
+    <CudaCompile Include="SlidingPuzzleGpu.cu">
+      <Filter>Gpu</Filter>
+    </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Gpu">
+      <UniqueIdentifier>{25f3c0ea-be12-4c4e-8019-57e541c3ad96}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>
