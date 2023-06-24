@@ -5,6 +5,7 @@
     <ClCompile Include="SlidingTilePuzzleSimple.cpp" />
     <ClCompile Include="SlidingTilePuzzleGpu.cpp" />
     <ClCompile Include="PuzzleGpu.cpp" />
+    <ClCompile Include="SlidingTilePuzzleOptimized.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PermutationMap.h" />
@@ -17,6 +18,7 @@
     <ClInclude Include="SlidingPuzzleGpu.h">
       <Filter>Gpu</Filter>
     </ClInclude>
+    <ClInclude Include="SlidingTilePuzzleOptimized.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="Gpu.cu">

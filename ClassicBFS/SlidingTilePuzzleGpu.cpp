@@ -6,21 +6,6 @@
 
 #include <sstream>
 
-namespace {
-    const int OP_UP = 0, OP_LEFT = 1, OP_RIGHT = 2, OP_DOWN = 3;
-
-    bool HasOp(int op, int dir) {
-        return op & (1 << dir);
-    }
-
-    void Move(int* arr, int* newarr, int blank, int newblank) {
-        memcpy(newarr, arr, 16 * sizeof(int));
-        newarr[blank] = arr[newblank];
-        newarr[newblank] = arr[blank];
-    }
-
-}
-
 SlidingTilePuzzleGpu::SlidingTilePuzzleGpu(int width, int height)
     : m_Width(width)
     , m_Height(height)

@@ -111,6 +111,7 @@
     <ClCompile Include="PermutationMap.cpp" />
     <ClCompile Include="PuzzleGpu.cpp" />
     <ClCompile Include="SlidingTilePuzzleGpu.cpp" />
+    <ClCompile Include="SlidingTilePuzzleOptimized.cpp" />
     <ClCompile Include="SlidingTilePuzzleSimple.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -123,6 +124,7 @@
     <ClInclude Include="PuzzleGpu.h" />
     <ClInclude Include="SlidingPuzzleGpu.h" />
     <ClInclude Include="SlidingTilePuzzleGpu.h" />
+    <ClInclude Include="SlidingTilePuzzleOptimized.h" />
     <ClInclude Include="SlidingTilePuzzleSimple.h" />
   </ItemGroup>
   <ItemGroup>

@@ -4,6 +4,7 @@
 #include "../Common/InMemoryBFS.h"
 #include "../ClassicBFS/SlidingTilePuzzleGpu.h"
 #include "../ClassicBFS/SlidingTilePuzzleSimple.h"
+#include "../ClassicBFS/SlidingTilePuzzleOptimized.h"
 #include "../Common/DiskBasedBFS.h"
 
 void TestBitArray() {
@@ -57,7 +58,8 @@ void TestDiskBasedBFS() {
     std::string initial = "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15";
 
     //SlidingTilePuzzleSimple puzzle(4, 4);
-    SlidingTilePuzzleGpu puzzle(4, 3);
+    //SlidingTilePuzzleGpu puzzle(4, 3);
+    SlidingTilePuzzleOptimized<4, 3> puzzle;
     PuzzleOptions opts;
     //opts.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ", "h:/PUZ2"};
     opts.directories = { "c:/PUZ", "d:/PUZ"};

@@ -3,7 +3,6 @@
   <ItemGroup>
     <ClCompile Include="File.cpp" />
     <ClCompile Include="Store.cpp" />
-    <ClCompile Include="BitArray.h" />
     <ClCompile Include="Multiplexor.cpp" />
     <ClCompile Include="SegmentReader.cpp" />
     <ClCompile Include="SegmentWriter.cpp" />
@@ -47,10 +46,12 @@
     <ClCompile Include="DiskBasedOptThreeBitBFS.cpp">
       <Filter>DiskBasedBFS</Filter>
     </ClCompile>
+    <ClCompile Include="BitArray.h">
+      <Filter>Util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="File.h" />
-    <ClInclude Include="Buffer.h" />
     <ClInclude Include="Store.h" />
     <ClInclude Include="Puzzle.h" />
     <ClInclude Include="Multiplexor.h" />
@@ -68,10 +69,15 @@
     <ClInclude Include="DiskBasedBFS.h">
       <Filter>DiskBasedBFS</Filter>
     </ClInclude>
-    <ClInclude Include="Array.h" />
     <ClInclude Include="StreamVInt.h" />
     <ClInclude Include="CompressedFrontier.h" />
     <ClInclude Include="SectorMap.h" />
+    <ClInclude Include="Array.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="Buffer.h">
+      <Filter>Util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Util">
