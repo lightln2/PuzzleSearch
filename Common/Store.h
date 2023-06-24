@@ -9,6 +9,17 @@
 #include <string>
 #include <vector>
 
+struct StoreOptions {
+    /* segments are split across these paths in round-robin order */
+    std::vector<std::string> paths;
+    /*  
+    * segments are stored sequentially in this number of files.
+    * 0 means store each segment in a separate file;
+    * 1 meand store all segments in a single file
+    */
+    int filesCount = 10;
+};
+
 class StoreImpl {
 public:
     virtual ~StoreImpl() noexcept {};

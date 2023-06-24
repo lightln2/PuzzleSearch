@@ -14,6 +14,7 @@ namespace file {
     void DeleteFile(const std::string& fileName);
     void CreateDirectory(const std::string& directory);
     void DeleteDirectory(const std::string& directory);
+    bool FileExists(const std::string& fileName);
 
     void Seek(FHANDLE fd, uint64_t offset);
     size_t Read(FHANDLE fd, void* buffer, size_t size);

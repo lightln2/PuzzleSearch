@@ -79,4 +79,9 @@ namespace file {
         RemoveDirectoryA(directory.c_str());
     }
 
+    bool FileExists(const std::string& fileName) {
+        auto attrs = GetFileAttributesA(fileName.c_str());
+        return attrs != INVALID_FILE_ATTRIBUTES;
+    }
+
 } // namespace file
