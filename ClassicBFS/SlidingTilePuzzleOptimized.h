@@ -8,7 +8,6 @@ struct VPuzzleState {
     int tiles[16];
     VPuzzleState() = default;
     VPuzzleState(int tiles[16]) { memcpy(this->tiles, tiles, sizeof(this->tiles)); }
-    std::string ToString();
 };
 
 template<int width, int height>

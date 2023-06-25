@@ -4,6 +4,7 @@
 #include <device_launch_parameters.h>
 
 #include <iostream>
+#include <stdio.h>
 
 constexpr int OP_UP = 0, OP_LEFT = 1, OP_RIGHT = 2, OP_DOWN = 3;
 constexpr uint64_t INVALID_INDEX = std::numeric_limits<uint64_t>::max();
@@ -130,7 +131,7 @@ __device__ void from_index(int* arr, uint32_t index) {
 }
 
 template <int size>
-__device__ int32_t to_index(int* arr) {
+__device__ uint32_t to_index(int* arr) {
     auto blank = arr[OFFSET_ZERO];
     uint32_t index = 0;
     for (uint32_t i = 11; i >= 2; i--)
@@ -164,7 +165,7 @@ __device__ void unpack(int* arr) {
     }
     // restore parity
     bool rowEven = ((arr[OFFSET_ZERO] / width) & 1) == 0;
-    bool restoreParity = (widthIsEven && invEven == rowEven) || (!widthIsEven && invEven);
+    bool restoreParity = (widthIsEven && !invEven == rowEven) || (!widthIsEven && !invEven);
     if (restoreParity) {
         auto tmp = arr[0];
         arr[0] = arr[1];

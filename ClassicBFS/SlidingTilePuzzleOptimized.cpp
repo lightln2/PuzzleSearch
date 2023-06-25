@@ -72,7 +72,7 @@ namespace {
         assert(pos == size - 1);
         tiles[BLANK_POS] = blank;
         VPuzzleState result{ tiles };
-        assert((Parity<width, height>(result)));
+        ensure((Parity<width, height>(result)));
         return result;
     }
 
@@ -207,18 +207,9 @@ namespace {
 
 } // namespace
 
-std::string VPuzzleState::ToString() {
-    std::ostringstream stream;
-    for (int i = 0; i < 15; i++) {
-        stream << tiles[i] << ' ';
-    }
-    stream << "b=" << tiles[15];
-    return stream.str();
-}
-
 template<int width, int height>
 uint64_t SlidingTilePuzzleOptimized<width, height>::IndexesCount() const {
-    uint64_t segments = MaxSegments<size>();
+    constexpr uint64_t segments = MaxSegments<size>();
     return segments == 1 ?
         MaxIndexesPerSegment<size>() :
         segments << 32;
@@ -228,7 +219,7 @@ template<int width, int height>
 std::string SlidingTilePuzzleOptimized<width, height>::ToString(uint64_t index) {
     VPuzzleState state = FromIndex<width, height>((index >> 32) & 0xFFFFFFFF, index & 0xFFFFFFFF);
     state = Unpack<width, height>(state);
-    return state.ToString();
+    return ::ToString<width, height>(state);
 }
 
 template<int width, int height>
@@ -236,7 +227,13 @@ uint64_t SlidingTilePuzzleOptimized<width, height>::Parse(std::string stateStr) 
     VPuzzleState state = ParseState<width, height>(stateStr);
     state = Pack<width, height>(state);
     auto [seg, idx] = GetIndex<width, height>(state);
-    return (uint64_t(seg) << 32) | idx;
+    uint64_t index = (uint64_t(seg) << 32) | idx;
+    auto restoredStr = ToString(index);
+    if (restoredStr != stateStr) {
+        std::cerr << "Restored: " << restoredStr << "; orig: " << stateStr << std::endl;
+        ensure(false);
+    }
+    return index;
 }
 
 template<int width, int height>
