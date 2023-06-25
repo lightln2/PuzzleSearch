@@ -186,6 +186,56 @@ private:
     BitArray m_Array;
 };
 
+class IndexedBitArray {
+    static constexpr size_t STEP = 1024;
+public:
+    IndexedBitArray(uint64_t size)
+        : m_Array(size)
+        , m_Index((m_Array.DataSize() + STEP - 1) / STEP)
+    {}
+
+    void Set(uint64_t index) {
+        m_Array.Set(index);
+        m_Index.Set((index) / (64 * STEP));
+    }
+
+    bool Get(uint64_t index) {
+        return m_Array.Get(index);
+    }
+
+    void Clear() {
+        m_Array.Clear();
+        m_Index.Clear();
+    }
+
+    void Clear(uint64_t index) {
+        m_Array.Clear(index);
+    }
+
+    uint64_t* Data() { return m_Array.Data(); }
+    const uint64_t* Data() const { return m_Array.Data(); }
+    size_t DataSize() const { return m_Array.DataSize(); }
+
+    template<typename F>
+    void ScanBitsAndClear(F func) {
+        uint64_t* ptr = Data();
+        uint64_t arrSize = DataSize();
+        m_Index.ScanBitsAndClear([&](uint64_t index) {
+            uint64_t offset = index * STEP;
+            for (size_t i = offset; i < std::min(arrSize, offset + STEP); i++) {
+                uint64_t val = ptr[i];
+                if (val == 0) continue;
+                ptr[i] = 0;
+                ::ScanBits(val, i * 64, func);
+            }
+        });
+    }
+
+private:
+    BitArray m_Array;
+    BitArray m_Index;
+};
+
 template<int BITS>
 class IndexedArray {
     static constexpr size_t STEP = 1024;

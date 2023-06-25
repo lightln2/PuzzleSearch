@@ -139,7 +139,7 @@ private:
     ExpandBuffer Expander;
 
     BitArray CurArray;
-    BitArray NextArray;
+    IndexedBitArray NextArray;
 };
 
 std::vector<uint64_t> DiskBasedOptThreeBitBFS(Puzzle& puzzle, std::string initialState, PuzzleOptions opts) {
