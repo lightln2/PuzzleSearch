@@ -175,6 +175,7 @@ public:
     }
 
     virtual void DeleteAll() {
+        if (m_TotalLength == 0) return;
         m_TotalLength = 0;
         m_NonemptySegments = 0;
         m_Chunks.clear();

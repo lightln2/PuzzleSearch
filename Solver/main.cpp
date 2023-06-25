@@ -88,6 +88,7 @@ void MTFrontierSearch4x3() {
 void TestBitArray();
 void TestClassicBFS();
 void TestDiskBasedBFS();
+void TestDiskBasedHanoi();
 
 int main() {
     try {
@@ -101,7 +102,8 @@ int main() {
 
         //TestBitArray();
         //TestClassicBFS();
-        TestDiskBasedBFS();
+        //TestDiskBasedBFS();
+        TestDiskBasedHanoi();
     }
     catch (const std::exception& ex) {
         std::cerr << "Error: " << ex.what() << std::endl;

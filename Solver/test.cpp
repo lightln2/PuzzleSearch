@@ -6,6 +6,7 @@
 #include "../ClassicBFS/SlidingTilePuzzleSimple.h"
 #include "../ClassicBFS/SlidingTilePuzzleOptimized.h"
 #include "../Common/DiskBasedBFS.h"
+#include "../ClassicBFS/FourPegHanoiSimple.h"
 
 void TestBitArray() {
     constexpr int TRY = 10;
@@ -56,16 +57,36 @@ void TestClassicBFS() {
 void TestDiskBasedBFS() {
 
     std::string initial = "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15";
+    //std::string initial = "0 1 2 3 4 5";
 
     //SlidingTilePuzzleSimple puzzle(4, 4);
-    //SlidingTilePuzzleGpu puzzle(4, 3);
-    SlidingTilePuzzleOptimized<4, 3> puzzle;
+    //SlidingTilePuzzleGpu puzzle(4, 4);
+    SlidingTilePuzzleOptimized<4, 4> puzzle;
     PuzzleOptions opts;
-    //opts.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ", "h:/PUZ2"};
-    opts.directories = { "c:/PUZ", "d:/PUZ"};
+    opts.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ", "h:/PUZ2"};
+    //opts.directories = { "c:/PUZ", "d:/PUZ"};
     opts.segmentBits = 32;
     opts.threads = 4;
-    //opts.maxSteps = 26;
+    //opts.maxSteps = 30;
+    //DiskBasedFrontierSearch(puzzle, initial, opts);
+    DiskBasedOptFrontierSearch(puzzle, initial, opts);
+    //DiskBasedOptThreeBitBFS(puzzle, initial, opts);
+}
+
+
+void TestDiskBasedHanoi() {
+    FourPegHanoiSimple puzzle(22);
+    std::string initial = puzzle.ToString(0);
+
+    PuzzleOptions opts;
+    //opts.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ", "h:/PUZ2" };
+    opts.directories = { "c:/PUZ", "d:/PUZ"};
+    opts.segmentBits = 32;
+    opts.threads = 3;
+    //opts.maxSteps = 4;
+    //InMemoryClassicBFS(puzzle, initial);
+    //InMemoryFrontierSearch(puzzle, initial);
+    //DiskBasedClassicBFS(puzzle, initial, opts);
     //DiskBasedFrontierSearch(puzzle, initial, opts);
     DiskBasedOptFrontierSearch(puzzle, initial, opts);
     //DiskBasedOptThreeBitBFS(puzzle, initial, opts);

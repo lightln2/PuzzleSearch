@@ -36,7 +36,7 @@ std::vector<uint64_t> InMemoryClassicBFS(Puzzle& puzzle, std::string initialStat
         if (count == 0) break;
         result.push_back(count);
         std::swap(openList, newOpenList);
-        std::cerr << "Step: " << result.size() << "; count: " << count << std::endl;
+        std::cerr << "Step: " << result.size() - 1 << "; count: " << count << std::endl;
     }
 
     std::cerr << "Time: " << timer << std::endl;

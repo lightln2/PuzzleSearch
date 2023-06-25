@@ -197,7 +197,7 @@ std::vector<uint64_t> DiskBasedClassicBFS(Puzzle& puzzle, std::string initialSta
         result.push_back(totalCount);
         fnSwapStores();
         std::cerr 
-            << "Step: " << result.size() 
+            << "Step: " << result.size() - 1
             << "; count: " << totalCount
             << " in " << stepTimer 
             << "; size: open=" << WithSize(currentOpenListStore.TotalLength())

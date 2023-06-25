@@ -108,6 +108,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="FourPegHanoiSimple.cpp" />
     <ClCompile Include="PermutationMap.cpp" />
     <ClCompile Include="PuzzleGpu.cpp" />
     <ClCompile Include="SlidingTilePuzzleGpu.cpp" />
@@ -119,6 +120,7 @@
     <CudaCompile Include="SlidingPuzzleGpu.cu" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="FourPegHanoiSimple.h" />
     <ClInclude Include="GPU.h" />
     <ClInclude Include="PermutationMap.h" />
     <ClInclude Include="PuzzleGpu.h" />
