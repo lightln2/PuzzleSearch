@@ -149,6 +149,17 @@ public:
         }
     }
 
+    template<typename F>
+    void ScanBitsAndClearWithExcl(F func, const BitArray& excl) {
+        const auto* exclData = excl.Data();
+        for (size_t i = 0; i < m_Values.size(); ++i) {
+            const uint64_t val = m_Values[i];
+            if (val == 0) continue;
+            m_Values[i] = 0;
+            ::ScanBits(val & ~exclData[i], i * 64, func);
+        }
+    }
+
 private:
     std::vector<uint64_t> m_Values;
 };
@@ -222,7 +233,8 @@ public:
         uint64_t arrSize = DataSize();
         m_Index.ScanBitsAndClear([&](uint64_t index) {
             uint64_t offset = index * STEP;
-            for (size_t i = offset; i < std::min(arrSize, offset + STEP); i++) {
+            uint64_t end = std::min(arrSize, offset + STEP);
+            for (size_t i = offset; i < end; i++) {
                 uint64_t val = ptr[i];
                 if (val == 0) continue;
                 ptr[i] = 0;
@@ -232,13 +244,14 @@ public:
     }
 
     template<typename F>
-    void ScanBitsAndClearWithExcl(F func, BitArray exclude) {
+    void ScanBitsAndClearWithExcl(F func, const BitArray& exclude) {
         uint64_t* ptr = Data();
         uint64_t arrSize = DataSize();
         const uint64_t* exclPtr = exclude.Data();
         m_Index.ScanBitsAndClear([&](uint64_t index) {
             uint64_t offset = index * STEP;
-            for (size_t i = offset; i < std::min(arrSize, offset + STEP); i++) {
+            uint64_t end = std::min(arrSize, offset + STEP);
+            for (size_t i = offset; i < end; i++) {
                 uint64_t val = ptr[i];
                 if (val == 0) continue;
                 ptr[i] = 0;
