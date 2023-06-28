@@ -108,6 +108,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="FourPegHanoiGPU.cpp" />
     <ClCompile Include="FourPegHanoiSimple.cpp" />
     <ClCompile Include="PermutationMap.cpp" />
     <ClCompile Include="PuzzleGpu.cpp" />
@@ -118,8 +119,10 @@
   <ItemGroup>
     <CudaCompile Include="Gpu.cu" />
     <CudaCompile Include="SlidingPuzzleGpu.cu" />
+    <CudaCompile Include="HanoiTowersGpu.cu" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="FourPegHanoiGPU.h" />
     <ClInclude Include="FourPegHanoiSimple.h" />
     <ClInclude Include="GPU.h" />
     <ClInclude Include="PermutationMap.h" />
@@ -128,6 +131,7 @@
     <ClInclude Include="SlidingTilePuzzleGpu.h" />
     <ClInclude Include="SlidingTilePuzzleOptimized.h" />
     <ClInclude Include="SlidingTilePuzzleSimple.h" />
+    <ClInclude Include="HanoiTowersGPU.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.vcxproj">

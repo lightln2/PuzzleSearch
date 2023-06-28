@@ -240,6 +240,9 @@ std::vector<uint64_t> DiskBasedOptFrontierSearchInt(Puzzle& puzzle, std::string 
         << "; x-seg=" << WithSize(total_sz_xseg)
         << std::endl;
     std::cerr << "Max size: " << WithSize(max_size) << std::endl;
+    uint64_t sum = 0;
+    for (auto w : result) sum += w;
+    std::cerr << "Total processed: " << WithDecSep(sum) << std::endl;
     return result;
 }
 

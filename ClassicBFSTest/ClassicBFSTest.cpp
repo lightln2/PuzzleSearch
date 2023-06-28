@@ -2,6 +2,7 @@
 
 #include "../ClassicBFS/SlidingTilePuzzleGpu.h"
 #include "../ClassicBFS/SlidingTilePuzzleSimple.h"
+#include "../ClassicBFS/FourPegHanoiSimple.h"
 #include "../Common/InMemoryBFS.h"
 #include "../Common/DiskBasedBFS.h"
 
@@ -270,4 +271,50 @@ TEST(SlidingTile_DiskBased_GPU, Opt3BitBFS_5x2_7seg_4th) {
     opts.threads = 4;
     auto result = DiskBasedOptThreeBitBFS(puzzle, "0 1 2 3 4 5 6 7 8 9", opts);
     EXPECT_EQ(ToString(result), ST5x2);
+}
+
+
+TEST(HanoiTowers_DiskBased_CPU, ClassicBFS_10) {
+    FourPegHanoiSimple puzzle(10);
+    PuzzleOptions opts;
+    opts.segmentBits = 32;
+    opts.threads = 1;
+    auto result = DiskBasedClassicBFS(puzzle, puzzle.ToString(0), opts);
+    EXPECT_EQ(ToString(result), "1 3 6 12 30 30 66 96 126 210 330 318 462 816 1032 936 1044 1752 2610 3036 3528 3306 4578 6318 9108 10674 11580 11844 13374 17124 23664 32184 36984 39810 38484 39768 45498 56838 74880 91506 106134 109890 91878 63528 45474 32598 12978 1908 210 12");
+}
+
+TEST(HanoiTowers_DiskBased_CPU, OptFS_10_mt) {
+    FourPegHanoiSimple puzzle(10);
+    PuzzleOptions opts;
+    opts.segmentBits = 20;
+    opts.threads = 4;
+    auto result = DiskBasedOptFrontierSearch(puzzle, puzzle.ToString(0), opts);
+    EXPECT_EQ(ToString(result), "1 3 6 12 30 30 66 96 126 210 330 318 462 816 1032 936 1044 1752 2610 3036 3528 3306 4578 6318 9108 10674 11580 11844 13374 17124 23664 32184 36984 39810 38484 39768 45498 56838 74880 91506 106134 109890 91878 63528 45474 32598 12978 1908 210 12");
+}
+
+TEST(HanoiTowers_DiskBased_CPU, ClassicBFS_10_Sym) {
+    FourPegHanoiSimple puzzle(10, true);
+    PuzzleOptions opts;
+    opts.segmentBits = 32;
+    opts.threads = 1;
+    auto result = DiskBasedClassicBFS(puzzle, puzzle.ToString(0), opts);
+    EXPECT_EQ(ToString(result), "1 1 1 3 5 7 11 16 24 36 55 56 81 137 172 162 183 293 435 506 588 562 779 1056 1519 1780 1930 1983 2249 2871 3957 5367 6165 6638 6425 6654 7608 9511 12500 15255 17690 18320 15339 10630 7614 5496 2214 334 52 4");
+}
+
+TEST(HanoiTowers_DiskBased_CPU, OptFS_10_mt_Sym) {
+    FourPegHanoiSimple puzzle(10, true);
+    PuzzleOptions opts;
+    opts.segmentBits = 20;
+    opts.threads = 4;
+    auto result = DiskBasedOptFrontierSearch(puzzle, puzzle.ToString(0), opts);
+    EXPECT_EQ(ToString(result), "1 1 1 3 5 7 11 16 24 36 55 56 81 137 172 162 183 293 435 506 588 562 779 1056 1519 1780 1930 1983 2249 2871 3957 5367 6165 6638 6425 6654 7608 9511 12500 15255 17690 18320 15339 10630 7614 5496 2214 334 52 4");
+}
+
+TEST(HanoiTowers_DiskBased_CPU, Opt3BitBFS_10_mt_Sym) {
+    FourPegHanoiSimple puzzle(10, true);
+    PuzzleOptions opts;
+    opts.segmentBits = 20;
+    opts.threads = 4;
+    auto result = DiskBasedOptThreeBitBFS(puzzle, puzzle.ToString(0), opts);
+    EXPECT_EQ(ToString(result), "1 1 1 3 5 7 11 16 24 36 55 56 81 137 172 162 183 293 435 506 588 562 779 1056 1519 1780 1930 1983 2249 2871 3957 5367 6165 6638 6425 6654 7608 9511 12500 15255 17690 18320 15339 10630 7614 5496 2214 334 52 4");
 }

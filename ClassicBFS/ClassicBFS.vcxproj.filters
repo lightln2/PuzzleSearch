@@ -7,6 +7,7 @@
     <ClCompile Include="PuzzleGpu.cpp" />
     <ClCompile Include="SlidingTilePuzzleOptimized.cpp" />
     <ClCompile Include="FourPegHanoiSimple.cpp" />
+    <ClCompile Include="FourPegHanoiGPU.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PermutationMap.h" />
@@ -21,12 +22,19 @@
     </ClInclude>
     <ClInclude Include="SlidingTilePuzzleOptimized.h" />
     <ClInclude Include="FourPegHanoiSimple.h" />
+    <ClInclude Include="HanoiTowersGPU.h">
+      <Filter>Gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="FourPegHanoiGPU.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="Gpu.cu">
       <Filter>Gpu</Filter>
     </CudaCompile>
     <CudaCompile Include="SlidingPuzzleGpu.cu">
+      <Filter>Gpu</Filter>
+    </CudaCompile>
+    <CudaCompile Include="HanoiTowersGpu.cu">
       <Filter>Gpu</Filter>
     </CudaCompile>
   </ItemGroup>

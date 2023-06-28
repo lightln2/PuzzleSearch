@@ -12,10 +12,13 @@ private:
         CuStream stream;
         uint64_t* gpuSrc;
         uint64_t* gpuDst;
-        Exec();
+        Exec(int branchingFactor);
         ~Exec();
     };
 public:
+
+    virtual int BranchingFactor() const { return OperatorsCount(); }
+
     virtual void Expand(
         std::vector<uint64_t>& indexes,
         std::vector<int>& usedOperatorBits,

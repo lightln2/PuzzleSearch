@@ -9,10 +9,13 @@
 constexpr int OP_UP = 0, OP_LEFT = 1, OP_RIGHT = 2, OP_DOWN = 3;
 constexpr uint64_t INVALID_INDEX = std::numeric_limits<uint64_t>::max();
 
-__device__ bool HasOp(int op, int dir) {
-    return op & (1 << dir);
-}
+namespace {
 
+    __device__ bool HasOp(int op, int dir) {
+        return op & (1 << dir);
+    }
+
+}
 __device__ void Move(int* arr, int* newarr, int blank, int newblank) {
     for (int i = 0; i < 16; i++) newarr[i] = arr[i];
     newarr[blank] = arr[newblank];

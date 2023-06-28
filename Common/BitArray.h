@@ -231,6 +231,22 @@ public:
         });
     }
 
+    template<typename F>
+    void ScanBitsAndClearWithExcl(F func, BitArray exclude) {
+        uint64_t* ptr = Data();
+        uint64_t arrSize = DataSize();
+        const uint64_t* exclPtr = exclude.Data();
+        m_Index.ScanBitsAndClear([&](uint64_t index) {
+            uint64_t offset = index * STEP;
+            for (size_t i = offset; i < std::min(arrSize, offset + STEP); i++) {
+                uint64_t val = ptr[i];
+                if (val == 0) continue;
+                ptr[i] = 0;
+                ::ScanBits(val & ~exclPtr[i], i * 64, func);
+            }
+        });
+    }
+
 private:
     BitArray m_Array;
     BitArray m_Index;

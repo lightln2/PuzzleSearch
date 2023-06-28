@@ -1,10 +1,10 @@
 #include "PuzzleGpu.h"
 #include "GPU.h"
 
-PuzzleGpu::Exec::Exec()
+PuzzleGpu::Exec::Exec(int branchingFactor)
     : stream(CreateCudaStream())
     , gpuSrc(CreateGPUBuffer(MAX_INDEXES_BUFFER))
-    , gpuDst(CreateGPUBuffer(MAX_INDEXES_BUFFER * 4))
+    , gpuDst(CreateGPUBuffer(MAX_INDEXES_BUFFER * branchingFactor))
 {}
 
 PuzzleGpu::Exec::~Exec()
@@ -20,17 +20,18 @@ void PuzzleGpu::Expand(
     std::vector<uint64_t>& expandedIndexes,
     std::vector<int>& expandedOperators)
 {
+    auto br = BranchingFactor();
     auto ops = OperatorsCount();
-    if (expandedIndexes.capacity() < MAX_INDEXES_BUFFER * ops) {
-        expandedIndexes.reserve(MAX_INDEXES_BUFFER * ops);
+    if (expandedIndexes.capacity() < MAX_INDEXES_BUFFER * br) {
+        expandedIndexes.reserve(MAX_INDEXES_BUFFER * br);
     }
-    if (expandedOperators.capacity() < MAX_INDEXES_BUFFER * ops) {
-        expandedOperators.reserve(MAX_INDEXES_BUFFER * ops);
+    if (expandedOperators.capacity() < MAX_INDEXES_BUFFER * br) {
+        expandedOperators.reserve(MAX_INDEXES_BUFFER * br);
     }
     expandedIndexes.clear();
     expandedOperators.clear();
-    expandedIndexes.resize(indexes.size() * ops);
-    expandedOperators.resize(indexes.size() * ops);
+    expandedIndexes.resize(indexes.size() * br);
+    expandedOperators.resize(indexes.size() * br);
 
     for (uint64_t i = 0; i < indexes.size(); i++) {
         indexes[i] = (indexes[i] << ops) | usedOperatorBits[i];
@@ -38,7 +39,7 @@ void PuzzleGpu::Expand(
 
     m_Mutex.lock();
     if (m_FreeStreams.empty()) {
-        m_Streams.emplace_back(std::make_unique<Exec>());
+        m_Streams.emplace_back(std::make_unique<Exec>(br));
         m_FreeStreams.push_back(m_Streams.back().get());
         //std::cerr << "added new stream: " << m_Streams.size() << std::endl;
     }
@@ -50,7 +51,7 @@ void PuzzleGpu::Expand(
 
     ExpandGpu(stream->gpuSrc, stream->gpuDst, indexes.size(), stream->stream);
 
-    CopyFromGpu(stream->gpuDst, &expandedIndexes[0], indexes.size() * 4, stream->stream);
+    CopyFromGpu(stream->gpuDst, &expandedIndexes[0], indexes.size() * br, stream->stream);
 
     m_Mutex.lock();
     m_FreeStreams.push_back(stream);
@@ -60,6 +61,6 @@ void PuzzleGpu::Expand(
         auto val = expandedIndexes[i];
         expandedOperators[i] = val & 15;
         // sign shift so that INVALID_INDEX remains the same
-        expandedIndexes[i] = (uint64_t)((int64_t)val >> 4);
+        expandedIndexes[i] = (uint64_t)((int64_t)val >> ops);
     }
 }

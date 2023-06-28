@@ -20,6 +20,15 @@ namespace {
             bottom[peg] = disk;
         }
 
+        bool can_move(int srcPeg, int dstPeg) {
+            if (srcPeg == dstPeg) return false;
+            int srcDisk = top[srcPeg];
+            if (srcDisk == -1) return false;
+            int dstDisk = top[dstPeg];
+            if (dstDisk != -1 && dstDisk < srcDisk) return false;
+            return true;
+        }
+
         bool move(int srcPeg, int dstPeg) {
             if (srcPeg == dstPeg) return false;
             int srcDisk = top[srcPeg];
@@ -37,6 +46,26 @@ namespace {
                 next[srcDisk] = dstDisk;
             }
             return true;
+        }
+
+        int restore_symmetry(int dstPeg) {
+            int pegs[4]{ 0, 1, 2, 3 };
+            auto fn_restore = [&](int i, int j) {
+                if (bottom[i] < bottom[j]) {
+                    std::swap(top[i], top[j]);
+                    std::swap(bottom[i], bottom[j]);
+                    std::swap(pegs[i], pegs[j]);
+                }
+            };
+            fn_restore(2, 3);
+            fn_restore(1, 2);
+            fn_restore(2, 3);
+            int invpegs[4];
+            invpegs[pegs[0]] = 0;
+            invpegs[pegs[1]] = 1;
+            invpegs[pegs[2]] = 2;
+            invpegs[pegs[3]] = 3;
+            return invpegs[dstPeg];
         }
     };
 
@@ -85,7 +114,6 @@ namespace {
 
     FPState IndexToState(int size, uint64_t index) {
         FPState state;
-        int tail[4]{ -1 };
         for (int i = 0; i < 32; i++) state.next[i] = -1;
         for (int i = 0; i < 4; i++) state.top[i] = -1;
         for (int disk = 0; disk < size; disk++) {
@@ -97,8 +125,9 @@ namespace {
 
 } // namespace
 
-FourPegHanoiSimple::FourPegHanoiSimple(int size)
+FourPegHanoiSimple::FourPegHanoiSimple(int size, bool useSymmetry)
     : m_Size(size)
+    , m_UseSymmetry(useSymmetry)
 {}
 
 uint64_t FourPegHanoiSimple::IndexesCount() const {
@@ -122,16 +151,15 @@ void FourPegHanoiSimple::Expand(uint64_t index, int op, uint64_t* children, int*
     for (int peg1 = 0; peg1 < 4; peg1++) {
         for (int peg2 = peg1 + 1; peg2 < 4; peg2++) {
             FPState s2 = state;
-            if (s2.move(peg1, peg2)) {
-                if (!HasOp(op, peg1)) {
-                    children[pos] = StateToIndex(s2);
-                    operators[pos] = peg2;
+            int p1 = peg1, p2 = peg2;
+            if (!s2.can_move(p1, p2)) std::swap(p1, p2);
+            if (s2.move(p1, p2)) {
+                if (m_UseSymmetry) {
+                    p2 = s2.restore_symmetry(p2);
                 }
-            }
-            else if (s2.move(peg2, peg1)) {
-                if (!HasOp(op, peg2)) {
+                if (!HasOp(op, p1)) {
                     children[pos] = StateToIndex(s2);
-                    operators[pos] = peg1;
+                    operators[pos] = p2;
                 }
             }
             pos++;

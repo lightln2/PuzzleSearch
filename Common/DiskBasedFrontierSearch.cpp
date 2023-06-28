@@ -86,6 +86,13 @@ public:
         }
         CrossSegmentReader.Delete(segment);
 
+        if (!hasData) {
+            if (SOpts.HasOddLengthCycles) {
+                FrontierReader.Delete(segment);
+            }
+            return 0;
+        }
+
         if (SOpts.HasOddLengthCycles) {
             while (true) {
                 auto& vect = FrontierReader.Read();
@@ -98,8 +105,6 @@ public:
             }
             FrontierReader.Delete(segment);
         }
-
-        if (!hasData) return 0;
 
         uint64_t count = 0;
         Array.ScanBitsAndClear([&](uint64_t index, int opBits) {

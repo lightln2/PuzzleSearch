@@ -111,16 +111,25 @@ public:
 
         uint64_t count = 0;
 
-        NextArray.ScanBitsAndClear([&](uint64_t index) {
-            if (SOpts.HasOddLengthCycles && CurArray.Get(index)) return;
-            count++;
-            Expander.Add(indexBase | index, 0, fnExpandCrossSegment);
-            FrontierWriter.Add(uint32_t(index));
-        });
+        if (SOpts.HasOddLengthCycles) {
+            NextArray.ScanBitsAndClearWithExcl([&](uint64_t index) {
+                count++;
+                Expander.Add(indexBase | index, 0, fnExpandCrossSegment);
+                FrontierWriter.Add(uint32_t(index));
+            }, CurArray);
+            CurArray.Clear();
+        }
+        else {
+            NextArray.ScanBitsAndClear([&](uint64_t index) {
+                if (SOpts.HasOddLengthCycles && CurArray.Get(index)) return;
+                count++;
+                Expander.Add(indexBase | index, 0, fnExpandCrossSegment);
+                FrontierWriter.Add(uint32_t(index));
+            });
+        }
         Expander.Finish(fnExpandCrossSegment);
         FrontierWriter.Flush();
 
-        if (SOpts.HasOddLengthCycles) CurArray.Clear();
 
         return count;
     }
