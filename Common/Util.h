@@ -28,6 +28,7 @@ struct Timer {
     std::chrono::steady_clock::time_point start;
     Timer() : start(std::chrono::high_resolution_clock::now()) {}
     uint64_t Elapsed() const { return (std::chrono::high_resolution_clock::now() - start).count(); }
+    void reset() { start = std::chrono::high_resolution_clock::now(); }
 };
 
 std::ostream& operator<<(std::ostream& os, const Timer& timer);
