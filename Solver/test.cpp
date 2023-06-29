@@ -77,7 +77,7 @@ void TestDiskBasedBFS() {
 
 void TestDiskBasedHanoi() {
 
-    FourPegHanoiGPU<15, true> puzzle;
+    FourPegHanoiGPU puzzle(15, true);
     std::string initial = puzzle.ToString(0);
 
     PuzzleOptions opts;

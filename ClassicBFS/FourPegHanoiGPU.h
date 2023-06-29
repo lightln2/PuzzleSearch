@@ -5,12 +5,13 @@
 
 #include <string>
 
-template<int size, bool useSymmetry>
 class FourPegHanoiGPU : public PuzzleGpu {
 public:
-    FourPegHanoiGPU()
+    FourPegHanoiGPU(int size, bool useSymmetry)
         : m_SimplePuzzle(size, useSymmetry)
-    {}
+    {
+        ensure(size <= 24);
+    }
 
     virtual std::string Name() const;
 

@@ -321,7 +321,7 @@ TEST(HanoiTowers_CPU, Opt3BitBFS_10_mt_Sym) {
 }
 
 TEST(HanoiTowers_GPU, ClassicBFS_10_Sym) {
-    FourPegHanoiGPU<10, true> puzzle;
+    FourPegHanoiGPU puzzle(10, true);
     PuzzleOptions opts;
     opts.segmentBits = 32;
     opts.threads = 1;
@@ -330,7 +330,7 @@ TEST(HanoiTowers_GPU, ClassicBFS_10_Sym) {
 }
 
 TEST(HanoiTowers_GPU, OptFS_10_mt_Sym) {
-    FourPegHanoiGPU<10, true> puzzle;
+    FourPegHanoiGPU puzzle(10, true);
     PuzzleOptions opts;
     opts.segmentBits = 20;
     opts.threads = 4;
@@ -339,7 +339,7 @@ TEST(HanoiTowers_GPU, OptFS_10_mt_Sym) {
 }
 
 TEST(HanoiTowers_GPU, Opt3BitBFS_10_mt_Sym) {
-    FourPegHanoiGPU<10, true> puzzle;
+    FourPegHanoiGPU puzzle(10, true);
     PuzzleOptions opts;
     opts.segmentBits = 20;
     opts.threads = 4;
