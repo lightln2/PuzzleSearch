@@ -208,6 +208,14 @@ namespace {
 } // namespace
 
 template<int width, int height>
+std::string SlidingTilePuzzleOptimized<width, height>::Name() const {
+    std::ostringstream stream;
+    stream
+        << "Sliding-Tile GPU Optimized (for 32-bit segment): " << width << " x " << height;
+    return stream.str();
+}
+
+template<int width, int height>
 uint64_t SlidingTilePuzzleOptimized<width, height>::IndexesCount() const {
     constexpr uint64_t segments = MaxSegments<size>();
     return segments == 1 ?

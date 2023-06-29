@@ -5,11 +5,14 @@
 
 #include <string>
 
+template<int size, bool useSymmetry>
 class FourPegHanoiGPU : public PuzzleGpu {
 public:
-    FourPegHanoiGPU(int size, bool useSymmetry = false)
+    FourPegHanoiGPU()
         : m_SimplePuzzle(size, useSymmetry)
     {}
+
+    virtual std::string Name() const;
 
     virtual int OperatorsCount() const { return 4; }
 

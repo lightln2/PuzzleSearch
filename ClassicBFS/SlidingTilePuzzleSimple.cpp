@@ -25,6 +25,13 @@ SlidingTilePuzzleSimple::SlidingTilePuzzleSimple(int width, int height)
     , m_Size(width* height)
 { }
 
+std::string SlidingTilePuzzleSimple::Name() const {
+    std::ostringstream stream;
+    stream
+        << "Sliding-Tile simple: " << m_Width << " x " << m_Height;
+    return stream.str();
+}
+
 uint64_t SlidingTilePuzzleSimple::IndexesCount() const {
     uint64_t result = 1;
     for (int i = 1; i <= m_Size; i++) result *= i;
@@ -95,7 +102,8 @@ void SlidingTilePuzzleSimple::Expand(
     std::vector<uint64_t>& indexes,
     std::vector<int>& usedOperatorBits,
     std::vector<uint64_t>& expandedIndexes,
-    std::vector<int>& expandedOperators)
+    std::vector<int>& expandedOperators,
+    ExpandHint hint)
 {
     if (expandedIndexes.capacity() < MAX_INDEXES_BUFFER * 4) {
         expandedIndexes.reserve(MAX_INDEXES_BUFFER * 4);

@@ -125,6 +125,14 @@ namespace {
 
 } // namespace
 
+std::string FourPegHanoiSimple::Name() const { 
+    std::ostringstream stream;
+    stream
+        << "Four-Peg Hanoi Towers, size=" << m_Size
+        << "; symmetry=" << m_UseSymmetry;
+    return stream.str();
+}
+
 FourPegHanoiSimple::FourPegHanoiSimple(int size, bool useSymmetry)
     : m_Size(size)
     , m_UseSymmetry(useSymmetry)
@@ -171,7 +179,8 @@ void FourPegHanoiSimple::Expand(
     std::vector<uint64_t>& indexes,
     std::vector<int>& usedOperatorBits,
     std::vector<uint64_t>& expandedIndexes,
-    std::vector<int>& expandedOperators)
+    std::vector<int>& expandedOperators,
+    ExpandHint hint)
 {
     if (expandedIndexes.capacity() < MAX_INDEXES_BUFFER * 6) {
         expandedIndexes.reserve(MAX_INDEXES_BUFFER * 6);

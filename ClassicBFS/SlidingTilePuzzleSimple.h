@@ -9,6 +9,8 @@ class SlidingTilePuzzleSimple : public Puzzle {
 public:
     SlidingTilePuzzleSimple(int width, int height);
 
+    virtual std::string Name() const;
+
     virtual int OperatorsCount() const { return 4; }
 
     virtual uint64_t IndexesCount() const;
@@ -23,7 +25,8 @@ public:
         std::vector<uint64_t>& indexes,
         std::vector<int>& usedOperatorBits,
         std::vector<uint64_t>& expandedIndexes,
-        std::vector<int>& expandedOperators);
+        std::vector<int>& expandedOperators,
+        ExpandHint hint);
 
 private:
     void Expand(uint64_t index, int op, uint64_t* children, int* operators);

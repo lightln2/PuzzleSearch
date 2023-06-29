@@ -64,10 +64,10 @@ void TestDiskBasedBFS() {
     //SlidingTilePuzzleGpu puzzle(4, 4);
     SlidingTilePuzzleOptimized<4, 4> puzzle;
     PuzzleOptions opts;
-    opts.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ", "h:/PUZ2"};
-    //opts.directories = { "c:/PUZ", "d:/PUZ"};
+    //opts.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ", "h:/PUZ2"};
+    opts.directories = { "c:/PUZ", "d:/PUZ"};
     opts.segmentBits = 32;
-    opts.threads = 4;
+    opts.threads = 2;
     //opts.maxSteps = 30;
     //DiskBasedFrontierSearch(puzzle, initial, opts);
     DiskBasedOptFrontierSearch(puzzle, initial, opts);
@@ -77,7 +77,7 @@ void TestDiskBasedBFS() {
 
 void TestDiskBasedHanoi() {
 
-    FourPegHanoiGPU puzzle(15, true);
+    FourPegHanoiGPU<15, true> puzzle;
     std::string initial = puzzle.ToString(0);
 
     PuzzleOptions opts;

@@ -18,7 +18,8 @@ void PuzzleGpu::Expand(
     std::vector<uint64_t>& indexes,
     std::vector<int>& usedOperatorBits,
     std::vector<uint64_t>& expandedIndexes,
-    std::vector<int>& expandedOperators)
+    std::vector<int>& expandedOperators,
+    ExpandHint hint)
 {
     auto br = BranchingFactor();
     auto ops = OperatorsCount();
@@ -41,7 +42,7 @@ void PuzzleGpu::Expand(
     if (m_FreeStreams.empty()) {
         m_Streams.emplace_back(std::make_unique<Exec>(br));
         m_FreeStreams.push_back(m_Streams.back().get());
-        //std::cerr << "added new stream: " << m_Streams.size() << std::endl;
+        //std::cerr << "****Created new stream: " << m_Streams.back()->stream << std::endl;
     }
     auto* stream = m_FreeStreams.back();
     m_FreeStreams.pop_back();

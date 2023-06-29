@@ -7,12 +7,18 @@
 #include <string>
 #include <vector>
 
+struct ExpandHint {
+    int SegmentBits = 0;
+    bool CrossSegment = false;
+};
+
 class Puzzle {
 public:
     static constexpr size_t MAX_INDEXES_BUFFER = 2 * 1024 * 1024;
     static constexpr uint64_t INVALID_INDEX = uint64_t(-1);
 
 public:
+    virtual std::string Name() const = 0;
     virtual int OperatorsCount() const = 0;
     virtual uint64_t IndexesCount() const = 0;
     virtual bool HasOddLengthCycles() const = 0;
@@ -25,7 +31,9 @@ public:
         std::vector<uint64_t>& indexes,
         std::vector<int>& usedOperatorBits,
         std::vector<uint64_t>& expandedIndexes,
-        std::vector<int>& expandedOperators) = 0;
+        std::vector<int>& expandedOperators,
+        ExpandHint hint) = 0;
+
 };
 
 class ExpandBuffer {
@@ -35,6 +43,11 @@ public:
     {
         indexes.reserve(Puzzle::MAX_INDEXES_BUFFER);
         usedOperatorBits.reserve(Puzzle::MAX_INDEXES_BUFFER);
+    }
+
+    void SetExpandHint(int segmentBits, bool crossSegment) {
+        hint.SegmentBits = segmentBits;
+        hint.CrossSegment = crossSegment;
     }
 
     template<typename F>
@@ -51,6 +64,8 @@ public:
         if (indexes.size() > 0) {
             Expand(func);
         }
+        // reset hint
+        SetExpandHint(0, false);
     }
 
     static void PrintStats();
@@ -60,7 +75,7 @@ private:
     void Expand(F func) {
         Timer expandTimer;
 
-        puzzle.Expand(indexes, usedOperatorBits, childIndexes, childOperators);
+        puzzle.Expand(indexes, usedOperatorBits, childIndexes, childOperators, hint);
 
         m_StatExpandedTimes++;
         m_StatExpandedNodes += indexes.size();
@@ -81,6 +96,7 @@ private:
 
 private:
     Puzzle& puzzle;
+    ExpandHint hint;
     std::vector<uint64_t> indexes;
     std::vector<int> usedOperatorBits;
     std::vector<uint64_t> childIndexes;

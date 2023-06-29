@@ -18,7 +18,7 @@ TEST(SimplePuzzleTest, TestSlidingTile3x2) {
     std::vector<int> ops;
     indexes.push_back(index);
     usedOpBits.push_back(0);
-    puz.Expand(indexes, usedOpBits, children, ops);
+    puz.Expand(indexes, usedOpBits, children, ops, {});
     EXPECT_EQ(puz.INVALID_INDEX, children[0]);
     EXPECT_EQ(-1, ops[0]);
     EXPECT_EQ("3 1 2 0 4 5", puz.ToString(children[1]));
@@ -38,7 +38,7 @@ TEST(SimplePuzzleTest, TestSlidingTile4x4) {
     std::vector<int> ops;
     indexes.push_back(index);
     usedOpBits.push_back(0);
-    puz.Expand(indexes, usedOpBits, children, ops);
+    puz.Expand(indexes, usedOpBits, children, ops, {});
     EXPECT_EQ(puz.INVALID_INDEX, children[0]);
     EXPECT_EQ("4 1 2 3 0 5 6 7 8 9 10 11 12 13 14 15", puz.ToString(children[1]));
     EXPECT_EQ(puz.INVALID_INDEX, children[2]);
@@ -55,7 +55,7 @@ TEST(SimplePuzzleTest, TestSlidingTileGpu3x2) {
     std::vector<int> ops;
     indexes.push_back(index);
     usedOpBits.push_back(0);
-    puz.Expand(indexes, usedOpBits, children, ops);
+    puz.Expand(indexes, usedOpBits, children, ops, {});
     EXPECT_EQ(puz.INVALID_INDEX, children[0]);
     EXPECT_EQ(15, ops[0]);
     EXPECT_EQ("3 1 2 0 4 5", puz.ToString(children[1]));
@@ -75,7 +75,7 @@ TEST(SimplePuzzleTest, TestSlidingTileGpu4x4) {
     std::vector<int> ops;
     indexes.push_back(index);
     usedOpBits.push_back(0);
-    puz.Expand(indexes, usedOpBits, children, ops);
+    puz.Expand(indexes, usedOpBits, children, ops, {});
     EXPECT_EQ(puz.INVALID_INDEX, children[0]);
     EXPECT_EQ("4 1 2 3 0 5 6 7 8 9 10 11 12 13 14 15", puz.ToString(children[1]));
     EXPECT_EQ(puz.INVALID_INDEX, children[2]);
@@ -92,7 +92,7 @@ TEST(SimplePuzzleTest, TestSlidingTileOpt3x2) {
     std::vector<int> ops;
     indexes.push_back(index);
     usedOpBits.push_back(0);
-    puz.Expand(indexes, usedOpBits, children, ops);
+    puz.Expand(indexes, usedOpBits, children, ops, {});
     EXPECT_EQ(puz.INVALID_INDEX, children[0]);
     EXPECT_EQ(15, ops[0]);
     EXPECT_EQ("3 1 2 0 4 5", puz.ToString(children[1]));
@@ -112,7 +112,7 @@ TEST(SimplePuzzleTest, TestSlidingTileOpt4x4) {
     std::vector<int> ops;
     indexes.push_back(index);
     usedOpBits.push_back(0);
-    puz.Expand(indexes, usedOpBits, children, ops);
+    puz.Expand(indexes, usedOpBits, children, ops, {});
     EXPECT_EQ(puz.INVALID_INDEX, children[0]);
     EXPECT_EQ("4 1 2 3 0 5 6 7 8 9 10 11 12 13 14 15", puz.ToString(children[1]));
     EXPECT_EQ(puz.INVALID_INDEX, children[2]);

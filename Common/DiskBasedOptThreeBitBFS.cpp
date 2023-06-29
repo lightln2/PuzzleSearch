@@ -70,6 +70,8 @@ public:
         }
         CrossSegmentReader.Delete(segment);
 
+        Expander.SetExpandHint(SOpts.Opts.segmentBits, false);
+
         auto fnExpandInSegment = [&](uint64_t child, int op) {
             auto [seg, idx] = SOpts.GetSegIdx(child);
             if (seg != segment) return;
@@ -102,6 +104,8 @@ public:
         }
 
         OldFrontierReader.Delete(segment);
+
+        Expander.SetExpandHint(SOpts.Opts.segmentBits, true);
 
         auto fnExpandCrossSegment = [&](uint64_t child, int op) {
             auto [seg, idx] = SOpts.GetSegIdx(child);

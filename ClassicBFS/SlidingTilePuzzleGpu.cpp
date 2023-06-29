@@ -13,6 +13,13 @@ SlidingTilePuzzleGpu::SlidingTilePuzzleGpu(int width, int height)
 {
 }
 
+std::string SlidingTilePuzzleGpu::Name() const {
+    std::ostringstream stream;
+    stream
+        << "Sliding-Tile GPU: " << m_Width << " x " << m_Height;
+    return stream.str();
+}
+
 uint64_t SlidingTilePuzzleGpu::IndexesCount() const {
     uint64_t result = 1;
     for (int i = 1; i <= m_Size; i++) result *= i;

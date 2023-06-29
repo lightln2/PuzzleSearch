@@ -8,6 +8,8 @@ class SlidingTilePuzzleGpu : public PuzzleGpu {
 public:
     SlidingTilePuzzleGpu(int width, int height);
 
+    virtual std::string Name() const;
+
     virtual int OperatorsCount() const { return 4; }
 
     virtual uint64_t IndexesCount() const;

@@ -9,6 +9,8 @@ class FourPegHanoiSimple : public Puzzle {
 public:
     FourPegHanoiSimple(int size, bool useSymmetry = false);
 
+    virtual std::string Name() const;
+
     virtual int OperatorsCount() const { return 4; }
 
     virtual uint64_t IndexesCount() const;
@@ -23,7 +25,8 @@ public:
         std::vector<uint64_t>& indexes,
         std::vector<int>& usedOperatorBits,
         std::vector<uint64_t>& expandedIndexes,
-        std::vector<int>& expandedOperators);
+        std::vector<int>& expandedOperators,
+        ExpandHint hint);
 
     int Size() const { return m_Size; }
     bool UseSymmetry() const { return m_UseSymmetry; }

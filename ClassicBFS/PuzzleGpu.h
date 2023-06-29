@@ -23,7 +23,8 @@ public:
         std::vector<uint64_t>& indexes,
         std::vector<int>& usedOperatorBits,
         std::vector<uint64_t>& expandedIndexes,
-        std::vector<int>& expandedOperators);
+        std::vector<int>& expandedOperators,
+        ExpandHint hint);
 
 protected:
     virtual void ExpandGpu(

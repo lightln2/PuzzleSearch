@@ -23,10 +23,11 @@ namespace {
 
 }
 
+template<int size>
 struct FPStateGPU {
-    int next[32] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
-    int top[4] = { -1, -1, -1, -1 };
-    int bottom[4] = { -1, -1, -1, -1 };
+    int8_t next[size];
+    int top[4];
+    int bottom[4];
 
     __device__ void add(int peg, int disk) {
         if (top[peg] == -1) top[peg] = disk;
@@ -83,7 +84,8 @@ struct FPStateGPU {
     }
 };
 
-__device__ uint64_t StateToIndex(const FPStateGPU& state) {
+template<int size>
+__device__ uint64_t StateToIndex(const FPStateGPU<size>& state) {
     uint64_t index = 0;
     for (int peg = 0; peg < 4; peg++) {
         int top = state.top[peg];
@@ -94,10 +96,12 @@ __device__ uint64_t StateToIndex(const FPStateGPU& state) {
     return index;
 }
 
-__device__ FPStateGPU IndexToState(int size, uint64_t index) {
-    FPStateGPU state;
-    for (int i = 0; i < 32; i++) state.next[i] = -1;
+template<int size>
+__device__ FPStateGPU<size> IndexToState(uint64_t index) {
+    FPStateGPU<size> state;
+    for (int i = 0; i < size; i++) state.next[i] = -1;
     for (int i = 0; i < 4; i++) state.top[i] = -1;
+    for (int i = 0; i < 4; i++) state.bottom[i] = -1;
     for (int disk = 0; disk < size; disk++) {
         int peg = (index >> (2 * disk)) & 3;
         state.add(peg, disk);
@@ -105,7 +109,8 @@ __device__ FPStateGPU IndexToState(int size, uint64_t index) {
     return state;
 }
 
-__global__ void kernel_hanoi_towers_expand(uint64_t* indexes, uint64_t* expanded, int size, bool useSymmetry, uint64_t count) {
+template<int size, bool useSymmetry>
+__global__ void kernel_hanoi_towers_expand(uint64_t* indexes, uint64_t* expanded, uint64_t count) {
     uint64_t i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= count) return;
 
@@ -113,47 +118,73 @@ __global__ void kernel_hanoi_towers_expand(uint64_t* indexes, uint64_t* expanded
     int opBits = index & 15;
     index >>= 4;
 
-    FPStateGPU state = IndexToState(size, index);
+    FPStateGPU<size> state = IndexToState<size>(index);
     uint64_t baseDst = i * 6;
     int pos = 0;
     for (int peg1 = 0; peg1 < 4; peg1++) {
         for (int peg2 = peg1 + 1; peg2 < 4; peg2++) {
-            expanded[baseDst + pos] = INVALID_INDEX;
-            FPStateGPU s2 = state;
+            uint64_t result = INVALID_INDEX;
+            FPStateGPU<size> s2 = state;
             int p1 = peg1, p2 = peg2;
             if (!s2.can_move(p1, p2)) gpu_swap(p1, p2);
-            if (s2.move(p1, p2)) {
-                if (useSymmetry) {
-                    p2 = s2.restore_symmetry(p2);
-                }
-                if (!HasOp(opBits, p1)) {
+            if (!HasOp(opBits, p1)) {
+                if (s2.move(p1, p2)) {
+                    if (useSymmetry) {
+                        p2 = s2.restore_symmetry(p2);
+                    }
                     uint64_t childIndex = StateToIndex(s2);
-                    expanded[baseDst + pos] = (childIndex << 4) | p2;
+                    result = (childIndex << 4) | p2;
                 }
             }
+            expanded[baseDst + pos] = result;
             pos++;
         }
     }
 }
 
+template<int size, bool useSymmetry>
 void GpuHanoiTowersExpand(
     uint64_t* gpuIndexes,
     uint64_t* gpuExpanded,
-    int size,
-    bool useSymmetry,
     uint64_t count,
     CuStream stream)
 {
     auto threadsPerBlock = 256;
     auto blocksPerGrid = uint32_t((count + threadsPerBlock - 1) / threadsPerBlock);
     
-    kernel_hanoi_towers_expand<<<blocksPerGrid, threadsPerBlock, 0, cudaStream_t(stream) >>> (
+    kernel_hanoi_towers_expand<size, useSymmetry> << <blocksPerGrid, threadsPerBlock, 0, cudaStream_t(stream) >> > (
         gpuIndexes,
         gpuExpanded,
-        size,
-        useSymmetry,
         count);
     ERR(cudaGetLastError());
 }
 
+template void GpuHanoiTowersExpand<10, false>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<11, false>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<12, false>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<13, false>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<14, false>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<15, false>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<16, false>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<17, false>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<18, false>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<19, false>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<20, false>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<21, false>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<22, false>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<23, false>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
 
+template void GpuHanoiTowersExpand<10, true>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<11, true>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<12, true>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<13, true>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<14, true>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<15, true>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<16, true>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<17, true>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<18, true>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<19, true>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<20, true>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<21, true>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<22, true>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);
+template void GpuHanoiTowersExpand<23, true>(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream);

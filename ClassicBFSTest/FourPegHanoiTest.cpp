@@ -19,7 +19,7 @@ TEST(HanoiPuzzleTest, HanoiSimple5) {
     std::vector<int> ops;
     indexes.push_back(index);
     usedOpBits.push_back(0);
-    puz.Expand(indexes, usedOpBits, children, ops);
+    puz.Expand(indexes, usedOpBits, children, ops, {});
     EXPECT_EQ("2 3 4 5 0 1 0 0", puz.ToString(children[0]));
     EXPECT_EQ(1, ops[0]);
     EXPECT_EQ("2 3 4 5 0 0 1 0", puz.ToString(children[1]));
@@ -43,7 +43,7 @@ TEST(HanoiPuzzleTest, HanoiSimple7) {
     std::vector<int> ops;
     indexes.push_back(index);
     usedOpBits.push_back(0);
-    puz.Expand(indexes, usedOpBits, children, ops);
+    puz.Expand(indexes, usedOpBits, children, ops, {});
     EXPECT_EQ("5 6 0 1 2 0 0 3 4 7", puz.ToString(children[0]));
     EXPECT_EQ(1, ops[0]);
     EXPECT_EQ("5 6 0 2 0 1 0 3 4 7", puz.ToString(children[1]));
@@ -70,7 +70,7 @@ TEST(HanoiPuzzleTest, HanoiSimple5_Symmetry) {
     std::vector<int> ops;
     indexes.push_back(index);
     usedOpBits.push_back(0);
-    puz.Expand(indexes, usedOpBits, children, ops);
+    puz.Expand(indexes, usedOpBits, children, ops, {});
     EXPECT_EQ("2 3 4 5 0 1 0 0", puz.ToString(children[0]));
     EXPECT_EQ(1, ops[0]);
     EXPECT_EQ("2 3 4 5 0 1 0 0", puz.ToString(children[1]));
@@ -92,7 +92,7 @@ TEST(HanoiPuzzleTest, HanoiSimple7_Symmetry) {
     std::vector<int> ops;
     indexes.push_back(index);
     usedOpBits.push_back(0);
-    puz.Expand(indexes, usedOpBits, children, ops);
+    puz.Expand(indexes, usedOpBits, children, ops, {});
     EXPECT_EQ("1 3 4 6 0 5 7 0 2 0", puz.ToString(children[0]));
     EXPECT_EQ(0, ops[0]);
     EXPECT_EQ("2 3 4 6 0 1 5 7 0 0", puz.ToString(children[1]));
