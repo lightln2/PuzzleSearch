@@ -205,7 +205,7 @@ std::vector<uint64_t> DiskBasedFrontierSearchInternal(Puzzle& puzzle, std::strin
         std::swap(curFrontierStore, newFrontierStore);
         std::cerr
             << "Step: " << result.size() - 1
-            << "; count: " << totalCount
+            << "; count: " << WithDecSep(totalCount)
             << " in " << stepTimer
             << "; size: frontier=" << WithSize(curFrontierStore.TotalLength())
             << ", x-seg=" << WithSize(xstore_size)
