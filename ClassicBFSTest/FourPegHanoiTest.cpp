@@ -26,9 +26,6 @@ TEST(HanoiPuzzleTest, HanoiSimple5) {
     EXPECT_EQ(2, ops[1]);
     EXPECT_EQ("2 3 4 5 0 0 0 1", puz.ToString(children[2]));
     EXPECT_EQ(3, ops[2]);
-    EXPECT_EQ(Puzzle::INVALID_INDEX, children[3]);
-    EXPECT_EQ(Puzzle::INVALID_INDEX, children[4]);
-    EXPECT_EQ(Puzzle::INVALID_INDEX, children[5]);
 }
 
 TEST(HanoiPuzzleTest, HanoiSimple7) {
@@ -77,9 +74,6 @@ TEST(HanoiPuzzleTest, HanoiSimple5_Symmetry) {
     EXPECT_EQ(1, ops[1]);
     EXPECT_EQ("2 3 4 5 0 1 0 0", puz.ToString(children[2]));
     EXPECT_EQ(1, ops[2]);
-    EXPECT_EQ(Puzzle::INVALID_INDEX, children[3]);
-    EXPECT_EQ(Puzzle::INVALID_INDEX, children[4]);
-    EXPECT_EQ(Puzzle::INVALID_INDEX, children[5]);
 }
 
 TEST(HanoiPuzzleTest, HanoiSimple7_Symmetry) {

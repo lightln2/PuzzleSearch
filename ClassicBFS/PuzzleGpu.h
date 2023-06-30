@@ -7,7 +7,7 @@
 using CuStream = void*;
 
 class PuzzleGpu : public Puzzle {
-private:
+protected:
     struct Exec {
         CuStream stream;
         uint64_t* gpuSrc;
@@ -33,6 +33,10 @@ protected:
         uint64_t count,
         CuStream stream) = 0;
 
+    Exec* AquireStream();
+    void ReleaseStream(Exec* stream);
+    void CombineIndexAndOpBits(std::vector<uint64_t>& indexes, std::vector<int>& usedOperatorBits);
+    void SplitIndexAndOps(std::vector<uint64_t>& expandedIndexes, std::vector<int>& expandedOperators);
 private:
     std::mutex m_Mutex;
     std::vector<std::unique_ptr<Exec>> m_Streams;

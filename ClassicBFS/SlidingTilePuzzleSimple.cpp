@@ -58,7 +58,7 @@ uint64_t SlidingTilePuzzleSimple::Parse(std::string state) {
     return PermutationRank(arr, m_Size);
 }
 
-void SlidingTilePuzzleSimple::Expand(uint64_t index, int op, uint64_t* children, int* operators) {
+void SlidingTilePuzzleSimple::Expand(uint64_t index, int op, std::vector<uint64_t>& expandedIndexes, std::vector<int>& expandedOperators) {
     int arr[16];
     int blank = -1;
     PermutationUnrank(index, arr, m_Size);
@@ -74,26 +74,26 @@ void SlidingTilePuzzleSimple::Expand(uint64_t index, int op, uint64_t* children,
 
     if (blank >= m_Width && !HasOp(op, OP_UP)) {
         Move(arr, newarr, blank, blank - m_Width);
-        children[0] = PermutationRank(newarr, m_Size);
-        operators[0] = OP_DOWN;
+        expandedIndexes.push_back(PermutationRank(newarr, m_Size));
+        expandedOperators.push_back(OP_DOWN);
     }
 
     if (blank < m_Size - m_Width && !HasOp(op, OP_DOWN)) {
         Move(arr, newarr, blank, blank + m_Width);
-        children[1] = PermutationRank(newarr, m_Size);
-        operators[1] = OP_UP;
+        expandedIndexes.push_back(PermutationRank(newarr, m_Size));
+        expandedOperators.push_back(OP_UP);
     }
 
     if (blank % m_Width > 0 && !HasOp(op, OP_LEFT)) {
         Move(arr, newarr, blank, blank - 1);
-        children[2] = PermutationRank(newarr, m_Size);
-        operators[2] = OP_RIGHT;
+        expandedIndexes.push_back(PermutationRank(newarr, m_Size));
+        expandedOperators.push_back(OP_RIGHT);
     }
 
     if (blank % m_Width < m_Width - 1 && !HasOp(op, OP_RIGHT)) {
         Move(arr, newarr, blank, blank + 1);
-        children[3] = PermutationRank(newarr, m_Size);
-        operators[3] = OP_LEFT;
+        expandedIndexes.push_back(PermutationRank(newarr, m_Size));
+        expandedOperators.push_back(OP_LEFT);
     }
 
 }
@@ -105,18 +105,9 @@ void SlidingTilePuzzleSimple::Expand(
     std::vector<int>& expandedOperators,
     ExpandHint hint)
 {
-    if (expandedIndexes.capacity() < MAX_INDEXES_BUFFER * 4) {
-        expandedIndexes.reserve(MAX_INDEXES_BUFFER * 4);
-    }
-    if (expandedOperators.capacity() < MAX_INDEXES_BUFFER * 4) {
-        expandedOperators.reserve(MAX_INDEXES_BUFFER * 4);
-    }
-    expandedIndexes.clear();
-    expandedOperators.clear();
-    expandedIndexes.resize(indexes.size() * 4, INVALID_INDEX);
-    expandedOperators.resize(indexes.size() * 4, -1);
+    SetupOutputBuffers(expandedIndexes, expandedOperators);
 
     for (int i = 0; i < indexes.size(); i++) {
-        Expand(indexes[i], usedOperatorBits[i], &expandedIndexes[i * 4], &expandedOperators[i * 4]);
+        Expand(indexes[i], usedOperatorBits[i], expandedIndexes, expandedOperators);
     }
 }

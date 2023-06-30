@@ -20,6 +20,7 @@ public:
 public:
     virtual std::string Name() const = 0;
     virtual int OperatorsCount() const = 0;
+    virtual int BranchingFactor() const = 0;
     virtual uint64_t IndexesCount() const = 0;
     virtual bool HasOddLengthCycles() const = 0;
 
@@ -34,6 +35,8 @@ public:
         std::vector<int>& expandedOperators,
         ExpandHint hint) = 0;
 
+protected:
+    virtual void SetupOutputBuffers(std::vector<uint64_t>& expandedIndexes, std::vector<int>& expandedOperators);
 };
 
 class ExpandBuffer {

@@ -102,8 +102,8 @@ int main() {
 
         //TestBitArray();
         //TestClassicBFS();
-        //TestDiskBasedBFS();
-        TestDiskBasedHanoi();
+        TestDiskBasedBFS();
+        //TestDiskBasedHanoi();
     }
     catch (const std::exception& ex) {
         std::cerr << "Error: " << ex.what() << std::endl;

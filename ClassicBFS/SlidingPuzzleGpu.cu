@@ -163,7 +163,7 @@ __device__ void unpack(int* arr) {
         for (int j = 0; j < i; j++) {
             bool inv = (arr[j] >= arr[i]);
             arr[j] += (int)inv;
-            invEven ^= !inv;
+            invEven ^= inv;
         }
     }
     // restore parity
@@ -227,6 +227,9 @@ __global__ void kernel_sliding_tile_optimized(uint64_t* indexes, uint64_t* expan
     unpack<size, width, width % 2 == 0>(arr);
     int blank = arr[OFFSET_ZERO];
 
+    uint64_t result;
+    
+    result = INVALID_INDEX;
     if (blank >= width && !HasOp(opBits, OP_UP)) {
         int arr2[16];
         for (int j = 0; j < 16; j++) arr2[j] = arr[j];
@@ -235,41 +238,34 @@ __global__ void kernel_sliding_tile_optimized(uint64_t* indexes, uint64_t* expan
         uint64_t newseg = to_segment(arr2);
         uint64_t newidx = to_index<size>(arr2);
         uint64_t exp = (newseg << 32) | newidx;
-        expanded[i * 4 + 0] = (exp << 4) | OP_DOWN;
+        result = (exp << 4) | OP_DOWN;
     }
-    else {
-        expanded[i * 4 + 0] = INVALID_INDEX;
-    }
+    expanded[i * 4 + 0] = result;
 
+    result = INVALID_INDEX;
     if (blank < size - width && !HasOp(opBits, OP_DOWN)) {
-        int arr2[16];
-        for (int j = 0; j < 16; j++) arr2[j] = arr[j];
-        RotateDn<width>(arr2);
-        pack<size>(arr2);
-        uint64_t newseg = to_segment(arr2);
-        uint64_t newidx = to_index<size>(arr2);
+        RotateDn<width>(arr);
+        pack<size>(arr);
+        uint64_t newseg = to_segment(arr);
+        uint64_t newidx = to_index<size>(arr);
         uint64_t exp = (newseg << 32) | newidx;
-        expanded[i * 4 + 1] = (exp << 4) | OP_UP;
+        result = (exp << 4) | OP_UP;
     }
-    else {
-        expanded[i * 4 + 1] = INVALID_INDEX;
-    }
+    expanded[i * 4 + 1] = result;
 
+    result = INVALID_INDEX;
     if (blank % width > 0 && !HasOp(opBits, OP_LEFT)) {
         uint64_t exp = index - 1;
-        expanded[i * 4 + 2] = (exp << 4) | OP_RIGHT;
+        result = (exp << 4) | OP_RIGHT;
     }
-    else {
-        expanded[i * 4 + 2] = INVALID_INDEX;
-    }
+    expanded[i * 4 + 2] = result;
 
+    result = INVALID_INDEX;
     if (blank % width < width - 1 && !HasOp(opBits, OP_RIGHT)) {
         uint64_t exp = index + 1;
-        expanded[i * 4 + 3] = (exp << 4) | OP_LEFT;
+        result = (exp << 4) | OP_LEFT;
     }
-    else {
-        expanded[i * 4 + 3] = INVALID_INDEX;
-    }
+    expanded[i * 4 + 3] = result;
 }
 
 template<int width, int height>

@@ -11,3 +11,16 @@ void ExpandBuffer::PrintStats() {
         << WithTime(m_StatExpandedNanos)
         << std::endl;
 }
+
+void Puzzle::SetupOutputBuffers(std::vector<uint64_t>& expandedIndexes, std::vector<int>& expandedOperators)
+{
+    size_t expandedCapacity = MAX_INDEXES_BUFFER * BranchingFactor();
+    if (expandedIndexes.capacity() < expandedCapacity) {
+        expandedIndexes.reserve(expandedCapacity);
+    }
+    if (expandedOperators.capacity() < expandedCapacity) {
+        expandedOperators.reserve(expandedCapacity);
+    }
+    expandedIndexes.clear();
+    expandedOperators.clear();
+}

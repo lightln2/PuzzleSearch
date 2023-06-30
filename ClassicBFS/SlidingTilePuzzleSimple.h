@@ -13,6 +13,8 @@ public:
 
     virtual int OperatorsCount() const { return 4; }
 
+    virtual int BranchingFactor() const { return 4; }
+
     virtual uint64_t IndexesCount() const;
 
     virtual bool HasOddLengthCycles() const { return false; }
@@ -29,7 +31,7 @@ public:
         ExpandHint hint);
 
 private:
-    void Expand(uint64_t index, int op, uint64_t* children, int* operators);
+    void Expand(uint64_t index, int op, std::vector<uint64_t>& expandedIndexes, std::vector<int>& expandedOperators);
 
 private:
     int m_Width;

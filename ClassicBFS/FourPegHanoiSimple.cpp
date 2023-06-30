@@ -153,9 +153,8 @@ uint64_t FourPegHanoiSimple::Parse(std::string stateStr) {
     return StateToIndex(state);
 }
 
-void FourPegHanoiSimple::Expand(uint64_t index, int op, uint64_t* children, int* operators) {
+void FourPegHanoiSimple::Expand(uint64_t index, int op, std::vector<uint64_t>& expandedIndexes, std::vector<int>& expandedOperators) {
     FPState state = IndexToState(m_Size, index);
-    int pos = 0;
     for (int peg1 = 0; peg1 < 4; peg1++) {
         for (int peg2 = peg1 + 1; peg2 < 4; peg2++) {
             FPState s2 = state;
@@ -166,11 +165,10 @@ void FourPegHanoiSimple::Expand(uint64_t index, int op, uint64_t* children, int*
                     p2 = s2.restore_symmetry(p2);
                 }
                 if (!HasOp(op, p1)) {
-                    children[pos] = StateToIndex(s2);
-                    operators[pos] = p2;
+                    expandedIndexes.push_back(StateToIndex(s2));
+                    expandedOperators.push_back(p2);
                 }
             }
-            pos++;
         }
     }
 }
@@ -182,18 +180,9 @@ void FourPegHanoiSimple::Expand(
     std::vector<int>& expandedOperators,
     ExpandHint hint)
 {
-    if (expandedIndexes.capacity() < MAX_INDEXES_BUFFER * 6) {
-        expandedIndexes.reserve(MAX_INDEXES_BUFFER * 6);
-    }
-    if (expandedOperators.capacity() < MAX_INDEXES_BUFFER * 6) {
-        expandedOperators.reserve(MAX_INDEXES_BUFFER * 6);
-    }
-    expandedIndexes.clear();
-    expandedOperators.clear();
-    expandedIndexes.resize(indexes.size() * 6, INVALID_INDEX);
-    expandedOperators.resize(indexes.size() * 6, -1);
+    SetupOutputBuffers(expandedIndexes, expandedOperators);
 
     for (int i = 0; i < indexes.size(); i++) {
-        Expand(indexes[i], usedOperatorBits[i], &expandedIndexes[6 * i], &expandedOperators[6 * i]);
+        Expand(indexes[i], usedOperatorBits[i], expandedIndexes, expandedOperators);
     }
 }
