@@ -111,6 +111,7 @@
     <ClCompile Include="FourPegHanoiGPU.cpp" />
     <ClCompile Include="FourPegHanoiSimple.cpp" />
     <ClCompile Include="PancakeOptimized.cpp" />
+    <ClCompile Include="PancakeOptimizedGpu.cpp" />
     <ClCompile Include="PancakeSimple.cpp" />
     <ClCompile Include="PermutationMap.cpp" />
     <ClCompile Include="PuzzleGpu.cpp" />
@@ -122,12 +123,15 @@
     <CudaCompile Include="Gpu.cu" />
     <CudaCompile Include="SlidingPuzzleGpu.cu" />
     <CudaCompile Include="HanoiTowersGpu.cu" />
+    <CudaCompile Include="PancakeGpu.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FourPegHanoiGPU.h" />
     <ClInclude Include="FourPegHanoiSimple.h" />
     <ClInclude Include="GPU.h" />
+    <ClInclude Include="PancakeGpu.h" />
     <ClInclude Include="PancakeOptimized.h" />
+    <ClInclude Include="PancakeOptimizedGpu.h" />
     <ClInclude Include="PancakeSimple.h" />
     <ClInclude Include="PermutationMap.h" />
     <ClInclude Include="PuzzleGpu.h" />

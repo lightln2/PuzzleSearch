@@ -3,6 +3,7 @@
 
 #include "../Common/InMemoryBFS.h"
 #include "../ClassicBFS/PancakeOptimized.h"
+#include "../ClassicBFS/PancakeOptimizedGpu.h"
 #include "../ClassicBFS/PancakeSimple.h"
 #include "../ClassicBFS/SlidingTilePuzzleGpu.h"
 #include "../ClassicBFS/SlidingTilePuzzleSimple.h"
@@ -111,7 +112,8 @@ void TestDiskBasedHanoi() {
 void TestPancake() {
 
     //PancakeSimple puzzle(13);
-    PancakeOptimized puzzle(13);
+    //PancakeOptimized puzzle(13);
+    PancakeOptimizedGPU puzzle(13, true);
     std::string initial = puzzle.ToString(0);
 
     PuzzleOptions opts;

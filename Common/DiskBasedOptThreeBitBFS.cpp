@@ -24,6 +24,7 @@ public:
         , FrontierWriter(newFrontierStore)
         , CrossSegmentReader(curCrossSegmentStores)
         , Mult(nextCrossSegmentStores, sopts.Segments)
+        //, Mult(nextCrossSegmentStores, sopts.OperatorsCount, sopts.Segments, 16, 12, 16ui64 * 1024 * 1024)
         , NextArray(SOpts.SegmentSize)
         , CurArray(SOpts.HasOddLengthCycles ? SOpts.SegmentSize : 0)
         , Expander(SOpts.Puzzle)
@@ -148,6 +149,7 @@ private:
     CompressedSegmentReader CurFrontierReader;
     CompressedSegmentWriter FrontierWriter;
     CompressedCrossSegmentReader CrossSegmentReader;
+    //SmartMultiplexor Mult;
     CompressedMultiplexor Mult;
     ExpandBuffer Expander;
 

@@ -23,7 +23,7 @@ public:
         , FrontierWriter(nextFrontierStore)
         , CrossSegmentReader(curCrossSegmentStores)
         //, Mult(nextCrossSegmentStores, sopts.Segments)
-        , Mult(nextCrossSegmentStores, sopts.OperatorsCount, sopts.Segments, 15, 12, 16ui64 * 1024 * 1024)
+        , Mult(nextCrossSegmentStores, sopts.OperatorsCount, sopts.Segments, 16, 12, 16ui64 * 1024 * 1024)
         , Array(SOpts.SegmentSize)
         , FrontierArray(SOpts.HasOddLengthCycles ? SOpts.SegmentSize : 0)
         , Expander(SOpts.Puzzle)

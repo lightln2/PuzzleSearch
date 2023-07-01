@@ -27,11 +27,7 @@ public:
         ExpandHint hint);
 
 protected:
-    virtual void ExpandGpu(
-        uint64_t* gpuIndexes,
-        uint64_t* gpuExpanded,
-        uint64_t count,
-        CuStream stream) = 0;
+    virtual void ExpandGpu(uint64_t* gpuIndexes, uint64_t* gpuExpanded, uint64_t count, CuStream stream) = 0;
 
     Exec* AquireStream();
     void ReleaseStream(Exec* stream);

@@ -10,6 +10,7 @@
     <ClCompile Include="FourPegHanoiGPU.cpp" />
     <ClCompile Include="PancakeSimple.cpp" />
     <ClCompile Include="PancakeOptimized.cpp" />
+    <ClCompile Include="PancakeOptimizedGpu.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PermutationMap.h" />
@@ -30,6 +31,10 @@
     <ClInclude Include="FourPegHanoiGPU.h" />
     <ClInclude Include="PancakeSimple.h" />
     <ClInclude Include="PancakeOptimized.h" />
+    <ClInclude Include="PancakeGpu.h">
+      <Filter>Gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="PancakeOptimizedGpu.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="Gpu.cu">
@@ -39,6 +44,9 @@
       <Filter>Gpu</Filter>
     </CudaCompile>
     <CudaCompile Include="HanoiTowersGpu.cu">
+      <Filter>Gpu</Filter>
+    </CudaCompile>
+    <CudaCompile Include="PancakeGpu.cu">
       <Filter>Gpu</Filter>
     </CudaCompile>
   </ItemGroup>
