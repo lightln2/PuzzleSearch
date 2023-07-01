@@ -2,6 +2,7 @@
 #include "../Common/Util.h"
 
 #include "../Common/InMemoryBFS.h"
+#include "../ClassicBFS/PancakeOptimized.h"
 #include "../ClassicBFS/PancakeSimple.h"
 #include "../ClassicBFS/SlidingTilePuzzleGpu.h"
 #include "../ClassicBFS/SlidingTilePuzzleSimple.h"
@@ -79,14 +80,14 @@ void TestDiskBasedBFS() {
 void TestDiskBasedHanoi() {
 
     //FourPegHanoiSimple puzzle(20, true);
-    FourPegHanoiGPU puzzle(21, true);
+    FourPegHanoiGPU puzzle(18, true);
     std::string initial = puzzle.ToString(0);
 
     PuzzleOptions opts;
-    opts.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ", "h:/PUZ2" };
-    //opts.directories = { "c:/PUZ", "d:/PUZ"};
+    //opts.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ", "h:/PUZ2" };
+    opts.directories = { "c:/PUZ", "d:/PUZ"};
     opts.segmentBits = 32;
-    opts.threads = 6;
+    opts.threads = 1;
     //opts.maxSteps = 4;
     //InMemoryClassicBFS(puzzle, initial);
     //InMemoryFrontierSearch(puzzle, initial);
@@ -109,8 +110,8 @@ void TestDiskBasedHanoi() {
 
 void TestPancake() {
 
-    //FourPegHanoiSimple puzzle(20, true);
-    PancakeSimple puzzle(13);
+    //PancakeSimple puzzle(13);
+    PancakeOptimized puzzle(13);
     std::string initial = puzzle.ToString(0);
 
     PuzzleOptions opts;
@@ -118,7 +119,7 @@ void TestPancake() {
     opts.directories = { "c:/PUZ", "d:/PUZ"};
     opts.segmentBits = 29;
     opts.threads = 4;
-    //opts.maxSteps = 4;
+    opts.maxSteps = 11;
     DiskBasedOptThreeBitBFS(puzzle, initial, opts);
 
     /*

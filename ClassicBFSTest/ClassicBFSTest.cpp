@@ -423,3 +423,13 @@ TEST(Pancake_CPU, Opt3BitBFS_9_mt) {
     EXPECT_EQ(ToString(result), "1 8 56 391 2278 10666 38015 93585 132697 79379 5804");
 }
 
+TEST(Pancake_Opt_CPU, Opt3BitBFS_9_mt) {
+    PancakeSimple puzzle(13);
+    PuzzleOptions opts;
+    opts.segmentBits = 29;
+    opts.threads = 3;
+    opts.maxSteps = 6;
+    auto result = DiskBasedOptThreeBitBFS(puzzle, puzzle.ToString(0), opts);
+    EXPECT_EQ(ToString(result), "1 12 132 1451 14556 130096 1030505");
+}
+

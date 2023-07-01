@@ -9,6 +9,7 @@
     <ClCompile Include="FourPegHanoiSimple.cpp" />
     <ClCompile Include="FourPegHanoiGPU.cpp" />
     <ClCompile Include="PancakeSimple.cpp" />
+    <ClCompile Include="PancakeOptimized.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PermutationMap.h" />
@@ -28,6 +29,7 @@
     </ClInclude>
     <ClInclude Include="FourPegHanoiGPU.h" />
     <ClInclude Include="PancakeSimple.h" />
+    <ClInclude Include="PancakeOptimized.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="Gpu.cu">
