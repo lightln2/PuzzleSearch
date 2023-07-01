@@ -241,5 +241,6 @@ std::vector<uint64_t> DiskBasedOptThreeBitBFS(Puzzle& puzzle, std::string initia
         << "; x-seg=" << WithSize(total_sz_xseg)
         << std::endl;
     std::cerr << "Max size: " << WithSize(max_size) << std::endl;
+    PrintResult(result);
     return result;
 }

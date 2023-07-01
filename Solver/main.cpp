@@ -89,6 +89,7 @@ void TestBitArray();
 void TestClassicBFS();
 void TestDiskBasedBFS();
 void TestDiskBasedHanoi();
+void TestPancake();
 
 int main() {
     try {
@@ -103,7 +104,8 @@ int main() {
         //TestBitArray();
         //TestClassicBFS();
         //TestDiskBasedBFS();
-        TestDiskBasedHanoi();
+        //TestDiskBasedHanoi();
+        TestPancake();
     }
     catch (const std::exception& ex) {
         std::cerr << "Error: " << ex.what() << std::endl;

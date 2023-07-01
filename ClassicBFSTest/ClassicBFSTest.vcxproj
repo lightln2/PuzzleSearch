@@ -30,6 +30,7 @@
   <ItemGroup>
     <ClCompile Include="ClassicBFSTest.cpp" />
     <ClCompile Include="FourPegHanoiTest.cpp" />
+    <ClCompile Include="PancakeTest.cpp" />
     <ClCompile Include="PermutationMapTest.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

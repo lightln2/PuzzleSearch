@@ -39,3 +39,14 @@ void SegmentedOptions::PrintOptions() {
         << "; segment size: " << WithDecSep(SegmentSize)
         << std::endl;
 }
+
+void PrintResult(const std::vector<uint64_t>& result) {
+    std::cerr << "Radius: " << result.size() - 1 << std::endl;
+    std::cerr << "Result:";
+    uint64_t sum = 0;
+    for (auto w : result) {
+        sum += w;
+        std::cerr << " " << w;
+    }
+    std::cerr << "\nTotal: " << WithDecSep(sum) << std::endl;
+}
