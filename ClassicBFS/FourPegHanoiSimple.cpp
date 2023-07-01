@@ -182,7 +182,54 @@ void FourPegHanoiSimple::Expand(
 {
     SetupOutputBuffers(expandedIndexes, expandedOperators);
 
+    bool filterXSeg = (hint.SegmentBits == 32 && hint.CrossSegment && m_Size > 16);
+
+    auto fbInSegOnly = [](uint64_t index) {
+        uint32_t idx = index & 0xFFFFFFFF;
+        uint32_t p0 = idx >> 1;
+        uint32_t p1 = idx;
+        uint32_t p0i = ~p0;
+        uint32_t p1i = ~p1;
+        bool z0 = ((p0 & p1) & 0x55555555ui32) != 0;
+        bool z1 = ((p0 & p1i) & 0x55555555ui32) != 0;
+        bool z2 = ((p0i & p1) & 0x55555555ui32) != 0;
+        bool z3 = ((p0i & p1i) & 0x55555555ui32) != 0;
+        return int(z0) + int(z1) + int(z2) + int(z3) >= 3;
+    };
+
     for (int i = 0; i < indexes.size(); i++) {
+        if (filterXSeg) {
+            if (fbInSegOnly(indexes[i])) continue;
+        }
+        size_t start = expandedIndexes.size();
         Expand(indexes[i], usedOperatorBits[i], expandedIndexes, expandedOperators);
+        /*
+        if (filterXSeg) {
+            if (fbInSegOnly(indexes[i])) {
+                for (size_t j = start; j < expandedIndexes.size(); j++) {
+                    uint64_t child = expandedIndexes[j];
+                    if (child != INVALID_INDEX) {
+                        if ((child >> 32) != (indexes[i] >> 32)) {
+                            std::cerr << "SEG DIFF: " << ToString(indexes[i]) << std::endl;
+                            {
+                                uint32_t idx = indexes[i] & 0xFFFFFFFF;
+                                uint32_t p0 = (idx >> 1) & 0x55555555ui32;
+                                uint32_t p1 = idx & 0x55555555ui32;
+                                uint32_t p0i = ~p0;
+                                uint32_t p1i = ~p1;
+                                bool z0 = (p0 & p1) != 0;
+                                bool z1 = (p0 & p1i) != 0;
+                                bool z2 = (p0i & p1) != 0;
+                                bool z3 = (p0i & p1i) != 0;
+                                std::cerr << std::hex << idx << "  -> " << p0 << " - " << p1 << std::endl;
+                                std::cerr << z0 << " " << z1 << " " << z2 << " " << z3 << std::endl;
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        */
     }
 }

@@ -77,14 +77,15 @@ void TestDiskBasedBFS() {
 
 void TestDiskBasedHanoi() {
 
-    FourPegHanoiGPU puzzle(19, true);
+    //FourPegHanoiSimple puzzle(20, true);
+    FourPegHanoiGPU puzzle(20, true);
     std::string initial = puzzle.ToString(0);
 
     PuzzleOptions opts;
     //opts.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ", "h:/PUZ2" };
     opts.directories = { "c:/PUZ", "d:/PUZ"};
     opts.segmentBits = 32;
-    opts.threads = 4;
+    opts.threads = 3;
     //opts.maxSteps = 4;
     //InMemoryClassicBFS(puzzle, initial);
     //InMemoryFrontierSearch(puzzle, initial);

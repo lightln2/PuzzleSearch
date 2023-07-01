@@ -59,6 +59,8 @@ void PuzzleGpu::Expand(
 {
     SetupOutputBuffers(expandedIndexes, expandedOperators);
 
+    if (indexes.size() == 0) return;
+
     auto br = BranchingFactor();
 
     expandedIndexes.resize(indexes.size() * br);

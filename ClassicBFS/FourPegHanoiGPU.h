@@ -27,6 +27,13 @@ public:
 
     virtual uint64_t Parse(std::string state) { return m_SimplePuzzle.Parse(state); }
 
+    virtual void Expand(
+        std::vector<uint64_t>& indexes,
+        std::vector<int>& usedOperatorBits,
+        std::vector<uint64_t>& expandedIndexes,
+        std::vector<int>& expandedOperators,
+        ExpandHint hint);
+
 protected:
     virtual void ExpandGpu(
         uint64_t* gpuIndexes,
