@@ -31,7 +31,10 @@ StoreSet SegmentedOptions::MakeStoreSet(std::string suffix, int count) {
 
 void SegmentedOptions::PrintOptions() {
     std::cerr
-        << "; nodes: " << WithDecSep(TotalSize)
+        << Puzzle.Name()
+        << "\nnodes: " << WithDecSep(TotalSize)
+        << "; threads: " << Opts.threads
+        << "\nseg.bits: " << Opts.segmentBits
         << "; segments: " << WithDecSep(Segments)
         << "; segment size: " << WithDecSep(SegmentSize)
         << std::endl;

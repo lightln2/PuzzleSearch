@@ -82,10 +82,10 @@ void TestDiskBasedHanoi() {
     std::string initial = puzzle.ToString(0);
 
     PuzzleOptions opts;
-    //opts.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ", "h:/PUZ2" };
-    opts.directories = { "c:/PUZ", "d:/PUZ"};
+    opts.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ", "h:/PUZ2" };
+    //opts.directories = { "c:/PUZ", "d:/PUZ"};
     opts.segmentBits = 32;
-    opts.threads = 3;
+    opts.threads = 6;
     //opts.maxSteps = 4;
     //InMemoryClassicBFS(puzzle, initial);
     //InMemoryFrontierSearch(puzzle, initial);
