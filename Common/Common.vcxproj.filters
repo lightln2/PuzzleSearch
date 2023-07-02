@@ -49,6 +49,9 @@
     <ClCompile Include="BitArray.h">
       <Filter>Util</Filter>
     </ClCompile>
+    <ClCompile Include="DiskBasedOptThreeBitBFS2.cpp">
+      <Filter>DiskBasedBFS</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="File.h" />

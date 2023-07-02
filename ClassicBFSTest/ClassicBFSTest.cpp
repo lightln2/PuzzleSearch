@@ -404,6 +404,26 @@ TEST(HanoiTowers_GPU, Opt3BitBFS_10_mt_Sym) {
     EXPECT_EQ(ToString(result), "1 1 1 3 5 7 11 16 24 36 55 56 81 137 172 162 183 293 435 506 588 562 779 1056 1519 1780 1930 1983 2249 2871 3957 5367 6165 6638 6425 6654 7608 9511 12500 15255 17690 18320 15339 10630 7614 5496 2214 334 52 4");
 }
 
+TEST(HanoiTowers_GPU, Opt3BitBFS_21) {
+    FourPegHanoiGPU puzzle(21, false);
+    PuzzleOptions opts;
+    opts.segmentBits = 32;
+    opts.threads = 2;
+    opts.maxSteps = 10;
+    auto result = DiskBasedOptThreeBitBFS(puzzle, puzzle.ToString(0), opts);
+    EXPECT_EQ(ToString(result), "1 3 6 12 30 30 66 96 126 210 330");
+}
+
+TEST(HanoiTowers_GPU, Opt3BitBFS_21_Sym) {
+    FourPegHanoiGPU puzzle(21, true);
+    PuzzleOptions opts;
+    opts.segmentBits = 32;
+    opts.threads = 2;
+    opts.maxSteps = 10;
+    auto result = DiskBasedOptThreeBitBFS(puzzle, puzzle.ToString(0), opts);
+    EXPECT_EQ(ToString(result), "1 1 1 3 5 7 11 16 24 36 55");
+}
+
 TEST(Pancake_CPU, Opt3BitBFS_5) {
     PancakeSimple puzzle(5);
     auto result = DiskBasedOptThreeBitBFS(puzzle, puzzle.ToString(0));
@@ -493,6 +513,35 @@ TEST(Pancake_Opt_GPU, Opt3BitBFS_13_mt_invIdx) {
     opts.threads = 3;
     opts.maxSteps = 6;
     auto result = DiskBasedOptThreeBitBFS(puzzle, puzzle.ToString(0), opts);
+    EXPECT_EQ(ToString(result), "1 12 132 1451 14556 130096 1030505");
+}
+
+TEST(Pancake_Opt_GPU, Opt3BitBFS2_9_mt) {
+    PancakeOptimizedGPU puzzle(9, false);
+    PuzzleOptions opts;
+    opts.segmentBits = 15;
+    opts.threads = 3;
+    auto result = DiskBasedOptThreeBitBFS2(puzzle, puzzle.ToString(0), opts);
+    EXPECT_EQ(ToString(result), "1 8 56 391 2278 10666 38015 93585 132697 79379 5804");
+}
+
+TEST(Pancake_Opt_GPU, Opt3BitBFS2_13_mt) {
+    PancakeOptimizedGPU puzzle(13, false);
+    PuzzleOptions opts;
+    opts.segmentBits = 29;
+    opts.threads = 3;
+    opts.maxSteps = 6;
+    auto result = DiskBasedOptThreeBitBFS2(puzzle, puzzle.ToString(0), opts);
+    EXPECT_EQ(ToString(result), "1 12 132 1451 14556 130096 1030505");
+}
+
+TEST(Pancake_Opt_GPU, Opt3BitBFS2_13_mt_invIdx) {
+    PancakeOptimizedGPU puzzle(13, true);
+    PuzzleOptions opts;
+    opts.segmentBits = 29;
+    opts.threads = 3;
+    opts.maxSteps = 6;
+    auto result = DiskBasedOptThreeBitBFS2(puzzle, puzzle.ToString(0), opts);
     EXPECT_EQ(ToString(result), "1 12 132 1451 14556 130096 1030505");
 }
 

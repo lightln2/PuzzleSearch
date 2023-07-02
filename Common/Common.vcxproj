@@ -83,6 +83,7 @@
     <ClCompile Include="DiskBasedClassicBFS.cpp" />
     <ClCompile Include="DiskBasedFrontierSearch.cpp" />
     <ClCompile Include="DiskBasedOptThreeBitBFS.cpp" />
+    <ClCompile Include="DiskBasedOptThreeBitBFS2.cpp" />
     <ClCompile Include="DiskBasedThreeBitBFS.cpp" />
     <ClCompile Include="DiskBasedTwoBitBFS.cpp" />
     <ClCompile Include="File.cpp" />

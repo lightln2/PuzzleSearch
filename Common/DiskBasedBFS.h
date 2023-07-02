@@ -42,3 +42,4 @@ std::vector<uint64_t> DiskBasedThreeBitBFS(Puzzle& puzzle, std::string initialSt
 std::vector<uint64_t> DiskBasedFrontierSearch(Puzzle& puzzle, std::string initialState, PuzzleOptions opts = {});
 std::vector<uint64_t> DiskBasedOptFrontierSearch(Puzzle& puzzle, std::string initialState, PuzzleOptions opts = {});
 std::vector<uint64_t> DiskBasedOptThreeBitBFS(Puzzle& puzzle, std::string initialState, PuzzleOptions opts = {});
+std::vector<uint64_t> DiskBasedOptThreeBitBFS2(Puzzle& puzzle, std::string initialState, PuzzleOptions opts = {});

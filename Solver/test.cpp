@@ -39,33 +39,20 @@ void TestBitArray() {
 void TestClassicBFS() {
     std::string initial = "0 1 2 3 4 5 6 7 8 9 10 11";
 
-    /*
-    {
-        SlidingTilePuzzleSimple puzzle(4, 3);
-        InMemoryClassicBFS(puzzle, initial);
-        InMemoryTwoBitBFS(puzzle, initial);
-        InMemoryThreeBitBFS(puzzle, initial);
-        InMemoryFrontierSearch(puzzle, initial);
-    }
-    */
-    {
-        SlidingTilePuzzleGpu puzzle(4, 3);
-        InMemoryClassicBFS(puzzle, initial);
-        //InMemoryTwoBitBFS(puzzle, initial);
-        //InMemoryThreeBitBFS(puzzle, initial);
-        //InMemoryFrontierSearch(puzzle, initial);
-    }
+    SlidingTilePuzzleGpu puzzle(4, 3);
+    InMemoryClassicBFS(puzzle, initial);
+    //InMemoryTwoBitBFS(puzzle, initial);
+    //InMemoryThreeBitBFS(puzzle, initial);
+    //InMemoryFrontierSearch(puzzle, initial);
 }
 
 
 void TestDiskBasedBFS() {
-
-    std::string initial = "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15";
-    //std::string initial = "0 1 2 3 4 5";
-
     //SlidingTilePuzzleSimple puzzle(4, 4);
     //SlidingTilePuzzleGpu puzzle(4, 4);
     SlidingTilePuzzleOptimized<4, 4> puzzle;
+    std::string initial = puzzle.ToString(0);
+
     PuzzleOptions opts;
     //opts.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ", "h:/PUZ2"};
     opts.directories = { "c:/PUZ", "d:/PUZ"};
@@ -76,7 +63,6 @@ void TestDiskBasedBFS() {
     DiskBasedOptFrontierSearch(puzzle, initial, opts);
     //DiskBasedOptThreeBitBFS(puzzle, initial, opts);
 }
-
 
 void TestDiskBasedHanoi() {
 
@@ -90,23 +76,10 @@ void TestDiskBasedHanoi() {
     opts.segmentBits = 32;
     opts.threads = 1;
     //opts.maxSteps = 4;
-    //InMemoryClassicBFS(puzzle, initial);
-    //InMemoryFrontierSearch(puzzle, initial);
     //DiskBasedClassicBFS(puzzle, initial, opts);
     //DiskBasedFrontierSearch(puzzle, initial, opts);
     //DiskBasedOptFrontierSearch(puzzle, initial, opts);
     DiskBasedOptThreeBitBFS(puzzle, initial, opts);
-
-    /*
-    FourPegHanoiGPU puzzle(15, true);
-    std::string initial = puzzle.ToString(0);
-
-    PuzzleOptions opts;
-    opts.directories = { "c:/PUZ", "d:/PUZ"};
-    opts.segmentBits = 32;
-    opts.threads = 1;
-    DiskBasedOptFrontierSearch(puzzle, initial, opts);
-    */
 }
 
 void TestPancake() {
@@ -114,6 +87,7 @@ void TestPancake() {
     //PancakeSimple puzzle(13);
     //PancakeOptimized puzzle(13);
     PancakeOptimizedGPU puzzle(13, true);
+
     std::string initial = puzzle.ToString(0);
 
     PuzzleOptions opts;
@@ -121,17 +95,6 @@ void TestPancake() {
     opts.directories = { "c:/PUZ", "d:/PUZ"};
     opts.segmentBits = 29;
     opts.threads = 4;
-    opts.maxSteps = 11;
-    DiskBasedOptThreeBitBFS(puzzle, initial, opts);
-
-    /*
-    FourPegHanoiGPU puzzle(15, true);
-    std::string initial = puzzle.ToString(0);
-
-    PuzzleOptions opts;
-    opts.directories = { "c:/PUZ", "d:/PUZ"};
-    opts.segmentBits = 32;
-    opts.threads = 1;
-    DiskBasedOptFrontierSearch(puzzle, initial, opts);
-    */
+    //opts.maxSteps = 11;
+    DiskBasedOptThreeBitBFS2(puzzle, initial, opts);
 }
