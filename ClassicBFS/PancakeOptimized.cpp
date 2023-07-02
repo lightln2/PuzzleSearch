@@ -18,16 +18,9 @@ namespace {
         }
     }
 
-    void Move(int* arr, int* newarr, int size, int count, bool invIdx) {
+    void Move(int* arr, int* newarr, int size, int count) {
         memcpy(newarr, arr, 16 * sizeof(int));
-        if (invIdx && size > 12) {
-            MoveInternal(newarr, size, 12);
-            MoveInternal(newarr, size, count);
-            MoveInternal(newarr, size, 12);
-        }
-        else {
-            MoveInternal(newarr, size, count);
-        }
+        MoveInternal(newarr, size, count);
     }
 
     uint64_t OptPermutationRank(int* arr, int size) {
@@ -67,7 +60,6 @@ namespace {
         }
         else {
             uint64_t segment = index >> 29;
-            //index -= (segment << 29);
             index &= ((1ui64 << 29) - 1);
 
             for (int i = size - 13; i >= 0; i--) {
@@ -116,7 +108,6 @@ std::string PancakeOptimized::ToString(uint64_t index) {
     std::ostringstream stream;
     int arr[16];
     OptPermutationUnrank(index, arr, m_Size);
-    if (m_InverseIndex && m_Size > 12) MoveInternal(arr, m_Size, 12);
     for (int i = 0; i < m_Size; i++) {
         if (i > 0) stream << ' ';
         stream << arr[i];
@@ -130,8 +121,23 @@ uint64_t PancakeOptimized::Parse(std::string state) {
     for (int i = 0; i < m_Size; i++) {
         stream >> arr[i];
     }
-    if (m_InverseIndex && m_Size > 12) MoveInternal(arr, m_Size, 12);
     return OptPermutationRank(arr, m_Size);
+}
+
+void PancakeOptimized::CrossSegmentPostProcess(int op, int segment, int segmentBits, Buffer<uint32_t>& expandedIndexes) {
+    bool invert = m_InverseIndex && segmentBits == 29 && m_Size > 12;
+    if (!invert) return;
+    const uint64_t SEG_MASK = (1ui64 << 29) - 1;
+    for (size_t i = 0; i < expandedIndexes.Size(); i++) {
+        uint64_t index = (uint64_t(segment) << segmentBits) | expandedIndexes[i];
+        int arr[16];
+        OptPermutationUnrank(index, arr, m_Size);
+        // invert!
+        MoveInternal(arr, m_Size, 12);
+        index = OptPermutationRank(arr, m_Size);
+        ensure(index >> segmentBits == segment);
+        expandedIndexes[i] = uint32_t(index & SEG_MASK);
+    }
 }
 
 void PancakeOptimized::Expand(uint64_t index, int opBits, std::vector<uint64_t>& expandedIndexes, std::vector<int>& expandedOperators) {
@@ -141,7 +147,7 @@ void PancakeOptimized::Expand(uint64_t index, int opBits, std::vector<uint64_t>&
     int newarr[16];
     for (int op = 0; op < m_Size - 1; op++) {
         if (HasOp(opBits, op)) continue;
-        Move(arr, newarr, m_Size, op + 2, m_InverseIndex);
+        Move(arr, newarr, m_Size, op + 2);
         expandedIndexes.push_back(OptPermutationRank(newarr, m_Size));
         expandedOperators.push_back(op);
     }
@@ -154,20 +160,23 @@ void PancakeOptimized::ExpandInSegment(uint64_t index, int opBits, std::vector<u
     int newarr[16];
     for (int op = 0; op < 11; op++) {
         if (HasOp(opBits, op)) continue;
-        Move(arr, newarr, m_Size, op + 2, m_InverseIndex);
+        Move(arr, newarr, m_Size, op + 2);
         expandedIndexes.push_back(OptPermutationRank(newarr, m_Size));
         expandedOperators.push_back(op);
     }
 }
 
 void PancakeOptimized::ExpandCrossSegment(uint64_t index, int opBits, std::vector<uint64_t>& expandedIndexes, std::vector<int>& expandedOperators) {
+    bool invert = m_InverseIndex && m_Size > 12;
+    //std::cerr << "INVERT: " << m_InverseIndex<< "; s: " << m_Size << std::endl;
     int arr[16];
     OptPermutationUnrank(index, arr, m_Size);
 
     int newarr[16];
     for (int op = 11; op < m_Size - 1; op++) {
         if (HasOp(opBits, op)) continue;
-        Move(arr, newarr, m_Size, op + 2, m_InverseIndex);
+        Move(arr, newarr, m_Size, op + 2);
+        if (invert) MoveInternal(newarr, m_Size, 12);
         expandedIndexes.push_back(OptPermutationRank(newarr, m_Size));
         expandedOperators.push_back(op);
     }

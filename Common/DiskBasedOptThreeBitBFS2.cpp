@@ -39,6 +39,8 @@ public:
         FrontierWriter.Add(idx);
         FrontierWriter.Flush();
 
+        Expander.SetExpandHint(SOpts.Opts.segmentBits, true);
+
         auto fnExpandCrossSegment = [&](uint64_t child, int op) {
             auto [s, idx] = SOpts.GetSegIdx(child);
             if (s == seg) return;
@@ -65,6 +67,7 @@ public:
                 auto& vect = CrossSegmentReader.Read(op);
                 if (vect.IsEmpty()) break;
                 hasData = true;
+                SOpts.Puzzle.CrossSegmentPostProcess(op, segment, SOpts.Opts.segmentBits, vect);
                 if (XSegUsedOpBits[op].DataSize() == 0) {
                     XSegUsedOpBits[op].Resize(SOpts.SegmentSize);
                     XSegUsedOps.push_back(op);

@@ -17,6 +17,9 @@ void DestroyCudaStream(CuStream stream);
 void CopyToGpu(uint64_t* buffer, uint64_t* gpuBuffer, size_t count, CuStream stream);
 void CopyFromGpu(uint64_t* gpuBuffer, uint64_t* buffer, size_t count, CuStream stream);
 
+void CopyToGpu(uint32_t* buffer, uint32_t* gpuBuffer, size_t count, CuStream stream);
+void CopyFromGpu(uint32_t* gpuBuffer, uint32_t* buffer, size_t count, CuStream stream);
+
 __device__ void GpuPermutationCompact(int* arr, int size);
 
 __device__ void GpuPermutationUncompact(int* arr, int size);

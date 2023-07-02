@@ -38,6 +38,14 @@ void CopyFromGpu(uint64_t* gpuBuffer, uint64_t* buffer, size_t count, CuStream s
     ERR(cudaStreamSynchronize(cudaStream_t(stream)));
 }
 
+void CopyToGpu(uint32_t* buffer, uint32_t* gpuBuffer, size_t count, CuStream stream) {
+    ERR(cudaMemcpyAsync(gpuBuffer, buffer, count * sizeof(uint32_t), cudaMemcpyHostToDevice, cudaStream_t(stream)));
+}
+
+void CopyFromGpu(uint32_t* gpuBuffer, uint32_t* buffer, size_t count, CuStream stream) {
+    ERR(cudaMemcpyAsync(buffer, gpuBuffer, count * sizeof(int32_t), cudaMemcpyDeviceToHost, cudaStream_t(stream)));
+    ERR(cudaStreamSynchronize(cudaStream_t(stream)));
+}
 
 __device__ void GpuPermutationCompact(int* arr, int size) {
     int set_bits = 0;

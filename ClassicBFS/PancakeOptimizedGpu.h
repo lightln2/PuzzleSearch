@@ -34,6 +34,12 @@ public:
         std::vector<int>& expandedOperators,
         ExpandHint hint);
 
+    virtual void CrossSegmentPostProcess(
+        int op,
+        int segment,
+        int segmentBits,
+        Buffer<uint32_t>& expandedIndexes);
+
 protected:
     virtual void ExpandGpu(
         uint64_t* gpuIndexes,

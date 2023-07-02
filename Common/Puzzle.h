@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Buffer.h"
 #include "Util.h"
 
 #include <atomic>
@@ -34,6 +35,13 @@ public:
         std::vector<uint64_t>& expandedIndexes,
         std::vector<int>& expandedOperators,
         ExpandHint hint) = 0;
+
+    /* Advanced */
+    virtual void CrossSegmentPostProcess(
+        int op,
+        int segment,
+        int segmentBits,
+        Buffer<uint32_t>& expandedIndexes) {}
 
 protected:
     virtual void SetupOutputBuffers(std::vector<uint64_t>& expandedIndexes, std::vector<int>& expandedOperators);

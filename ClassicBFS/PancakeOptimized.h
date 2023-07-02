@@ -34,6 +34,11 @@ public:
 
     bool InvIndex() const { return m_InverseIndex; }
 
+    virtual void CrossSegmentPostProcess(
+        int op,
+        int segment,
+        int segmentBits,
+        Buffer<uint32_t>& expandedIndexes);
 private:
     void Expand(uint64_t index, int opBits, std::vector<uint64_t>& expandedIndexes, std::vector<int>& expandedOperators);
     void ExpandInSegment(uint64_t index, int opBits, std::vector<uint64_t>& expandedIndexes, std::vector<int>& expandedOperators);

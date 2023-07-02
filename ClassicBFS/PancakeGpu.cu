@@ -29,16 +29,9 @@ namespace {
         }
     }
 
-    __device__ void Move(int* arr, int* newarr, int size, int count, bool invIdx) {
+    __device__ void Move(int* arr, int* newarr, int size, int count) {
         for (int i = 0; i < 16; i++) newarr[i] = arr[i];
-        if (invIdx && size > 12) {
-            MoveInternal(newarr, size, 12);
-            MoveInternal(newarr, size, count);
-            MoveInternal(newarr, size, 12);
-        }
-        else {
-            MoveInternal(newarr, size, count);
-        }
+        MoveInternal(newarr, size, count);
     }
 
     __device__ uint64_t OptPermutationRank(int* arr, int size) {
@@ -96,7 +89,7 @@ namespace {
 
 }
 
-__global__ void kernel_pancake_expand(uint64_t* indexes, uint64_t* expanded, int size, bool invIndex, uint64_t count) {
+__global__ void kernel_pancake_expand(uint64_t* indexes, uint64_t* expanded, int size, uint64_t count) {
     uint64_t i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= count) return;
 
@@ -116,7 +109,7 @@ __global__ void kernel_pancake_expand(uint64_t* indexes, uint64_t* expanded, int
     for (int op = 0; op < MAX_OP; op++) {
         uint64_t result = INVALID_INDEX;
         if (!HasOp(opBits, op)) {
-            Move(arr, newarr, size, op + 2, invIndex);
+            Move(arr, newarr, size, op + 2);
             uint64_t child = OptPermutationRank(newarr, size);
             result = (child << MAX_OP) | op;
         }
@@ -124,7 +117,7 @@ __global__ void kernel_pancake_expand(uint64_t* indexes, uint64_t* expanded, int
     }
 }
 
-__global__ void kernel_pancake_expandInSegment(uint64_t* indexes, uint64_t* expanded, int size, bool invIndex, uint64_t count) {
+__global__ void kernel_pancake_expandInSegment(uint64_t* indexes, uint64_t* expanded, int size, uint64_t count) {
     uint64_t i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= count) return;
 
@@ -144,7 +137,7 @@ __global__ void kernel_pancake_expandInSegment(uint64_t* indexes, uint64_t* expa
     for (int op = 0; op < 11; op++) {
         uint64_t result = INVALID_INDEX;
         if (!HasOp(opBits, op)) {
-            Move(arr, newarr, size, op + 2, invIndex);
+            Move(arr, newarr, size, op + 2);
             uint64_t child = OptPermutationRank(newarr, size);
             result = (child << MAX_OP) | op;
         }
@@ -172,7 +165,10 @@ __global__ void kernel_pancake_expandCrossSegment(uint64_t* indexes, uint64_t* e
     for (int op = 11; op < MAX_OP; op++) {
         uint64_t result = INVALID_INDEX;
         if (!HasOp(opBits, op)) {
-            Move(arr, newarr, size, op + 2, invIndex);
+            Move(arr, newarr, size, op + 2);
+            if (size > 12 && invIndex) {
+                MoveInternal(newarr, size, 12);
+            }
             uint64_t child = OptPermutationRank(newarr, size);
             result = (child << MAX_OP) | op;
         }
@@ -180,11 +176,26 @@ __global__ void kernel_pancake_expandCrossSegment(uint64_t* indexes, uint64_t* e
     }
 }
 
+__global__ void kernel_pancake_crossSegmentPostProcess(uint32_t* indexes, int segment, int size, uint64_t count) {
+    uint64_t i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= count) return;
+
+    const uint64_t SEG_MASK = (1ui64 << 29) - 1;
+
+    uint64_t index = (uint64_t(segment) << 29) | indexes[i];
+
+    int arr[16];
+    OptPermutationUnrank(index, arr, size);
+    MoveInternal(arr, size, 12);
+    index = OptPermutationRank(arr, size);
+    if (segment != index >> 29) index = INVALID_INDEX;
+    indexes[i] = uint32_t(index & SEG_MASK);
+}
+
 void PancakeExpand(
     uint64_t* gpuIndexes,
     uint64_t* gpuExpanded,
     int size,
-    bool invIndex,
     uint64_t count,
     CuStream stream)
 {
@@ -195,7 +206,6 @@ void PancakeExpand(
         gpuIndexes,
         gpuExpanded,
         size,
-        invIndex,
         count);
     ERR(cudaGetLastError());
 }
@@ -204,7 +214,6 @@ void PancakeExpandInSegment(
     uint64_t* gpuIndexes,
     uint64_t* gpuExpanded,
     int size,
-    bool invIndex,
     uint64_t count,
     CuStream stream)
 {
@@ -215,7 +224,6 @@ void PancakeExpandInSegment(
         gpuIndexes,
         gpuExpanded,
         size,
-        invIndex,
         count);
     ERR(cudaGetLastError());
 }
@@ -236,6 +244,24 @@ void PancakeExpandCrossSegment(
         gpuExpanded,
         size,
         invIndex,
+        count);
+    ERR(cudaGetLastError());
+}
+
+void PancakeCrossSegmentPostProcessGPU(
+    uint32_t* gpuIndexes,
+    int segment,
+    int size,
+    uint64_t count,
+    CuStream stream)
+{
+    auto threadsPerBlock = 256;
+    auto blocksPerGrid = uint32_t((count + threadsPerBlock - 1) / threadsPerBlock);
+
+    kernel_pancake_crossSegmentPostProcess << <blocksPerGrid, threadsPerBlock, 0, cudaStream_t(stream) >> > (
+        gpuIndexes,
+        segment,
+        size,
         count);
     ERR(cudaGetLastError());
 }

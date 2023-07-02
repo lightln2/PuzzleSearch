@@ -18,6 +18,21 @@ void PancakeOptimizedGPU::ExpandGpu(
     ensure(false);
 }
 
+void PancakeOptimizedGPU::CrossSegmentPostProcess(int op, int segment, int segmentBits, Buffer<uint32_t>& expandedIndexes) {
+    bool invert = m_SimplePuzzle.InvIndex() && segmentBits == 29 && m_SimplePuzzle.Size() > 12;
+    if (!invert) return;
+
+    auto* stream = AquireStream();
+
+    CopyToGpu(&expandedIndexes[0], (uint32_t*)stream->gpuSrc, expandedIndexes.Size(), stream->stream);
+
+    PancakeCrossSegmentPostProcessGPU((uint32_t*)stream->gpuSrc, segment, m_SimplePuzzle.Size(), expandedIndexes.Size(), stream->stream);
+
+    CopyFromGpu((uint32_t*)stream->gpuSrc, &expandedIndexes[0], expandedIndexes.Size(), stream->stream);
+
+    ReleaseStream(stream);
+}
+
 void PancakeOptimizedGPU::Expand(
     std::vector<uint64_t>& indexes,
     std::vector<int>& usedOperatorBits,
@@ -39,24 +54,20 @@ void PancakeOptimizedGPU::Expand(
 
     if (hint.SegmentBits == 29 && m_SimplePuzzle.Size() > 12) {
         if (hint.CrossSegment) {
-            //PancakeExpand(stream->gpuSrc, stream->gpuDst, m_SimplePuzzle.Size(), m_SimplePuzzle.InvIndex(), indexes.size(), stream->stream);
-            //expandedIndexes.resize(indexes.size() * br);
-            //expandedOperators.resize(indexes.size() * br);
-            //CopyFromGpu(stream->gpuDst, &expandedIndexes[0], expandedIndexes.size(), stream->stream);
             PancakeExpandCrossSegment(stream->gpuSrc, stream->gpuDst, m_SimplePuzzle.Size(), m_SimplePuzzle.InvIndex(), indexes.size(), stream->stream);
             expandedIndexes.resize(indexes.size() * (br - 11));
             expandedOperators.resize(indexes.size() * (br - 11));
             CopyFromGpu(stream->gpuDst, &expandedIndexes[0], expandedIndexes.size(), stream->stream);
         }
         else {
-            PancakeExpandInSegment(stream->gpuSrc, stream->gpuDst, m_SimplePuzzle.Size(), m_SimplePuzzle.InvIndex(), indexes.size(), stream->stream);
+            PancakeExpandInSegment(stream->gpuSrc, stream->gpuDst, m_SimplePuzzle.Size(), indexes.size(), stream->stream);
             expandedIndexes.resize(indexes.size() * 11);
             expandedOperators.resize(indexes.size() * 11);
             CopyFromGpu(stream->gpuDst, &expandedIndexes[0], expandedIndexes.size(), stream->stream);
         }
     }
     else {
-        PancakeExpand(stream->gpuSrc, stream->gpuDst, m_SimplePuzzle.Size(), m_SimplePuzzle.InvIndex(), indexes.size(), stream->stream);
+        PancakeExpand(stream->gpuSrc, stream->gpuDst, m_SimplePuzzle.Size(), indexes.size(), stream->stream);
         expandedIndexes.resize(indexes.size() * br);
         expandedOperators.resize(indexes.size() * br);
         CopyFromGpu(stream->gpuDst, &expandedIndexes[0], expandedIndexes.size(), stream->stream);
