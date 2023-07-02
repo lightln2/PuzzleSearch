@@ -2,7 +2,6 @@
 
 #include "Buffer.h"
 #include "Store.h"
-#include "StreamVInt.h"
 
 class CompressedFrontierReader {
     static constexpr size_t BUFSIZE = 12 * 1024 * 1024;

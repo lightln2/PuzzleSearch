@@ -52,6 +52,7 @@
     <ClCompile Include="DiskBasedOptThreeBitBFS2.cpp">
       <Filter>DiskBasedBFS</Filter>
     </ClCompile>
+    <ClCompile Include="FrontierCompression.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="File.h" />
@@ -81,6 +82,7 @@
     <ClInclude Include="Buffer.h">
       <Filter>Util</Filter>
     </ClInclude>
+    <ClInclude Include="FrontierCompression.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Util">

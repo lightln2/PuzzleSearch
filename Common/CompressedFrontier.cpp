@@ -1,4 +1,6 @@
 #include "CompressedFrontier.h"
+#include "FrontierCompression.h"
+#include "StreamVInt.h"
 #include "Util.h"
 
 
@@ -95,7 +97,7 @@ Buffer<uint32_t>& CompressedSegmentReader::Read() {
         m_InputPos = 0;
     }
     m_IndexBuffer.Clear();
-    m_InputPos = StreamVInt::Decode(m_InputPos, m_InputBuffer, m_IndexBuffer);
+    m_InputPos = FrontierCompression::Decode(m_InputPos, m_InputBuffer, m_IndexBuffer);
     return m_IndexBuffer;
 }
 
@@ -125,7 +127,7 @@ void CompressedSegmentWriter::Add(uint32_t index) {
 }
 
 void CompressedSegmentWriter::FlushData() {
-    StreamVInt::Encode(m_IndexBuffer, m_CompressedBuffer);
+    FrontierCompression::Encode(m_IndexBuffer, m_CompressedBuffer);
     m_IndexBuffer.Clear();
     if (!m_OutputBuffer.CanAppend(m_CompressedBuffer)) FlushBuffer();
     m_OutputBuffer.Append(m_CompressedBuffer);

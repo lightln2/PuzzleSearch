@@ -88,6 +88,7 @@
     <ClCompile Include="DiskBasedTwoBitBFS.cpp" />
     <ClCompile Include="File.cpp" />
     <ClCompile Include="DiskBasedOptFrontierSearch.cpp" />
+    <ClCompile Include="FrontierCompression.cpp" />
     <ClCompile Include="InMemoryClassicBFS.cpp" />
     <ClCompile Include="InMemoryFrontierSearch.cpp" />
     <ClCompile Include="InMemoryThreeBitBFS.cpp" />
@@ -107,6 +108,7 @@
     <ClInclude Include="CompressedFrontier.h" />
     <ClInclude Include="DiskBasedBFS.h" />
     <ClInclude Include="File.h" />
+    <ClInclude Include="FrontierCompression.h" />
     <ClInclude Include="InMemoryBFS.h" />
     <ClInclude Include="Multiplexor.h" />
     <ClInclude Include="Puzzle.h" />
