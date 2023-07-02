@@ -8,10 +8,10 @@ namespace {
 
 namespace FrontierCompression {
 
-    int BitMapSize(int count, uint32_t* indexes) {
+    size_t BitMapSize(int count, uint32_t* indexes) {
         uint32_t first = indexes[0];
         uint32_t last = indexes[count - 1];
-        int bitmapSize = (last - first + 63) / 64;
+        size_t bitmapSize = (last - first + 63) / 64;
         return bitmapSize * 8 + 8;
     }
 
@@ -56,8 +56,8 @@ namespace FrontierCompression {
 
     int Encode(int count, uint32_t* indexes, uint8_t* buffer, int buffer_capacity) {
         if (count == 0) return 0;
-        int minBitsPerStreamVInt = count * 10;
-        int bitsPerHM = BitMapSize(count, indexes) * 8;
+        size_t minBitsPerStreamVInt = size_t(count) * 10;
+        size_t bitsPerHM = BitMapSize(count, indexes) * 8;
         if (count > 128 && bitsPerHM < minBitsPerStreamVInt) {
             //std::cerr << "MAP: " << bitsPerHM << " < " << minBitsPerStreamVInt << std::endl;
             return EncodeBitMap(count, indexes, buffer, buffer_capacity);

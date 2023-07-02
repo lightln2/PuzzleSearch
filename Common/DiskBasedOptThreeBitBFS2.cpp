@@ -127,9 +127,10 @@ public:
             count++;
             int opBits = 0;
             for (int op : XSegUsedOps) {
-                if (XSegUsedOpBits[op].Get(index)) {
-                    opBits |= (1 << op);
-                }
+                opBits |= XSegUsedOpBits[op].Get(index) << op;
+                //if (XSegUsedOpBits[op].Get(index)) {
+                //    opBits |= (1 << op);
+                //}
             }
             Expander.Add(indexBase | index, opBits, fnExpandCrossSegment);
             FrontierWriter.Add(uint32_t(index));
