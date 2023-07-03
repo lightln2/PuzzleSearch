@@ -45,7 +45,6 @@ void FourPegHanoiOptimizedGPU::Expand(
         bool z3 = ((p0i & p1i) & 0x55555555ui32) != 0;
         return int(z0) + int(z1) + int(z2) + int(z3) >= 3;
     };
-
     if (filterXSeg) {
         size_t src = 0, dst = 0;
         while (dst < indexes.size()) {

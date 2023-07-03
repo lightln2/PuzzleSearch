@@ -216,6 +216,30 @@ TEST(HanoiPuzzleTest, HanoiOpt19_Symmetry) {
     EXPECT_EQ(1, ops[1]);
 }
 
+TEST(HanoiPuzzleTest, HanoiOpt19_Symmetry2) {
+    FourPegHanoiOptimized puz(19, true);
+    auto index = puz.Parse("18 19 0 13 14 15 16 17 0 1 2 3 4 5 6 7 8 9 10 11 12 0");
+    std::vector<uint64_t> indexes;
+    std::vector<int> usedOpBits;
+    std::vector<uint64_t> children;
+    std::vector<int> ops;
+    indexes.push_back(index);
+    usedOpBits.push_back(0);
+    puz.Expand(indexes, usedOpBits, children, ops, {});
+    EXPECT_EQ("13 18 19 0 14 15 16 17 0 1 2 3 4 5 6 7 8 9 10 11 12 0", puz.ToString(children[0]));
+    EXPECT_EQ(0, ops[0]);
+    EXPECT_EQ("1 18 19 0 13 14 15 16 17 0 2 3 4 5 6 7 8 9 10 11 12 0", puz.ToString(children[1]));
+    EXPECT_EQ(0, ops[1]);
+    EXPECT_EQ("19 0 18 0 13 14 15 16 17 0 1 2 3 4 5 6 7 8 9 10 11 12", puz.ToString(children[2]));
+    EXPECT_EQ(1, ops[2]);
+    EXPECT_EQ("18 19 0 1 13 14 15 16 17 0 2 3 4 5 6 7 8 9 10 11 12 0", puz.ToString(children[3]));
+    EXPECT_EQ(1, ops[3]);
+    EXPECT_EQ("18 19 0 14 15 16 17 0 13 0 1 2 3 4 5 6 7 8 9 10 11 12", puz.ToString(children[4]));
+    EXPECT_EQ(2, ops[4]);
+    EXPECT_EQ("18 19 0 13 14 15 16 17 0 2 3 4 5 6 7 8 9 10 11 12 0 1", puz.ToString(children[5]));
+    EXPECT_EQ(3, ops[5]);
+}
+
 /////////// GPU & OPTIMIZED ///////////////////
 
 TEST(HanoiPuzzleTest, HanoiGpuOpt5) {
@@ -326,4 +350,28 @@ TEST(HanoiPuzzleTest, HanoiGpuOpt19_Symmetry) {
     EXPECT_EQ(1, ops[0]);
     EXPECT_EQ("2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 0 1 0 0", puz.ToString(children[1]));
     EXPECT_EQ(1, ops[1]);
+}
+
+TEST(HanoiPuzzleTest, HanoiGpuOpt19_Symmetry2) {
+    FourPegHanoiOptimizedGPU puz(19, true);
+    auto index = puz.Parse("18 19 0 13 14 15 16 17 0 1 2 3 4 5 6 7 8 9 10 11 12 0");
+    std::vector<uint64_t> indexes;
+    std::vector<int> usedOpBits;
+    std::vector<uint64_t> children;
+    std::vector<int> ops;
+    indexes.push_back(index);
+    usedOpBits.push_back(0);
+    puz.Expand(indexes, usedOpBits, children, ops, {});
+    EXPECT_EQ("13 18 19 0 14 15 16 17 0 1 2 3 4 5 6 7 8 9 10 11 12 0", puz.ToString(children[0]));
+    EXPECT_EQ(0, ops[0]);
+    EXPECT_EQ("1 18 19 0 13 14 15 16 17 0 2 3 4 5 6 7 8 9 10 11 12 0", puz.ToString(children[1]));
+    EXPECT_EQ(0, ops[1]);
+    EXPECT_EQ("19 0 18 0 13 14 15 16 17 0 1 2 3 4 5 6 7 8 9 10 11 12", puz.ToString(children[2]));
+    EXPECT_EQ(1, ops[2]);
+    EXPECT_EQ("18 19 0 1 13 14 15 16 17 0 2 3 4 5 6 7 8 9 10 11 12 0", puz.ToString(children[3]));
+    EXPECT_EQ(1, ops[3]);
+    EXPECT_EQ("18 19 0 14 15 16 17 0 13 0 1 2 3 4 5 6 7 8 9 10 11 12", puz.ToString(children[4]));
+    EXPECT_EQ(2, ops[4]);
+    EXPECT_EQ("18 19 0 13 14 15 16 17 0 2 3 4 5 6 7 8 9 10 11 12 0 1", puz.ToString(children[5]));
+    EXPECT_EQ(3, ops[5]);
 }

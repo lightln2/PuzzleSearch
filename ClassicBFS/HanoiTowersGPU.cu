@@ -21,7 +21,7 @@ namespace {
     }
 
     __device__ void gpu_swap(uint64_t& x, uint64_t& y) {
-        int temp = x;
+        uint64_t temp = x;
         x = y;
         y = temp;
     }
@@ -196,7 +196,7 @@ namespace {
         }
 
         __device__ uint64_t to_index() const {
-            return pegs[1] | (pegs[2] * 2) | (pegs[3] * 3);
+            return pegs[1] | (pegs[2] << 1) | (pegs[3] | (pegs[3] << 1));
         }
 
         //__device__ bool empty(int peg) const {
@@ -213,7 +213,7 @@ namespace {
 
         __device__ bool move(int srcPeg, int dstPeg) {
             if (!can_move(srcPeg, dstPeg)) return false;
-            pegs[srcPeg] -= (1ui64 << top[srcPeg]);
+            pegs[srcPeg] &= ~(1ui64 << top[srcPeg]);
             pegs[dstPeg] |= (1ui64 << top[srcPeg]);
             return true;
         }
