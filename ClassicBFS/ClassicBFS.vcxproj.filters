@@ -12,6 +12,7 @@
     <ClCompile Include="PancakeOptimized.cpp" />
     <ClCompile Include="PancakeOptimizedGpu.cpp" />
     <ClCompile Include="FourPegHanoiOptimized.cpp" />
+    <ClCompile Include="FourPegHanoiOptimizedGPU.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PermutationMap.h" />
@@ -37,6 +38,7 @@
     </ClInclude>
     <ClInclude Include="PancakeOptimizedGpu.h" />
     <ClInclude Include="FourPegHanoiOptimized.h" />
+    <ClInclude Include="FourPegHanoiOptimizedGPU.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="Gpu.cu">

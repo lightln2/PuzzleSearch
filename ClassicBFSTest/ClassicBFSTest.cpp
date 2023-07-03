@@ -7,6 +7,7 @@
 #include "../ClassicBFS/SlidingTilePuzzleOptimized.h"
 #include "../ClassicBFS/SlidingTilePuzzleSimple.h"
 #include "../ClassicBFS/FourPegHanoiOptimized.h"
+#include "../ClassicBFS/FourPegHanoiOptimizedGPU.h"
 #include "../ClassicBFS/FourPegHanoiSimple.h"
 #include "../ClassicBFS/FourPegHanoiGPU.h"
 #include "../Common/InMemoryBFS.h"
@@ -331,7 +332,7 @@ TEST(SlidingTile_Optimized_GPU, Opt3BitBFS_5x2_7seg_4th) {
     EXPECT_EQ(ToString(result), ST5x2);
 }
 
-
+/////////// Hanoi CPU ////////////////
 
 TEST(HanoiTowers_CPU, ClassicBFS_10) {
     FourPegHanoiSimple puzzle(10);
@@ -377,6 +378,8 @@ TEST(HanoiTowers_CPU, Opt3BitBFS_10_mt_Sym) {
     auto result = DiskBasedOptThreeBitBFS(puzzle, puzzle.ToString(0), opts);
     EXPECT_EQ(ToString(result), "1 1 1 3 5 7 11 16 24 36 55 56 81 137 172 162 183 293 435 506 588 562 779 1056 1519 1780 1930 1983 2249 2871 3957 5367 6165 6638 6425 6654 7608 9511 12500 15255 17690 18320 15339 10630 7614 5496 2214 334 52 4");
 }
+
+/////////// Hanoi Optimized CPU ////////////////
 
 TEST(HanoiTowersOpt_CPU, ClassicBFS_10) {
     FourPegHanoiOptimized puzzle(10);
@@ -424,6 +427,8 @@ TEST(HanoiTowersOpt_CPU, Opt3BitBFS_10_mt_Sym) {
 }
 
 
+/////////// Hanoi GPU ////////////////
+
 TEST(HanoiTowers_GPU, ClassicBFS_10_Sym) {
     FourPegHanoiGPU puzzle(10, true);
     PuzzleOptions opts;
@@ -470,6 +475,57 @@ TEST(HanoiTowers_GPU, Opt3BitBFS_21_Sym) {
     auto result = DiskBasedOptThreeBitBFS(puzzle, puzzle.ToString(0), opts);
     EXPECT_EQ(ToString(result), "1 1 1 3 5 7 11 16 24 36 55");
 }
+
+/////////// Hanoi Optimized GPU ////////////////
+
+TEST(HanoiTowersOpt_GPU, ClassicBFS_10_Sym) {
+    FourPegHanoiOptimizedGPU puzzle(10, true);
+    PuzzleOptions opts;
+    opts.segmentBits = 32;
+    opts.threads = 1;
+    auto result = DiskBasedClassicBFS(puzzle, puzzle.ToString(0), opts);
+    EXPECT_EQ(ToString(result), "1 1 1 3 5 7 11 16 24 36 55 56 81 137 172 162 183 293 435 506 588 562 779 1056 1519 1780 1930 1983 2249 2871 3957 5367 6165 6638 6425 6654 7608 9511 12500 15255 17690 18320 15339 10630 7614 5496 2214 334 52 4");
+}
+
+TEST(HanoiTowersOpt_GPU, OptFS_10_mt_Sym) {
+    FourPegHanoiOptimizedGPU puzzle(10, true);
+    PuzzleOptions opts;
+    opts.segmentBits = 20;
+    opts.threads = 4;
+    auto result = DiskBasedOptFrontierSearch(puzzle, puzzle.ToString(0), opts);
+    EXPECT_EQ(ToString(result), "1 1 1 3 5 7 11 16 24 36 55 56 81 137 172 162 183 293 435 506 588 562 779 1056 1519 1780 1930 1983 2249 2871 3957 5367 6165 6638 6425 6654 7608 9511 12500 15255 17690 18320 15339 10630 7614 5496 2214 334 52 4");
+}
+
+TEST(HanoiTowersOpt_GPU, Opt3BitBFS_10_mt_Sym) {
+    FourPegHanoiOptimizedGPU puzzle(10, true);
+    PuzzleOptions opts;
+    opts.segmentBits = 20;
+    opts.threads = 4;
+    auto result = DiskBasedOptThreeBitBFS(puzzle, puzzle.ToString(0), opts);
+    EXPECT_EQ(ToString(result), "1 1 1 3 5 7 11 16 24 36 55 56 81 137 172 162 183 293 435 506 588 562 779 1056 1519 1780 1930 1983 2249 2871 3957 5367 6165 6638 6425 6654 7608 9511 12500 15255 17690 18320 15339 10630 7614 5496 2214 334 52 4");
+}
+
+TEST(HanoiTowersOpt_GPU, Opt3BitBFS_21) {
+    FourPegHanoiOptimizedGPU puzzle(21, false);
+    PuzzleOptions opts;
+    opts.segmentBits = 32;
+    opts.threads = 2;
+    opts.maxSteps = 10;
+    auto result = DiskBasedOptThreeBitBFS(puzzle, puzzle.ToString(0), opts);
+    EXPECT_EQ(ToString(result), "1 3 6 12 30 30 66 96 126 210 330");
+}
+
+TEST(HanoiTowersOpt_GPU, Opt3BitBFS_21_Sym) {
+    FourPegHanoiOptimizedGPU puzzle(21, true);
+    PuzzleOptions opts;
+    opts.segmentBits = 32;
+    opts.threads = 2;
+    opts.maxSteps = 10;
+    auto result = DiskBasedOptThreeBitBFS(puzzle, puzzle.ToString(0), opts);
+    EXPECT_EQ(ToString(result), "1 1 1 3 5 7 11 16 24 36 55");
+}
+
+//////////// PANCAKE /////////////
 
 TEST(Pancake_CPU, Opt3BitBFS_5) {
     PancakeSimple puzzle(5);

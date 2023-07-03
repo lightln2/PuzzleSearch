@@ -20,6 +20,11 @@ namespace {
         y = temp;
     }
 
+    __device__ void gpu_swap(uint64_t& x, uint64_t& y) {
+        int temp = x;
+        x = y;
+        y = temp;
+    }
 
 }
 
@@ -150,6 +155,143 @@ void GpuHanoiTowersExpand(
     auto blocksPerGrid = uint32_t((count + threadsPerBlock - 1) / threadsPerBlock);
     
     kernel_hanoi_towers_expand<<<blocksPerGrid, threadsPerBlock, 0, cudaStream_t(stream) >>> (
+        gpuIndexes,
+        gpuExpanded,
+        size,
+        useSymmetry,
+        count);
+    ERR(cudaGetLastError());
+}
+
+
+////////////////// OPTIMIZED /////////////////
+
+namespace {
+    struct FPStateOpt {
+        uint64_t pegs[4] = { 0, 0, 0, 0 };
+        int top[4] = { 255, 255, 255, 255 };
+
+        __device__ void from_index(uint64_t index, int size) {
+            const uint64_t SIZE_MASK = (1ui64 << (2 * size)) - 1;
+            const uint64_t BIT_MASK = 0x5555555555555555ui64 & SIZE_MASK;
+            uint64_t p0 = index >> 1;
+            uint64_t p1 = index;
+            uint64_t p0i = ~p0;
+            uint64_t p1i = ~p1;
+            pegs[0] = (p0i & p1i) & BIT_MASK;
+            pegs[1] = (p0i & p1) & BIT_MASK;
+            pegs[2] = (p0 & p1i) & BIT_MASK;
+            pegs[3] = (p0 & p1) & BIT_MASK;
+            finish();
+        }
+
+        //__device__ void add(int peg, int disk) {
+        //    pegs[peg] |= (1ui64 << (2 * disk));
+        //}
+
+        __device__ void finish() {
+            for (int peg = 0; peg < 4; peg++) {
+                top[peg] = (__ffsll(pegs[peg]) - 1) & 255;
+            }
+        }
+
+        __device__ uint64_t to_index() const {
+            return pegs[1] | (pegs[2] * 2) | (pegs[3] * 3);
+        }
+
+        //__device__ bool empty(int peg) const {
+        //    return pegs[peg] == 0;
+        //}
+
+        __device__ bool can_move(int srcPeg, int dstPeg) const {
+            return top[srcPeg] < top[dstPeg];
+        }
+
+        //__device__ bool has_disk(int peg, int disk) const {
+        //    return pegs[peg] & (1ui64 << (2 * disk));
+        //}
+
+        __device__ bool move(int srcPeg, int dstPeg) {
+            if (!can_move(srcPeg, dstPeg)) return false;
+            pegs[srcPeg] -= (1ui64 << top[srcPeg]);
+            pegs[dstPeg] |= (1ui64 << top[srcPeg]);
+            return true;
+        }
+
+        __device__ int restore_symmetry(int dstPeg) {
+            int bottom[4];
+            for (int peg = 0; peg < 4; peg++) {
+                bottom[peg] = 63 - __clzll(pegs[peg]);
+            }
+
+            int pegIndexes[4]{ 0, 1, 2, 3 };
+            auto fn_restore = [&](int i, int j) {
+                if (bottom[i] < bottom[j]) {
+                    gpu_swap(top[i], top[j]);
+                    gpu_swap(bottom[i], bottom[j]);
+                    gpu_swap(pegs[i], pegs[j]);
+                    gpu_swap(pegIndexes[i], pegIndexes[j]);
+                }
+            };
+            fn_restore(2, 3);
+            fn_restore(1, 2);
+            fn_restore(2, 3);
+            int invpegs[4];
+            invpegs[pegIndexes[0]] = 0;
+            invpegs[pegIndexes[1]] = 1;
+            invpegs[pegIndexes[2]] = 2;
+            invpegs[pegIndexes[3]] = 3;
+            return invpegs[dstPeg];
+        }
+    };
+
+} // namespace
+
+__global__ void kernel_hanoi_towers_expand_optimized(uint64_t* indexes, uint64_t* expanded, int size, bool useSymmetry, uint64_t count) {
+    uint64_t i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= count) return;
+
+    uint64_t index = indexes[i];
+    int opBits = index & 15;
+    index >>= 4;
+
+    FPStateOpt state;
+    state.from_index(index, size);
+    uint64_t baseDst = i * 6;
+    int pos = 0;
+    for (int peg1 = 0; peg1 < 4; peg1++) {
+        for (int peg2 = peg1 + 1; peg2 < 4; peg2++) {
+            uint64_t result = INVALID_INDEX;
+            FPStateOpt s2 = state;
+            int p1 = peg1, p2 = peg2;
+            if (!s2.can_move(p1, p2)) gpu_swap(p1, p2);
+            if (!HasOp(opBits, p1)) {
+                if (s2.move(p1, p2)) {
+                    if (useSymmetry) {
+                        p2 = s2.restore_symmetry(p2);
+                    }
+                    uint64_t childIndex = s2.to_index();
+                    result = (childIndex << 4) | p2;
+                }
+            }
+            expanded[baseDst + pos] = result;
+            pos++;
+        }
+    }
+}
+
+void GpuHanoiTowersExpandOptimized(
+    uint64_t* gpuIndexes,
+    uint64_t* gpuExpanded,
+    int size,
+    bool useSymmetry,
+    uint64_t count,
+    CuStream stream)
+{
+    auto threadsPerBlock = 256;
+    auto blocksPerGrid = uint32_t((count + threadsPerBlock - 1) / threadsPerBlock);
+
+    kernel_hanoi_towers_expand_optimized << <blocksPerGrid, threadsPerBlock, 0, cudaStream_t(stream) >> > (
         gpuIndexes,
         gpuExpanded,
         size,
