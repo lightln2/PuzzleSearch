@@ -11,6 +11,7 @@
     <ClCompile Include="PancakeSimple.cpp" />
     <ClCompile Include="PancakeOptimized.cpp" />
     <ClCompile Include="PancakeOptimizedGpu.cpp" />
+    <ClCompile Include="FourPegHanoiOptimized.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PermutationMap.h" />
@@ -35,6 +36,7 @@
       <Filter>Gpu</Filter>
     </ClInclude>
     <ClInclude Include="PancakeOptimizedGpu.h" />
+    <ClInclude Include="FourPegHanoiOptimized.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="Gpu.cu">

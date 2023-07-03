@@ -109,6 +109,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="FourPegHanoiGPU.cpp" />
+    <ClCompile Include="FourPegHanoiOptimized.cpp" />
     <ClCompile Include="FourPegHanoiSimple.cpp" />
     <ClCompile Include="PancakeOptimized.cpp" />
     <ClCompile Include="PancakeOptimizedGpu.cpp" />
@@ -127,6 +128,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FourPegHanoiGPU.h" />
+    <ClInclude Include="FourPegHanoiOptimized.h" />
     <ClInclude Include="FourPegHanoiSimple.h" />
     <ClInclude Include="GPU.h" />
     <ClInclude Include="PancakeGpu.h" />
