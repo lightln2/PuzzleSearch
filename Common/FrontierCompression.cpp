@@ -36,6 +36,24 @@ namespace FrontierCompression {
         return 8 + bitmapSizeInBytes;
     }
 
+    int EncodeBitMapWithCheck(int count, uint32_t* indexes, uint8_t* buffer, int buffer_capacity) {
+        uint32_t first = indexes[0];
+        uint32_t last = indexes[count - 1];
+        uint32_t max = last - first - 1;
+        int bitmapSize = (last - first + 63) / 64;
+        int bitmapSizeInBytes = bitmapSize * 8;
+        *(uint32_t*)buffer = bitmapSize | HI_BIT;
+        *(uint32_t*)(buffer + 4) = first;
+        uint64_t* bitmap = (uint64_t*)(buffer + 8);
+        memset(bitmap, 0, bitmapSizeInBytes);
+        for (int i = 1; i < count; i++) {
+            uint32_t val = indexes[i] - first - 1;
+            if (val > max) return -1;
+            bitmap[val / 64] |= (1ui64 << (val % 64));
+        }
+        return 8 + bitmapSizeInBytes;
+    }
+
     int DecodeBitMap(int& size, uint8_t* buffer, uint32_t* indexes, int values_capacity) {
         uint32_t bmsize = *(uint32_t*)buffer;
         ensure(bmsize & HI_BIT);
@@ -67,6 +85,19 @@ namespace FrontierCompression {
         }
     }
 
+    int EncodeWithCheck(int count, uint32_t* indexes, uint8_t* buffer, int buffer_capacity) {
+        if (count == 0) return 0;
+        size_t minBitsPerStreamVInt = size_t(count) * 10;
+        size_t bitsPerHM = BitMapSize(count, indexes) * 8;
+        if (count > 128 && bitsPerHM < minBitsPerStreamVInt) {
+            int encoded = EncodeBitMapWithCheck(count, indexes, buffer, buffer_capacity);
+            if (encoded >= 0) {
+                return encoded;
+            }
+        }
+        return StreamVInt::Encode(count, indexes, buffer, buffer_capacity);
+    }
+
     int Decode(int& size, uint8_t* buffer, uint32_t* indexes, int values_capacity) {
         if (size == 0) return 0;
         if (IsBitMap(buffer)) {
@@ -79,6 +110,15 @@ namespace FrontierCompression {
 
     void Encode(Buffer<uint32_t>& indexes, Buffer<uint8_t>& buffer) {
         size_t encoded = Encode(
+            indexes.Size(),
+            indexes.Buf(),
+            buffer.Buf() + buffer.Size(),
+            buffer.Capacity() - buffer.Size());
+        buffer.SetSize(buffer.Size() + encoded);
+    }
+
+    void EncodeWithCheck(Buffer<uint32_t>& indexes, Buffer<uint8_t>& buffer) {
+        size_t encoded = EncodeWithCheck(
             indexes.Size(),
             indexes.Buf(),
             buffer.Buf() + buffer.Size(),
