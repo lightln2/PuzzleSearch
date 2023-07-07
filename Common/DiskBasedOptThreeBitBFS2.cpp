@@ -25,7 +25,7 @@ public:
         , FrontierWriter(newFrontierStore)
         , CrossSegmentReader(curCrossSegmentStores)
         //, Mult(nextCrossSegmentStores, sopts.Segments)
-        , Mult(nextCrossSegmentStores, sopts.OperatorsCount, sopts.Segments, 17, 12, 16ui64 * 1024 * 1024)
+        , Mult(nextCrossSegmentStores, sopts.OperatorsCount, sopts.Segments, 16, 12, 16ui64 * 1024 * 1024)
         , XSegUsedOpBits(sopts.OperatorsCount, BitArray(0))
         , NextArray(SOpts.SegmentSize)
         , CurArray(SOpts.HasOddLengthCycles ? SOpts.SegmentSize : 0)

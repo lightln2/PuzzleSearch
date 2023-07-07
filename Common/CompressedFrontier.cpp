@@ -160,7 +160,8 @@ Buffer<uint32_t>& CompressedCrossSegmentReader::Read(int op) {
     }
     ensure(m_LastOp == op);
     m_IndexBuffer.Clear();
-    m_InputPos = StreamVInt::Decode(m_InputPos, m_InputBuffer, m_IndexBuffer);
+    //m_InputPos = StreamVInt::Decode(m_InputPos, m_InputBuffer, m_IndexBuffer);
+    m_InputPos = FrontierCompression::Decode(m_InputPos, m_InputBuffer, m_IndexBuffer);
     return m_IndexBuffer;
 }
 

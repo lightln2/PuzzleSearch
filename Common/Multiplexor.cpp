@@ -1,5 +1,6 @@
 #include "Multiplexor.h"
 #include "StreamVInt.h"
+#include "FrontierCompression.h"
 
 SimpleMultiplexor::SimpleMultiplexor(Store& store, int segmentsCount) 
     : m_Store(store)
@@ -135,7 +136,8 @@ void SmartMultiplexorPart::FlushBuffer(int segment) {
     auto& len = m_BufLengths[segment];
     if (len == 0) return;
     size_t offset = size_t(segment) << m_SmallSectorValsBits;
-    int compressed = StreamVInt::Encode(len, &m_SmallBuffer[offset], &m_EncodeBuffer[0], m_EncodeBuffer.Capacity());
+    //int compressed = StreamVInt::Encode(len, &m_SmallBuffer[offset], &m_EncodeBuffer[0], m_EncodeBuffer.Capacity());
+    int compressed = FrontierCompression::EncodeWithCheck(len, &m_SmallBuffer[offset], &m_EncodeBuffer[0], m_EncodeBuffer.Capacity());
     auto& file = m_Files[segment];
     if (!file.CanWriteWithoutExpand(compressed) && file.GetSectorsCount() >= m_MaxSectorsCount) {
         FlushFile(segment);
