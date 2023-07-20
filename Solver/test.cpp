@@ -67,11 +67,25 @@ void TestDiskBasedBFS() {
 }
 
 void TestDiskBasedHanoi() {
+    FourPegHanoiOptimized puzzle(22, true);
+    Timer timer;
+    ExpandBuffer expander(puzzle);
+    uint64_t total = 0;
+    auto fn = [&](uint64_t index, int op) {
+        total += index;
+    };
 
+    for (uint64_t index = 0; index < 100000000; index++) {
+        expander.Add(index, 0, fn);
+    }
+    expander.Finish(fn);
+    std::cerr << "Time: " << timer << "; sum: " << WithDecSep(total) << std::endl;
+
+    /*
     //FourPegHanoiSimple puzzle(20, true);
     //FourPegHanoiGPU puzzle(19, true);
     //FourPegHanoiOptimized puzzle(19, true);
-    FourPegHanoiOptimizedGPU puzzle(19, true);
+    FourPegHanoiOptimizedGPU puzzle(15, true);
     std::string initial = puzzle.ToString(0);
 
     PuzzleOptions opts;
@@ -84,21 +98,21 @@ void TestDiskBasedHanoi() {
     //DiskBasedFrontierSearch(puzzle, initial, opts);
     //DiskBasedOptFrontierSearch(puzzle, initial, opts);
     DiskBasedOptThreeBitBFS(puzzle, initial, opts);
+    */
 }
 
 void TestPancake() {
-
     //PancakeSimple puzzle(13);
-    //PancakeOptimized puzzle(13, true);
-    PancakeOptimizedGPU puzzle(15, true);
+    PancakeOptimized puzzle(13, true);
+    //PancakeOptimizedGPU puzzle(15, true);
 
     std::string initial = puzzle.ToString(0);
 
     PuzzleOptions opts;
-    opts.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ", "h:/PUZ2" };
-    //opts.directories = { "c:/PUZ", "d:/PUZ"};
+    //opts.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ", "h:/PUZ2" };
+    opts.directories = { "c:/PUZ", "d:/PUZ"};
     opts.segmentBits = 29;
-    opts.threads = 4;
+    opts.threads = 1;
     //opts.maxSteps = 11;
     DiskBasedOptThreeBitBFS2(puzzle, initial, opts);
 }

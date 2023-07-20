@@ -1,6 +1,8 @@
 #include "FourPegHanoiOptimized.h"
 #include "../Common/Util.h"
 
+#include <immintrin.h>
+
 #include <cstdint>
 
 namespace {
@@ -16,14 +18,39 @@ namespace {
         void from_index(uint64_t index, int size) {
             const uint64_t SIZE_MASK = (1ui64 << (2 * size)) - 1;
             const uint64_t BIT_MASK = 0x5555555555555555ui64 & SIZE_MASK;
+            from_index_bm(index, BIT_MASK);
+        }
+
+        void from_index_bm(uint64_t index, uint64_t bitMask) {
+            
+            __m256i value = _mm256_set1_epi64x(index);
+            __m256i xmask = _mm256_set_epi64x(
+                0,
+                0x5555555555555555ui64,
+                0xAAAAAAAAAAAAAAAAui64,
+                -1);
+            __m256i maskedVal = _mm256_xor_si256(value, xmask);
+            __m256i mask = _mm256_set1_epi64x(bitMask);
+            __m256i bitMasks =
+                _mm256_and_si256(
+                    mask, 
+                    _mm256_and_si256(
+                        maskedVal,
+                        _mm256_srli_epi64(maskedVal, 1)
+                    )
+                );
+            _mm256_storeu_epi64(pegs, bitMasks);
+            
+            /*
             uint64_t p0 = index >> 1;
             uint64_t p1 = index;
             uint64_t p0i = ~p0;
             uint64_t p1i = ~p1;
-            pegs[0] = (p0i & p1i) & BIT_MASK;
-            pegs[1] = (p0i & p1) & BIT_MASK;
-            pegs[2] = (p0 & p1i) & BIT_MASK;
-            pegs[3] = (p0 & p1) & BIT_MASK;
+            pegs[0] = (p0i & p1i) & bitMask;
+            pegs[1] = (p0i & p1) & bitMask;
+            pegs[2] = (p0 & p1i) & bitMask;
+            pegs[3] = (p0 & p1) & bitMask;
+            */
             finish();
         }
 
@@ -152,7 +179,11 @@ uint64_t FourPegHanoiOptimized::Parse(std::string stateStr) {
 
 void FourPegHanoiOptimized::Expand(uint64_t index, int op, std::vector<uint64_t>& expandedIndexes, std::vector<int>& expandedOperators) {
     FPState state;
+    static const uint64_t SIZE_MASK = (1ui64 << (2 * m_Size)) - 1;
+    static const uint64_t BIT_MASK = 0x5555555555555555ui64 & SIZE_MASK;
+
     state.from_index(index, m_Size);
+    //state.from_index_bm(index, BIT_MASK);
     for (int peg1 = 0; peg1 < 4; peg1++) {
         for (int peg2 = peg1 + 1; peg2 < 4; peg2++) {
             FPState s2 = state;
