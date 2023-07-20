@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Buffer.h"
+#include "File.h"
 #include "Util.h"
 
 #include <atomic>
@@ -9,15 +10,62 @@
 #include <string>
 #include <vector>
 
+/*
+Store segments in set of files split in several paths (best on different disks)
+In each path, each file stores several consecutive segments, so that it is
+deleted, once all segments are processed.
+*/
 struct StoreOptions {
-    /* segments are split across these paths in round-robin order */
-    std::vector<std::string> paths;
+    /* Segments are split across these paths in round-robin order */
+    std::vector<std::string> directories = { "." };
     /*  
-    * segments are stored sequentially in this number of files.
+    * segments are stored sequentially in this number of files for each path.
     * 0 means store each segment in a separate file;
-    * 1 meand store all segments in a single file
+    * 1 means store all segments in a single file
+    * 5 means that there are five files in each path (default)
     */
-    int filesCount = 10;
+    int filesPerPath = 5;
+};
+
+class VStore {
+private:
+    struct StoreFile {
+        RWFile File;
+        std::mutex Mutex;
+        uint64_t Length;
+        int NonemptySegments;
+
+        StoreFile(const std::string& fileName)
+            : File(fileName)
+            , Length(0)
+            , NonemptySegments(0)
+        {}
+    };
+
+    struct Chunk {
+        uint64_t offset;
+        uint32_t length;
+        int next;
+    };
+
+public:
+    VStore(int maxSegments, std::string name, StoreOptions options);
+
+private:
+    void FillFiles();
+    StoreFile& GetFile(int segment);
+
+private:
+    StoreOptions m_Options;
+    std::vector<std::string> m_FileNames;
+    std::vector<std::unique_ptr<StoreFile>> m_Files;
+    std::vector<int> m_SegmentToFileMap;
+
+    std::vector<Chunk> m_Chunks;
+    std::vector<int> m_Heads;
+    std::vector<int> m_Tails;
+    std::vector<int> m_ReadPointers;
+    std::unique_ptr<std::mutex> m_Mutex;
 };
 
 class StoreImpl {
@@ -64,6 +112,12 @@ public:
     static Store CreateSingleFileStore(int maxSegments,
                                       std::vector<std::string> directories,
                                       const std::string& file);
+
+    static Store CreateFileStore(
+        int maxSegments,
+        const std::string& file,
+        StoreOptions options);
+
 private:
     Store(StoreImplRef impl);
 

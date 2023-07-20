@@ -421,3 +421,47 @@ Store Store::CreateMultiFileStore(int maxSegments, std::vector<std::string> dire
 Store Store::CreateSingleFileStore(int maxSegments, std::vector<std::string> directories, const std::string& file) {
     return CreateSingleFileStore(maxSegments, Store::CreatePaths(directories, file));
 }
+
+Store Store::CreateFileStore(int maxSegments, const std::string& file, StoreOptions options) {
+    std::vector<StoreImplRef> parallelStores;
+    for (const auto& directory : options.directories) {
+        if (options.filesPerPath == 0) {
+            parallelStores.emplace_back(CreateMultiFileStoreImpl(maxSegments, directory + "/" + file));
+        }
+        else {
+            std::vector<StoreImplRef> seqStores;
+            for (int i = 0; i < options.filesPerPath; i++) {
+                std::string fullName = directory + "/" + file + "." + std::to_string(i);
+                seqStores.emplace_back(CreateSingleFileStoreImpl(maxSegments, fullName));
+            }
+            parallelStores.emplace_back(CreateSequentialStoreImpl(std::move(seqStores)));
+        }
+    }
+    return Store(CreateParallelStoreImpl(std::move(parallelStores)));
+}
+
+
+
+VStore::VStore(int maxSegments, std::string name, StoreOptions opts)
+    : m_Options(opts)
+    , m_Chunks(0)
+    , m_Heads(maxSegments, -1)
+    , m_Tails(maxSegments, -1)
+    , m_ReadPointers(maxSegments, -1)
+    , m_Mutex(std::make_unique<std::mutex>())
+{
+    if (m_Options.filesPerPath == 0) m_Options.filesPerPath = maxSegments;
+    for (int p = 0; p < m_Options.directories.size(); p++) {
+        if (!m_Options.directories[p].ends_with("/")) m_Options.directories[p] += "/";
+        file::CreateDirectory(m_Options.directories[p]);
+        for (int f = 0; f < m_Options.filesPerPath; f++) {
+            m_FileNames.push_back(m_Options.directories[p] + name + "." + std::to_string(f));
+        }
+    }
+    int segmentsPerFile = (maxSegments + m_Options.filesPerPath - 1) / m_Options.filesPerPath;
+    for (int s = 0; s < maxSegments; s++) {
+        int pathIndex = s % m_Options.directories.size();
+        int fileIndex = s / segmentsPerFile;
+        m_SegmentToFileMap.push_back(pathIndex * m_Options.filesPerPath + fileIndex);
+    }
+}

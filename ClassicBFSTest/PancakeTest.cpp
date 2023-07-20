@@ -117,7 +117,7 @@ TEST(PancakeTest, OptPancake15) {
 
 TEST(PancakeTest, OptPancake15Inv) {
     PancakeOptimized puz(15, true);
-    auto index = 12 * 11 * 10 * 9 * 8 * 7 * 6 * 5 * 4 * 3 * 2 - 1;
+    auto index = 0;
     auto stateStr = "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14";
     EXPECT_EQ(puz.Parse(stateStr), index);
     EXPECT_EQ(puz.ToString(index), stateStr);
@@ -285,7 +285,7 @@ TEST(PancakeTest, OptPancakeGpu15) {
 
 TEST(PancakeTest, OptPancakeGpu15Inv) {
     PancakeOptimizedGPU puz(15, true);
-    auto index = 12 * 11 * 10 * 9 * 8 * 7 * 6 * 5 * 4 * 3 * 2 - 1;
+    auto index = 0;
     auto stateStr = "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14";
     EXPECT_EQ(puz.Parse(stateStr), index);
     EXPECT_EQ(puz.ToString(index), stateStr);

@@ -11,6 +11,7 @@ namespace FrontierCompression {
     size_t BitMapSize(int count, uint32_t* indexes) {
         uint32_t first = indexes[0];
         uint32_t last = indexes[count - 1];
+        if (last < first) return std::numeric_limits<size_t>::max();
         size_t bitmapSize = (last - first + 63) / 64;
         return bitmapSize * 8 + 8;
     }
@@ -39,6 +40,7 @@ namespace FrontierCompression {
     int EncodeBitMapWithCheck(int count, uint32_t* indexes, uint8_t* buffer, int buffer_capacity) {
         uint32_t first = indexes[0];
         uint32_t last = indexes[count - 1];
+        if (last < first) return -1;
         uint32_t max = last - first - 1;
         int bitmapSize = (last - first + 63) / 64;
         int bitmapSizeInBytes = bitmapSize * 8;

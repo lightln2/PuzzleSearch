@@ -9,8 +9,8 @@
 struct PuzzleOptions {
     size_t maxSteps = 10000;
     int segmentBits = 32;
-    std::vector<std::string> directories = { "." };
     int threads = 1;
+    StoreOptions storeOptions;
 };
 
 struct SegmentedOptions {
