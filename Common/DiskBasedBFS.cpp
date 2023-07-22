@@ -18,8 +18,8 @@ SegmentedOptions::SegmentedOptions(class Puzzle& puzzle, PuzzleOptions& opts)
 
 Store SegmentedOptions::MakeStore(std::string suffix) {
     //return Store::CreateMultiFileStore(Segments, Opts.directories, suffix);
-    return Store::CreateSingleFileStore(Segments, Opts.storeOptions.directories, suffix);
-    //return Store::CreateFileStore(Segments, suffix, Opts.storeOptions);
+    //return Store::CreateSingleFileStore(Segments, Opts.storeOptions.directories, suffix);
+    return Store::CreateFileStore(Segments, suffix, Opts.storeOptions);
 }
 
 StoreSet SegmentedOptions::MakeStoreSet(std::string suffix, int count) {

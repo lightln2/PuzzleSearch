@@ -70,6 +70,17 @@ void PrintVecor(const std::string& title, const std::vector<std::string>& values
     std::cerr << "]" << std::endl;
 }
 
+std::vector<std::string> CreatePaths(const std::vector<std::string>& directories, const std::string& path) {
+    std::vector<std::string> paths;
+    for (const auto& dir : directories) {
+        if (dir.ends_with('/'))
+            paths.push_back(dir + path);
+        else
+            paths.push_back(dir + "/" + path);
+    }
+    return paths;
+}
+
 std::ostream& operator<<(std::ostream& os, const Timer& timer) {
     os << WithTime(timer.Elapsed());
     return os;

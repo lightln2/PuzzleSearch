@@ -24,6 +24,10 @@ std::string WithSize(uint64_t size);
 
 void PrintVecor(const std::string& title, const std::vector<std::string>&values);
 
+std::vector<std::string> CreatePaths(
+    const std::vector<std::string>& directories,
+    const std::string& path);
+
 struct Timer {
     std::chrono::steady_clock::time_point start;
     Timer() : start(std::chrono::high_resolution_clock::now()) {}

@@ -26,9 +26,9 @@ namespace file {
 
 class RWFile {
 public:
-    RWFile(const std::string& fileName)
+    RWFile(const std::string& fileName, bool create = true)
         : m_FileName(fileName)
-        , m_Handle(file::OpenFile(fileName))
+        , m_Handle(create ? file::OpenFile(fileName) : nullptr)
     { }
 
     RWFile() = default;
@@ -55,6 +55,13 @@ public:
 
     size_t Read(void* buffer, size_t size) { return file::Read(m_Handle, buffer, size); }
     size_t Read(void* buffer, uint64_t offset, size_t size) { return file::Read(m_Handle, buffer, offset, size); }
+
+    void Delete() {
+        if (!m_Handle) return;
+        file::CloseFile(m_Handle);
+        file::DeleteFile(m_FileName);
+        m_Handle = nullptr;
+    }
 
     void Recreate() {
         if (m_Handle) {
