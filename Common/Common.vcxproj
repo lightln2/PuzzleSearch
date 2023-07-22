@@ -50,6 +50,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -68,6 +69,7 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -93,13 +95,16 @@
     <ClCompile Include="InMemoryFrontierSearch.cpp" />
     <ClCompile Include="InMemoryThreeBitBFS.cpp" />
     <ClCompile Include="InMemoryTwoBitBFS.cpp" />
+    <ClCompile Include="BitMapCompression.cpp" />
     <ClCompile Include="Multiplexor.cpp" />
+    <ClCompile Include="OpBitsCompression.cpp" />
     <ClCompile Include="Puzzle.cpp" />
     <ClCompile Include="SectorMap.cpp" />
     <ClCompile Include="SegmentReader.cpp" />
     <ClCompile Include="SegmentWriter.cpp" />
     <ClCompile Include="Store.cpp" />
     <ClCompile Include="StreamVInt.cpp" />
+    <ClCompile Include="StreamVIntCompression.cpp" />
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -110,13 +115,16 @@
     <ClInclude Include="File.h" />
     <ClInclude Include="FrontierCompression.h" />
     <ClInclude Include="InMemoryBFS.h" />
+    <ClInclude Include="BitMapCompression.h" />
     <ClInclude Include="Multiplexor.h" />
+    <ClInclude Include="OpBitsCompression.h" />
     <ClInclude Include="Puzzle.h" />
     <ClInclude Include="SectorMap.h" />
     <ClInclude Include="SegmentReader.h" />
     <ClInclude Include="SegmentWriter.h" />
     <ClInclude Include="Store.h" />
     <ClInclude Include="StreamVInt.h" />
+    <ClInclude Include="StreamVIntCompression.h" />
     <ClInclude Include="ThreadUtil.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>

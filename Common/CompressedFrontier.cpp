@@ -28,7 +28,7 @@ CompressedFrontierReader::FrontierBuffer CompressedFrontierReader::Read() {
     }
     m_IndexBuffer.Clear();
     m_OpsBuffer.Clear();
-    m_InputPos = StreamVInt::Decode(m_InputPos, m_InputBuffer, m_IndexBuffer, m_OpsBuffer);
+    m_InputPos = StreamVInt::Decode(int(m_InputPos), m_InputBuffer, m_IndexBuffer, m_OpsBuffer);
     return { m_IndexBuffer, m_OpsBuffer };
 }
 
@@ -97,7 +97,7 @@ Buffer<uint32_t>& CompressedSegmentReader::Read() {
         m_InputPos = 0;
     }
     m_IndexBuffer.Clear();
-    m_InputPos = FrontierCompression::Decode(m_InputPos, m_InputBuffer, m_IndexBuffer);
+    m_InputPos = FrontierCompression::Decode(int(m_InputPos), m_InputBuffer, m_IndexBuffer);
     return m_IndexBuffer;
 }
 
@@ -161,7 +161,7 @@ Buffer<uint32_t>& CompressedCrossSegmentReader::Read(int op) {
     ensure(m_LastOp == op);
     m_IndexBuffer.Clear();
     //m_InputPos = StreamVInt::Decode(m_InputPos, m_InputBuffer, m_IndexBuffer);
-    m_InputPos = FrontierCompression::Decode(m_InputPos, m_InputBuffer, m_IndexBuffer);
+    m_InputPos = FrontierCompression::Decode(int(m_InputPos), m_InputBuffer, m_IndexBuffer);
     return m_IndexBuffer;
 }
 

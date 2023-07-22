@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "../Common/StreamVInt.h"
+#include "../Common/OpBitsCompression.h"
 #include "../Common/FrontierCompression.h"
 #include "../Common/Util.h"
 

@@ -30,33 +30,33 @@ public:
 
     static void Encode(Buffer<uint32_t>& indexes, Buffer<uint8_t>& buffer) {
         size_t encoded = Encode(
-            indexes.Size(),
+            int(indexes.Size()),
             indexes.Buf(),
             buffer.Buf() + buffer.Size(),
-            buffer.Capacity() - buffer.Size());
+            int(buffer.Capacity() - buffer.Size()));
         buffer.SetSize(buffer.Size() + encoded);
     }
 
     static int Decode(int position, Buffer<uint8_t>& buffer, Buffer<uint32_t>& indexes) {
-        int size = buffer.Size() - position;
-        size_t decoded = Decode(size, buffer.Buf() + position, indexes.Buf(), indexes.Capacity());
+        int size = int(buffer.Size() - position);
+        size_t decoded = Decode(size, buffer.Buf() + position, indexes.Buf(), int(indexes.Capacity()));
         indexes.SetSize(decoded);
         return position + size;
     }
 
     static void Encode(Buffer<uint32_t>& indexes, Buffer<uint8_t>& bounds, Buffer<uint8_t>& buffer) {
         int encoded = Encode(
-            indexes.Size(),
+            int(indexes.Size()),
             indexes.Buf(),
             bounds.Buf(),
             buffer.Buf() + buffer.Size(),
-            buffer.Capacity() - buffer.Size());
+            int(buffer.Capacity() - buffer.Size()));
         buffer.SetSize(buffer.Size() + encoded);
     }
 
     static int Decode(int position, Buffer<uint8_t>& buffer, Buffer<uint32_t>& indexes, Buffer<uint8_t>& bounds) {
-        int size = buffer.Size() - position;
-        size_t decoded = Decode(size, buffer.Buf() + position, indexes.Buf(), bounds.Buf(), indexes.Capacity());
+        int size = int(buffer.Size() - position);
+        size_t decoded = Decode(size, buffer.Buf() + position, indexes.Buf(), bounds.Buf(), int(indexes.Capacity()));
         indexes.SetSize(decoded);
         return position + size;
     }

@@ -1,12 +1,11 @@
 #pragma once
 
-#include "Buffer.h"
-
 #include <cstdint>
 
 template<int BITS>
-size_t EncodeOpBits(const uint8_t* src, size_t count, uint8_t* dst);
-
-template<int BITS>
-size_t DecodeOpBits(const uint8_t* src, size_t count, uint8_t* dst);
+class OpBitsCompression {
+public:
+    static size_t Encode(size_t count, const uint8_t* opBits, uint8_t* buffer);
+    static size_t Decode(size_t count, const uint8_t* buffer, uint8_t* opBits);
+};
 

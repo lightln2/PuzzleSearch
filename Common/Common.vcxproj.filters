@@ -40,7 +40,6 @@
     <ClCompile Include="DiskBasedOptFrontierSearch.cpp">
       <Filter>DiskBasedBFS</Filter>
     </ClCompile>
-    <ClCompile Include="StreamVInt.cpp" />
     <ClCompile Include="CompressedFrontier.cpp" />
     <ClCompile Include="SectorMap.cpp" />
     <ClCompile Include="DiskBasedOptThreeBitBFS.cpp">
@@ -52,7 +51,21 @@
     <ClCompile Include="DiskBasedOptThreeBitBFS2.cpp">
       <Filter>DiskBasedBFS</Filter>
     </ClCompile>
-    <ClCompile Include="FrontierCompression.cpp" />
+    <ClCompile Include="StreamVInt.cpp">
+      <Filter>Compression</Filter>
+    </ClCompile>
+    <ClCompile Include="FrontierCompression.cpp">
+      <Filter>Compression</Filter>
+    </ClCompile>
+    <ClCompile Include="OpBitsCompression.cpp">
+      <Filter>Compression</Filter>
+    </ClCompile>
+    <ClCompile Include="StreamVIntCompression.cpp">
+      <Filter>Compression</Filter>
+    </ClCompile>
+    <ClCompile Include="BitMapCompression.cpp">
+      <Filter>Compression</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="File.h" />
@@ -73,7 +86,6 @@
     <ClInclude Include="DiskBasedBFS.h">
       <Filter>DiskBasedBFS</Filter>
     </ClInclude>
-    <ClInclude Include="StreamVInt.h" />
     <ClInclude Include="CompressedFrontier.h" />
     <ClInclude Include="SectorMap.h" />
     <ClInclude Include="Array.h">
@@ -82,7 +94,21 @@
     <ClInclude Include="Buffer.h">
       <Filter>Util</Filter>
     </ClInclude>
-    <ClInclude Include="FrontierCompression.h" />
+    <ClInclude Include="StreamVInt.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="FrontierCompression.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="OpBitsCompression.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="StreamVIntCompression.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="BitMapCompression.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Util">
@@ -93,6 +119,9 @@
     </Filter>
     <Filter Include="DiskBasedBFS">
       <UniqueIdentifier>{19f5899c-17d2-432d-9798-155c0bd308e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Compression">
+      <UniqueIdentifier>{d1088f0d-15e0-4b76-8e4b-b632feb152f1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

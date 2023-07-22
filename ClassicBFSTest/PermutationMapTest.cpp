@@ -19,7 +19,7 @@ void TestCompact(std::string permutation, std::string expected) {
         }
     }
 
-    PermutationCompact(&arr[0], arr.size());
+    PermutationCompact(&arr[0], static_cast<int>(arr.size()));
 
     {
         std::ostringstream output;
@@ -30,7 +30,7 @@ void TestCompact(std::string permutation, std::string expected) {
         EXPECT_EQ(expected, output.str());
     }
 
-    PermutationUncompact(&arr[0], arr.size());
+    PermutationUncompact(&arr[0], static_cast<int>(arr.size()));
 
     {
         std::ostringstream output;
@@ -55,10 +55,10 @@ void TestRank(std::string permutation, uint64_t expected) {
         }
     }
 
-    auto index = PermutationRank(&arr[0], arr.size());
+    auto index = PermutationRank(&arr[0], int(arr.size()));
     EXPECT_EQ(index, expected);
 
-    PermutationUnrank(index, &arr[0], arr.size());
+    PermutationUnrank(index, &arr[0], int(arr.size()));
 
     {
         std::ostringstream output;

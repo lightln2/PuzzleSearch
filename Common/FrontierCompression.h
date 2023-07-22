@@ -3,10 +3,13 @@
 #include "Buffer.h"
 
 namespace FrontierCompression {
+    bool IsBitMap(uint8_t* buffer);
+    bool IsOneByte(uint8_t* buffer);
+    bool IsFourBytes(uint8_t* buffer);
+
     size_t BitMapSize(int count, uint32_t* indexes);
     int EncodeBitMap(int count, uint32_t* indexes, uint8_t* buffer, int buffer_capacity);
     int EncodeBitMapWithCheck(int count, uint32_t* indexes, uint8_t* buffer, int buffer_capacity);
-    bool IsBitMap(uint8_t* buffer);
     int DecodeBitMap(int& size, uint8_t* buffer, uint32_t* indexes, int values_capacity);
 
 
