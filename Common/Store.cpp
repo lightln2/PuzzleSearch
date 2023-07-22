@@ -80,30 +80,21 @@ void Store::PrintStats() {
         << std::endl;
 }
 
-std::vector<std::string> Store::CreatePaths(const std::vector<std::string>& directories, const std::string& path) {
-    std::vector<std::string> paths;
-    for (const auto& dir : directories) {
-        if (dir.ends_with('/'))
-            paths.push_back(dir + path);
-        else
-            paths.push_back(dir + "/" + path);
-    }
-    return paths;
-}
-
 namespace {
+
     struct Chunk {
         uint64_t offset;
         uint32_t length;
         int next;
     };
+
 } // namespace
 
 
 class SingleFileStoreImpl : public StoreImpl {
 public:
     SingleFileStoreImpl(int maxSegments, const std::string& filePath)
-        : m_File(std::make_unique<RWFile>(filePath))
+        : m_File(std::make_unique<RWFile>(filePath, false))
         , m_TotalLength(0)
         , m_NonemptySegments(0)
         , m_Chunks(0)
@@ -135,6 +126,8 @@ public:
 
     virtual void Write(int segment, void* buffer, size_t size) {
         m_Mutex->lock();
+        if (m_NonemptySegments == 0) m_File->Recreate();
+
         auto offset = m_TotalLength;
         m_TotalLength += size;
         m_File->Write(buffer, offset, size);
@@ -175,7 +168,7 @@ public:
     }
 
     virtual void DeleteAll() {
-        if (m_TotalLength == 0) return;
+        if (m_Chunks.empty()) return;
         m_TotalLength = 0;
         m_NonemptySegments = 0;
         m_Chunks.clear();
@@ -183,7 +176,7 @@ public:
             m_Heads[i] = m_Tails[i] = m_ReadPointers[i] = -1;
         }
 
-        m_File->Recreate();
+        m_File->Delete();
     }
 
 private:
@@ -199,8 +192,9 @@ private:
 
 class MultiFileStoreImpl : public StoreImpl {
 public:
-    MultiFileStoreImpl(int maxSegments, const std::string& directory)
+    MultiFileStoreImpl(int maxSegments, const std::string& directory,const std::string& prefix)
         : m_Directory(directory)
+        , m_Prefix(prefix + "_")
         , m_Files(maxSegments)
     { 
         if (!m_Directory.ends_with('/')) {
@@ -209,9 +203,7 @@ public:
         file::CreateDirectory(m_Directory);
     }
 
-    virtual ~MultiFileStoreImpl() noexcept {
-        file::DeleteDirectory(m_Directory);
-    }
+    virtual ~MultiFileStoreImpl() noexcept {}
 
     virtual int MaxSegments() const { return (int)m_Files.size(); }
 
@@ -241,7 +233,9 @@ public:
 
 private:
 
-    std::string FilePath(int segment) const { return m_Directory + std::to_string(segment); }
+    std::string FilePath(int segment) const {
+        return m_Directory + m_Prefix + std::to_string(segment);
+    }
 
     bool HasFile(int segment) const { return m_Files[segment].get(); }
     
@@ -262,6 +256,7 @@ private:
 
 private:
     std::string m_Directory;
+    std::string m_Prefix;
     std::vector<StoreImplRef> m_Files;
     std::mutex m_Mutex;
 };
@@ -370,8 +365,8 @@ StoreImplRef CreateSingleFileStoreImpl(int maxSegments, const std::string& fileP
     return std::make_unique<SingleFileStoreImpl>(maxSegments, filePath);
 }
 
-StoreImplRef CreateMultiFileStoreImpl(int maxSegments, const std::string& directory) {
-    return std::make_unique<MultiFileStoreImpl>(maxSegments, directory);
+StoreImplRef CreateMultiFileStoreImpl(int maxSegments, const std::string& directory, const std::string& prefix) {
+    return std::make_unique<MultiFileStoreImpl>(maxSegments, directory, prefix);
 }
 
 StoreImplRef CreateParallelStoreImpl(std::vector<StoreImplRef>&& stores) {
@@ -386,24 +381,8 @@ Store Store::CreateSingleFileStore(int maxSegments, const std::string& filePath)
     return Store(CreateSingleFileStoreImpl(maxSegments, filePath));
 }
 
-Store Store::CreateSingleFileStore(int maxSegments, std::vector<std::string> filePaths) {
-    std::vector<StoreImplRef> stores;
-    for (const auto& filePath : filePaths) {
-        stores.emplace_back(CreateSingleFileStoreImpl(maxSegments, filePath));
-    }
-    return Store(CreateParallelStoreImpl(std::move(stores)));
-}
-
-Store Store::CreateMultiFileStore(int maxSegments, const std::string& directory) {
-    return Store(CreateMultiFileStoreImpl(maxSegments, directory));
-}
-
-Store Store::CreateMultiFileStore(int maxSegments, std::vector<std::string> directories) {
-    std::vector<StoreImplRef> stores;
-    for (const auto& directory: directories) {
-        stores.emplace_back(CreateMultiFileStoreImpl(maxSegments, directory));
-    }
-    return Store(CreateParallelStoreImpl(std::move(stores)));
+Store Store::CreateMultiFileStore(int maxSegments, const std::string& directory, const std::string& prefix) {
+    return Store(CreateMultiFileStoreImpl(maxSegments, directory, prefix));
 }
 
 Store Store::CreateSequentialStore(int maxSegments, std::vector<std::string> filePaths) {
@@ -414,25 +393,20 @@ Store Store::CreateSequentialStore(int maxSegments, std::vector<std::string> fil
     return Store(CreateSequentialStoreImpl(std::move(stores)));
 }
 
-Store Store::CreateMultiFileStore(int maxSegments, std::vector<std::string> directories, const std::string& subdir) {
-    return CreateMultiFileStore(maxSegments, Store::CreatePaths(directories, subdir));
-}
-
-Store Store::CreateSingleFileStore(int maxSegments, std::vector<std::string> directories, const std::string& file) {
-    return CreateSingleFileStore(maxSegments, Store::CreatePaths(directories, file));
-}
-
-Store Store::CreateFileStore(int maxSegments, const std::string& file, StoreOptions options) {
+Store Store::CreateFileStore(int maxSegments, const std::string& name, StoreOptions options) {
     std::vector<StoreImplRef> parallelStores;
-    for (const auto& directory : options.directories) {
+    for (const auto& directory: options.directories) {
         if (options.filesPerPath == 0) {
-            parallelStores.emplace_back(CreateMultiFileStoreImpl(maxSegments, directory + "/" + file));
+            parallelStores.emplace_back(CreateMultiFileStoreImpl(maxSegments, directory, name));
+        }
+        else if (options.filesPerPath == 1) {
+            parallelStores.emplace_back(CreateSingleFileStoreImpl(maxSegments, directory + "/" + name));
         }
         else {
             std::vector<StoreImplRef> seqStores;
             for (int i = 0; i < options.filesPerPath; i++) {
-                std::string fullName = directory + "/" + file + "." + std::to_string(i);
-                seqStores.emplace_back(CreateSingleFileStoreImpl(maxSegments, fullName));
+                std::string file = directory + "/" + name + "_p" + std::to_string(i);
+                seqStores.emplace_back(CreateSingleFileStoreImpl(maxSegments, file));
             }
             parallelStores.emplace_back(CreateSequentialStoreImpl(std::move(seqStores)));
         }
@@ -440,28 +414,3 @@ Store Store::CreateFileStore(int maxSegments, const std::string& file, StoreOpti
     return Store(CreateParallelStoreImpl(std::move(parallelStores)));
 }
 
-
-
-VStore::VStore(int maxSegments, std::string name, StoreOptions opts)
-    : m_Options(opts)
-    , m_Chunks(0)
-    , m_Heads(maxSegments, -1)
-    , m_Tails(maxSegments, -1)
-    , m_ReadPointers(maxSegments, -1)
-    , m_Mutex(std::make_unique<std::mutex>())
-{
-    if (m_Options.filesPerPath == 0) m_Options.filesPerPath = maxSegments;
-    for (int p = 0; p < m_Options.directories.size(); p++) {
-        if (!m_Options.directories[p].ends_with("/")) m_Options.directories[p] += "/";
-        file::CreateDirectory(m_Options.directories[p]);
-        for (int f = 0; f < m_Options.filesPerPath; f++) {
-            m_FileNames.push_back(m_Options.directories[p] + name + "." + std::to_string(f));
-        }
-    }
-    int segmentsPerFile = (maxSegments + m_Options.filesPerPath - 1) / m_Options.filesPerPath;
-    for (int s = 0; s < maxSegments; s++) {
-        int pathIndex = s % m_Options.directories.size();
-        int fileIndex = s / segmentsPerFile;
-        m_SegmentToFileMap.push_back(pathIndex * m_Options.filesPerPath + fileIndex);
-    }
-}

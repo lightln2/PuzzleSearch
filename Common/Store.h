@@ -27,47 +27,6 @@ struct StoreOptions {
     int filesPerPath = 5;
 };
 
-class VStore {
-private:
-    struct StoreFile {
-        RWFile File;
-        std::mutex Mutex;
-        uint64_t Length;
-        int NonemptySegments;
-
-        StoreFile(const std::string& fileName)
-            : File(fileName)
-            , Length(0)
-            , NonemptySegments(0)
-        {}
-    };
-
-    struct Chunk {
-        uint64_t offset;
-        uint32_t length;
-        int next;
-    };
-
-public:
-    VStore(int maxSegments, std::string name, StoreOptions options);
-
-private:
-    void FillFiles();
-    StoreFile& GetFile(int segment);
-
-private:
-    StoreOptions m_Options;
-    std::vector<std::string> m_FileNames;
-    std::vector<std::unique_ptr<StoreFile>> m_Files;
-    std::vector<int> m_SegmentToFileMap;
-
-    std::vector<Chunk> m_Chunks;
-    std::vector<int> m_Heads;
-    std::vector<int> m_Tails;
-    std::vector<int> m_ReadPointers;
-    std::unique_ptr<std::mutex> m_Mutex;
-};
-
 class StoreImpl {
 public:
     virtual ~StoreImpl() noexcept {};
@@ -101,22 +60,9 @@ using StoreImplRef = std::unique_ptr<StoreImpl>;
 class Store {
 public:
     static Store CreateSingleFileStore(int maxSegments, const std::string& filePath);
-    static Store CreateSingleFileStore(int maxSegments, std::vector<std::string> filePaths);
-    static Store CreateMultiFileStore(int maxSegments, const std::string& directory);
-    static Store CreateMultiFileStore(int maxSegments, std::vector<std::string> directories);
+    static Store CreateMultiFileStore(int maxSegments, const std::string& directory, const std::string& prefix);
     static Store CreateSequentialStore(int maxSegments, std::vector<std::string> filePaths);
-
-    static Store CreateMultiFileStore(int maxSegments,
-                                      std::vector<std::string> directories,
-                                      const std::string& subdir);
-    static Store CreateSingleFileStore(int maxSegments,
-                                      std::vector<std::string> directories,
-                                      const std::string& file);
-
-    static Store CreateFileStore(
-        int maxSegments,
-        const std::string& file,
-        StoreOptions options);
+    static Store CreateFileStore(int maxSegments, const std::string& name, StoreOptions options);
 
 private:
     Store(StoreImplRef impl);
@@ -174,11 +120,6 @@ public:
     }
 
 private:
-    static std::vector<std::string> CreatePaths(
-        const std::vector<std::string>& directories,
-        const std::string& path);
-
-private:
     StoreImplRef m_Impl;
 
 private:
@@ -189,6 +130,7 @@ private:
     static std::atomic<uint64_t> m_StatWriteNanos;
     static std::atomic<uint64_t> m_StatWriteBytes;
 };
+
 
 struct StoreSet {
     std::vector<Store> Stores;

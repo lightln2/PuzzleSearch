@@ -38,33 +38,50 @@ void TestStore(Store& store) {
 }
 
 TEST(StoreTests, SingleFile) {
-	auto store = Store::CreateSingleFileStore(50, "./file0");
+	auto store = Store::CreateSingleFileStore(50, "./file");
 	TestStore(store);
 }
 
 TEST(StoreTests, MultiFile) {
-	auto store = Store::CreateMultiFileStore(50, "./dir0");
+	auto store = Store::CreateMultiFileStore(50, "./dir", "store");
 	TestStore(store);
 }
 
 TEST(StoreTests, ParallelSingleFile) {
-	auto store = Store::CreateSingleFileStore(50, { "./file1", "./file2", "./file3" });
+	StoreOptions opts;
+	opts.directories = { "./dir1", "./dir2", "./dir3" };
+	opts.filesPerPath = 1;
+	auto store = Store::CreateFileStore(50, "store", opts);
 	TestStore(store);
 }
 
 TEST(StoreTests, ParallelMultiFile) {
-	auto store = Store::CreateMultiFileStore(50, { "./dir1", "./dir2", "./dir3" });
+	StoreOptions opts;
+	opts.directories = { "./dir1", "./dir2", "./dir3" };
+	opts.filesPerPath = 0;
+	auto store = Store::CreateFileStore(50, "store", opts);
 	TestStore(store);
 }
 
-TEST(StoreTests, SequentialMultiFile) {
-	auto store = Store::CreateSequentialStore(50, { "./dir4", "./dir5", "./dir6" });
+TEST(StoreTests, Sequential) {
+	StoreOptions opts;
+	opts.directories = { "./dir" };
+	opts.filesPerPath = 3;
+	auto store = Store::CreateFileStore(50, "store", opts);
+	TestStore(store);
+}
+
+TEST(StoreTests, Generic) {
+	StoreOptions opts;
+	opts.directories = { "./dir1", "./dir2", "./dir3" };
+	opts.filesPerPath = 7;
+	auto store = Store::CreateFileStore(50, "store", opts);
 	TestStore(store);
 }
 
 TEST(StoreTests, SwapStores) {
-	auto store1 = Store::CreateSequentialStore(50, { "./f1" });
-	auto store2 = Store::CreateSequentialStore(50, { "./f2" });
+	auto store1 = Store::CreateFileStore(50, "store1", {});
+	auto store2 = Store::CreateFileStore(50, "store1", {});
 	std::swap(store1, store2);
 }
 
@@ -99,7 +116,7 @@ TEST(StoreTests, TestReaderWriter) {
 	}
 }
 
-TEST(StoreTests, TestMultiplexor) {
+TEST(StoreTests, TestSimpleMultiplexor) {
 	constexpr int SEGMENTS = 6;
 	constexpr uint32_t VALUES = 5 * 1024 * 1024;
 
@@ -128,3 +145,4 @@ TEST(StoreTests, TestMultiplexor) {
 		EXPECT_EQ((uint64_t)VALUES * (VALUES - 1) / 2, sum);
 	}
 }
+

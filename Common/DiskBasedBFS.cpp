@@ -17,15 +17,13 @@ SegmentedOptions::SegmentedOptions(class Puzzle& puzzle, PuzzleOptions& opts)
 }
 
 Store SegmentedOptions::MakeStore(std::string suffix) {
-    //return Store::CreateMultiFileStore(Segments, Opts.directories, suffix);
-    //return Store::CreateSingleFileStore(Segments, Opts.storeOptions.directories, suffix);
     return Store::CreateFileStore(Segments, suffix, Opts.storeOptions);
 }
 
 StoreSet SegmentedOptions::MakeStoreSet(std::string suffix, int count) {
     StoreSet storeSet;
     for (int i = 0; i < count; i++) {
-        storeSet.Stores.emplace_back(MakeStore(suffix + "_" + std::to_string(i) + "_"));
+        storeSet.Stores.emplace_back(MakeStore(suffix + "-" + std::to_string(i)));
     }
     return storeSet;
 }
