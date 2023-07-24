@@ -36,3 +36,30 @@ struct Timer {
 };
 
 std::ostream& operator<<(std::ostream& os, const Timer& timer);
+
+template<typename T>
+class ObjectPool {
+public:
+    T* Aquire() {
+        m_Mutex.lock();
+        if (m_FreeObjects.empty()) {
+            m_AllObjects.emplace_back(std::make_unique<T>());
+            m_FreeObjects.push_back(m_AllObjects.back().get());
+        }
+        auto* object = m_AllObjects.back();
+        m_AllObjects.pop_back();
+        m_Mutex.unlock();
+        return object;
+    }
+
+    void Release(T* object) {
+        m_Mutex.lock();
+        m_FreeObjects.push_back(object);
+        m_Mutex.unlock();
+    }
+
+private:
+    std::mutex m_Mutex;
+    std::vector<std::unique_ptr<T>> m_AllObjects;
+    std::vector<Exec*> m_FreeObjects;
+};
