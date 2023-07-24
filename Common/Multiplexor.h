@@ -7,7 +7,7 @@
 #include <vector>
 
 class SimpleMultiplexor {
-    static constexpr size_t BUFSIZE = 16 * 1024;
+    static constexpr size_t BUFSIZE = 4 * 1024;
 
 public:
     SimpleMultiplexor(Store& store, int segmentsCount);

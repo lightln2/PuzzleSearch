@@ -9,7 +9,7 @@
 #include <sstream>
 #include <vector>
 
-TEST(SimplePuzzleTest, TestSlidingTile3x2) {
+TEST(SlidingPuzzleTest, Simple3x2) {
     SlidingTilePuzzleSimple puz(3, 2);
     auto index = puz.Parse("0 1 2 3 4 5");
     std::vector<uint64_t> indexes;
@@ -25,7 +25,7 @@ TEST(SimplePuzzleTest, TestSlidingTile3x2) {
     EXPECT_NE(-1, ops[1]);
 }
 
-TEST(SimplePuzzleTest, TestSlidingTile4x4) {
+TEST(SlidingPuzzleTest, Simple4x4) {
     SlidingTilePuzzleSimple puz(4, 4);
     auto index = puz.Parse("0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15");
     std::vector<uint64_t> indexes;
@@ -40,7 +40,7 @@ TEST(SimplePuzzleTest, TestSlidingTile4x4) {
 
 }
 
-TEST(SimplePuzzleTest, TestSlidingTileGpu3x2) {
+TEST(SlidingPuzzleTest, Gpu3x2) {
     SlidingTilePuzzleGpu puz(3, 2);
     auto index = puz.Parse("0 1 2 3 4 5");
     std::vector<uint64_t> indexes;
@@ -60,7 +60,7 @@ TEST(SimplePuzzleTest, TestSlidingTileGpu3x2) {
     EXPECT_NE(15, ops[3]);
 }
 
-TEST(SimplePuzzleTest, TestSlidingTileGpu4x4) {
+TEST(SlidingPuzzleTest, Gpu4x4) {
     SlidingTilePuzzleGpu puz(4, 4);
     auto index = puz.Parse("0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15");
     std::vector<uint64_t> indexes;
@@ -77,7 +77,7 @@ TEST(SimplePuzzleTest, TestSlidingTileGpu4x4) {
 
 }
 
-TEST(SimplePuzzleTest, TestSlidingTileOpt3x2) {
+TEST(SlidingPuzzleTest, Opt3x2) {
     SlidingTilePuzzleOptimized<3, 2> puz;
     auto index = puz.Parse("0 1 2 3 4 5");
     std::vector<uint64_t> indexes;
@@ -97,7 +97,7 @@ TEST(SimplePuzzleTest, TestSlidingTileOpt3x2) {
     EXPECT_NE(-1, ops[3]);
 }
 
-TEST(SimplePuzzleTest, TestSlidingTileOpt4x4) {
+TEST(SlidingPuzzleTest, Opt4x4) {
     SlidingTilePuzzleOptimized<4, 4> puz;
     auto index = puz.Parse("0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15");
     std::vector<uint64_t> indexes;

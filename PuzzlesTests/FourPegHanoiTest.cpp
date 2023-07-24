@@ -10,7 +10,7 @@
 #include <sstream>
 #include <vector>
 
-TEST(HanoiPuzzleTest, HanoiSimple5) {
+TEST(HanoiPuzzleTest, Simple5) {
     FourPegHanoiSimple puz(5);
     auto index = puz.Parse("1 2 3 4 5 0 0 0");
     EXPECT_EQ(index, 0);
@@ -31,7 +31,7 @@ TEST(HanoiPuzzleTest, HanoiSimple5) {
     EXPECT_EQ(3, ops[2]);
 }
 
-TEST(HanoiPuzzleTest, HanoiSimple7) {
+TEST(HanoiPuzzleTest, Simple7) {
     FourPegHanoiSimple puz(7);
     auto index = puz.Parse("1 5 6 0 2 0 0 3 4 7");
     EXPECT_EQ(index, 12532);
@@ -58,7 +58,7 @@ TEST(HanoiPuzzleTest, HanoiSimple7) {
     EXPECT_EQ(2, ops[5]);
 }
 
-TEST(HanoiPuzzleTest, HanoiSimple5_Symmetry) {
+TEST(HanoiPuzzleTest, Simple5_Symmetry) {
     FourPegHanoiSimple puz(5, true);
     auto index = puz.Parse("1 2 3 4 5 0 0 0");
     EXPECT_EQ(index, 0);
@@ -79,7 +79,7 @@ TEST(HanoiPuzzleTest, HanoiSimple5_Symmetry) {
     EXPECT_EQ(1, ops[2]);
 }
 
-TEST(HanoiPuzzleTest, HanoiSimple7_Symmetry) {
+TEST(HanoiPuzzleTest, Simple7_Symmetry) {
     FourPegHanoiSimple puz(7, true);
     auto index = puz.Parse("3 4 6 0 1 5 7 0 2 0");
     EXPECT_EQ("3 4 6 0 1 5 7 0 2 0", puz.ToString(index));
@@ -106,7 +106,7 @@ TEST(HanoiPuzzleTest, HanoiSimple7_Symmetry) {
 
 /////////// OPTIMIZED ///////////////////
 
-TEST(HanoiPuzzleTest, HanoiOpt5) {
+TEST(HanoiPuzzleTest, Opt5) {
     FourPegHanoiOptimized puz(5);
     auto index = puz.Parse("1 2 3 4 5 0 0 0");
     EXPECT_EQ(index, 0);
@@ -127,7 +127,7 @@ TEST(HanoiPuzzleTest, HanoiOpt5) {
     EXPECT_EQ(3, ops[2]);
 }
 
-TEST(HanoiPuzzleTest, HanoiOpt7) {
+TEST(HanoiPuzzleTest, Opt7) {
     FourPegHanoiOptimized puz(7);
     auto index = puz.Parse("1 5 6 0 2 0 0 3 4 7");
     EXPECT_EQ(index, 12532);
@@ -154,7 +154,7 @@ TEST(HanoiPuzzleTest, HanoiOpt7) {
     EXPECT_EQ(2, ops[5]);
 }
 
-TEST(HanoiPuzzleTest, HanoiOpt5_Symmetry) {
+TEST(HanoiPuzzleTest, Opt5_Symmetry) {
     FourPegHanoiOptimized puz(5, true);
     auto index = puz.Parse("1 2 3 4 5 0 0 0");
     EXPECT_EQ(index, 0);
@@ -175,7 +175,7 @@ TEST(HanoiPuzzleTest, HanoiOpt5_Symmetry) {
     EXPECT_EQ(1, ops[2]);
 }
 
-TEST(HanoiPuzzleTest, HanoiOpt7_Symmetry) {
+TEST(HanoiPuzzleTest, Opt7_Symmetry) {
     FourPegHanoiOptimized puz(7, true);
     auto index = puz.Parse("3 4 6 0 1 5 7 0 2 0");
     EXPECT_EQ("3 4 6 0 1 5 7 0 2 0", puz.ToString(index));
@@ -200,7 +200,7 @@ TEST(HanoiPuzzleTest, HanoiOpt7_Symmetry) {
     EXPECT_EQ(2, ops[5]);
 }
 
-TEST(HanoiPuzzleTest, HanoiOpt19_Symmetry) {
+TEST(HanoiPuzzleTest, Opt19_Symmetry) {
     FourPegHanoiOptimized puz(19, true);
     auto index = puz.Parse("1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 0 0 0");
     std::vector<uint64_t> indexes;
@@ -216,7 +216,7 @@ TEST(HanoiPuzzleTest, HanoiOpt19_Symmetry) {
     EXPECT_EQ(1, ops[1]);
 }
 
-TEST(HanoiPuzzleTest, HanoiOpt19_Symmetry2) {
+TEST(HanoiPuzzleTest, Opt19_Symmetry2) {
     FourPegHanoiOptimized puz(19, true);
     auto index = puz.Parse("18 19 0 13 14 15 16 17 0 1 2 3 4 5 6 7 8 9 10 11 12 0");
     std::vector<uint64_t> indexes;
@@ -242,7 +242,7 @@ TEST(HanoiPuzzleTest, HanoiOpt19_Symmetry2) {
 
 /////////// GPU & OPTIMIZED ///////////////////
 
-TEST(HanoiPuzzleTest, HanoiGpuOpt5) {
+TEST(HanoiPuzzleTest, GpuOpt5) {
     FourPegHanoiOptimizedGPU puz(5, false);
     auto index = puz.Parse("1 2 3 4 5 0 0 0");
     EXPECT_EQ(index, 0);
@@ -263,7 +263,7 @@ TEST(HanoiPuzzleTest, HanoiGpuOpt5) {
     EXPECT_EQ(3, ops[2]);
 }
 
-TEST(HanoiPuzzleTest, HanoiGpuOpt7) {
+TEST(HanoiPuzzleTest, GpuOpt7) {
     FourPegHanoiOptimizedGPU puz(7, false);
     auto index = puz.Parse("1 5 6 0 2 0 0 3 4 7");
     EXPECT_EQ(index, 12532);
@@ -290,7 +290,7 @@ TEST(HanoiPuzzleTest, HanoiGpuOpt7) {
     EXPECT_EQ(2, ops[5]);
 }
 
-TEST(HanoiPuzzleTest, HanoiGpuOpt5_Symmetry) {
+TEST(HanoiPuzzleTest, GpuOpt5_Symmetry) {
     FourPegHanoiOptimizedGPU puz(5, true);
     auto index = puz.Parse("1 2 3 4 5 0 0 0");
     EXPECT_EQ(index, 0);
@@ -311,7 +311,7 @@ TEST(HanoiPuzzleTest, HanoiGpuOpt5_Symmetry) {
     EXPECT_EQ(1, ops[2]);
 }
 
-TEST(HanoiPuzzleTest, HanoiGpuOpt7_Symmetry) {
+TEST(HanoiPuzzleTest, GpuOpt7_Symmetry) {
     FourPegHanoiOptimizedGPU puz(7, true);
     auto index = puz.Parse("3 4 6 0 1 5 7 0 2 0");
     EXPECT_EQ("3 4 6 0 1 5 7 0 2 0", puz.ToString(index));
@@ -336,7 +336,7 @@ TEST(HanoiPuzzleTest, HanoiGpuOpt7_Symmetry) {
     EXPECT_EQ(2, ops[5]);
 }
 
-TEST(HanoiPuzzleTest, HanoiGpuOpt19_Symmetry) {
+TEST(HanoiPuzzleTest, GpuOpt19_Symmetry) {
     FourPegHanoiOptimizedGPU puz(19, true);
     auto index = puz.Parse("1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 0 0 0");
     std::vector<uint64_t> indexes;
@@ -352,7 +352,7 @@ TEST(HanoiPuzzleTest, HanoiGpuOpt19_Symmetry) {
     EXPECT_EQ(1, ops[1]);
 }
 
-TEST(HanoiPuzzleTest, HanoiGpuOpt19_Symmetry2) {
+TEST(HanoiPuzzleTest, GpuOpt19_Symmetry2) {
     FourPegHanoiOptimizedGPU puz(19, true);
     auto index = puz.Parse("18 19 0 13 14 15 16 17 0 1 2 3 4 5 6 7 8 9 10 11 12 0");
     std::vector<uint64_t> indexes;
