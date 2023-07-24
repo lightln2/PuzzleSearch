@@ -70,7 +70,7 @@ void CompressedMultiplexorPart::Flush(int segment) {
     auto& len = m_Lengths[segment];
     if (len == 0) return;
     size_t offset = segment * BUFSIZE;
-    int compressed = StreamVInt::Encode(len, &m_Buffers[offset], &m_CompressedBuffer[0], m_CompressedBuffer.Capacity());
+    int compressed = StreamVInt::Encode(int(len), &m_Buffers[offset], &m_CompressedBuffer[0], int(m_CompressedBuffer.Capacity()));
     m_Store.WriteArray(segment, &m_CompressedBuffer[0], compressed);
     len = 0;
 }
@@ -137,7 +137,7 @@ void SmartMultiplexorPart::FlushBuffer(int segment) {
     if (len == 0) return;
     size_t offset = size_t(segment) << m_SmallSectorValsBits;
     //int compressed = StreamVInt::Encode(len, &m_SmallBuffer[offset], &m_EncodeBuffer[0], m_EncodeBuffer.Capacity());
-    int compressed = FrontierCompression::EncodeWithCheck(len, &m_SmallBuffer[offset], &m_EncodeBuffer[0], m_EncodeBuffer.Capacity());
+    int compressed = FrontierCompression::EncodeWithCheck(len, &m_SmallBuffer[offset], &m_EncodeBuffer[0], int(m_EncodeBuffer.Capacity()));
     auto& file = m_Files[segment];
     if (!file.CanWriteWithoutExpand(compressed) && file.GetSectorsCount() >= m_MaxSectorsCount) {
         FlushFile(segment);
@@ -170,7 +170,7 @@ void SmartMultiplexorPart::FlushFile(int segment) {
 }
 
 void SmartMultiplexorPart::FlushAllBuffers() {
-    for (size_t i = 0; i < m_BufLengths.size(); i++) {
+    for (int i = 0; i < m_BufLengths.size(); i++) {
         FlushBuffer(i);
         FlushFile(i);
     }
@@ -201,7 +201,7 @@ void SmartMultiplexor::Add(int op, int segment, uint32_t value) {
     if (!m_Mults[op].get()) {
         m_Mults[op] = std::make_unique<SmartMultiplexorPart>(
             m_StoreSet.Stores[op],
-            m_SegmentsCount,
+            int(m_SegmentsCount),
             m_MapSectotSizeBits,
             m_SmallSectorValsBits,
             m_LargeBuffer,

@@ -41,7 +41,7 @@
     <ClCompile Include="SimplePuzzleTest.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ClassicBFS\ClassicBFS.vcxproj">
+    <ProjectReference Include="..\Puzzles\Puzzles.vcxproj">
       <Project>{2d488571-c7dd-4445-bd84-d4cc6dc8f0a1}</Project>
     </ProjectReference>
   </ItemGroup>

@@ -89,14 +89,11 @@
     <ClCompile Include="test.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ClassicBFS\ClassicBFS.vcxproj">
+    <ProjectReference Include="..\Puzzles\Puzzles.vcxproj">
       <Project>{2d488571-c7dd-4445-bd84-d4cc6dc8f0a1}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Common\Common.vcxproj">
       <Project>{dab52854-a6a4-4125-8b4a-34082a93a9c8}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\HanoiTowers\HanoiTowers.vcxproj">
-      <Project>{4a424ced-a09e-4993-a9cd-ec826dd3a6a9}</Project>
     </ProjectReference>
     <ProjectReference Include="..\SlidingTilePuzzle\SlidingTilePuzzle.vcxproj">
       <Project>{d11f425b-5a61-4ece-88dc-ba07ec45d61b}</Project>

@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "../ClassicBFS/PermutationMap.h"
+#include "../Puzzles/PermutationMap.h"
 #include "../SlidingTilePuzzle/Util.h"
 
 #include <string>

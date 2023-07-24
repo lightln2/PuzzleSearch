@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <iomanip>
 #include <iostream>
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -61,5 +62,5 @@ public:
 private:
     std::mutex m_Mutex;
     std::vector<std::unique_ptr<T>> m_AllObjects;
-    std::vector<Exec*> m_FreeObjects;
+    std::vector<T*> m_FreeObjects;
 };

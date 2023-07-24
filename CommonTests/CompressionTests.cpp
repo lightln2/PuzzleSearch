@@ -11,11 +11,11 @@ TEST(TestFrontierCompression, TestBitmapCompression) {
 	std::vector<uint32_t> indexes = { 7, 8, 32, 39, 177, 999, 1000, 1001, 1002, 1005 };
 	std::vector<uint8_t> buffer(4096);
 	int encodedSize = 
-		FrontierCompression::EncodeBitMap(indexes.size(), &indexes[0], &buffer[0], buffer.size());
+		FrontierCompression::EncodeBitMap(int(indexes.size()), &indexes[0], &buffer[0], int(buffer.size()));
 
 	std::vector<uint32_t> newindexes(1024);
 	int size = encodedSize;
-	int valsCount = FrontierCompression::DecodeBitMap(size, &buffer[0], &newindexes[0], newindexes.size());
+	int valsCount = FrontierCompression::DecodeBitMap(size, &buffer[0], &newindexes[0], int(newindexes.size()));
 	EXPECT_EQ(valsCount, indexes.size());
 	for (int i = 0; i < indexes.size(); i++) {
 		EXPECT_EQ(newindexes[i], indexes[i]);
@@ -29,11 +29,11 @@ TEST(TestFrontierCompression, TestCompression_StreamVInt) {
 	}
 	std::vector<uint8_t> buffer(4096);
 	int encodedSize =
-		FrontierCompression::Encode(indexes.size(), &indexes[0], &buffer[0], buffer.size());
+		FrontierCompression::Encode(int(indexes.size()), &indexes[0], &buffer[0], int(buffer.size()));
 	EXPECT_EQ(FrontierCompression::IsBitMap(&buffer[0]), false);
 	std::vector<uint32_t> newindexes(1024);
 	int size = encodedSize;
-	int valsCount = FrontierCompression::Decode(size, &buffer[0], &newindexes[0], newindexes.size());
+	int valsCount = FrontierCompression::Decode(size, &buffer[0], &newindexes[0], int(newindexes.size()));
 	EXPECT_EQ(valsCount, indexes.size());
 	for (int i = 0; i < indexes.size(); i++) {
 		EXPECT_EQ(newindexes[i], i * 11);
@@ -47,11 +47,11 @@ TEST(TestFrontierCompression, TestCompression_Map) {
 	}
 	std::vector<uint8_t> buffer(4096);
 	int encodedSize =
-		FrontierCompression::Encode(indexes.size(), &indexes[0], &buffer[0], buffer.size());
+		FrontierCompression::Encode(int(indexes.size()), &indexes[0], &buffer[0], int(buffer.size()));
 	EXPECT_EQ(FrontierCompression::IsBitMap(&buffer[0]), true);
 	std::vector<uint32_t> newindexes(1024);
 	int size = encodedSize;
-	int valsCount = FrontierCompression::Decode(size, &buffer[0], &newindexes[0], newindexes.size());
+	int valsCount = FrontierCompression::Decode(size, &buffer[0], &newindexes[0], int(newindexes.size()));
 	EXPECT_EQ(valsCount, indexes.size());
 	for (int i = 0; i < indexes.size(); i++) {
 		EXPECT_EQ(newindexes[i], indexes[i]);
@@ -67,11 +67,11 @@ TEST(TestFrontierCompression, TestCompression_WithCheck) {
 	auto orig_indexes = indexes;
 	std::vector<uint8_t> buffer(4096);
 	int encodedSize =
-		FrontierCompression::EncodeWithCheck(indexes.size(), &indexes[0], &buffer[0], buffer.size());
+		FrontierCompression::EncodeWithCheck(int(indexes.size()), &indexes[0], &buffer[0], int(buffer.size()));
 	EXPECT_EQ(FrontierCompression::IsBitMap(&buffer[0]), false);
 	std::vector<uint32_t> newindexes(1024);
 	int size = encodedSize;
-	int valsCount = FrontierCompression::Decode(size, &buffer[0], &newindexes[0], newindexes.size());
+	int valsCount = FrontierCompression::Decode(size, &buffer[0], &newindexes[0], int(newindexes.size()));
 	EXPECT_EQ(valsCount, indexes.size());
 	for (int i = 0; i < indexes.size(); i++) {
 		EXPECT_EQ(newindexes[i], orig_indexes[i]);

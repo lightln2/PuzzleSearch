@@ -396,6 +396,7 @@ Store Store::CreateSequentialStore(int maxSegments, std::vector<std::string> fil
 Store Store::CreateFileStore(int maxSegments, const std::string& name, StoreOptions options) {
     std::vector<StoreImplRef> parallelStores;
     for (const auto& directory: options.directories) {
+        file::CreateDirectory(directory);
         if (options.filesPerPath == 0) {
             parallelStores.emplace_back(CreateMultiFileStoreImpl(maxSegments, directory, name));
         }

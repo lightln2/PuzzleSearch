@@ -1,8 +1,8 @@
 #include "pch.h"
 
-#include "../ClassicBFS/PancakeOptimized.h"
-#include "../ClassicBFS/PancakeOptimizedGpu.h"
-#include "../ClassicBFS/PancakeSimple.h"
+#include "../Puzzles/PancakeOptimized.h"
+#include "../Puzzles/PancakeOptimizedGpu.h"
+#include "../Puzzles/PancakeSimple.h"
 #include "../Common/Util.h"
 
 #include <string>

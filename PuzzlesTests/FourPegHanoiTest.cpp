@@ -1,9 +1,9 @@
 #include "pch.h"
 
-#include "../ClassicBFS/FourPegHanoiSimple.h"
-#include "../ClassicBFS/FourPegHanoiOptimized.h"
-#include "../ClassicBFS/FourPegHanoiGPU.h"
-#include "../ClassicBFS/FourPegHanoiOptimizedGPU.h"
+#include "../Puzzles/FourPegHanoiSimple.h"
+#include "../Puzzles/FourPegHanoiOptimized.h"
+#include "../Puzzles/FourPegHanoiGPU.h"
+#include "../Puzzles/FourPegHanoiOptimizedGPU.h"
 #include "../Common/Util.h"
 
 #include <string>

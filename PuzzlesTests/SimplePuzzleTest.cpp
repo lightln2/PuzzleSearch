@@ -1,8 +1,8 @@
 #include "pch.h"
 
-#include "../ClassicBFS/SlidingTilePuzzleSimple.h"
-#include "../ClassicBFS/SlidingTilePuzzleGpu.h"
-#include "../ClassicBFS/SlidingTilePuzzleOptimized.h"
+#include "../Puzzles/SlidingTilePuzzleSimple.h"
+#include "../Puzzles/SlidingTilePuzzleGpu.h"
+#include "../Puzzles/SlidingTilePuzzleOptimized.h"
 #include "../Common/Util.h"
 
 #include <string>
