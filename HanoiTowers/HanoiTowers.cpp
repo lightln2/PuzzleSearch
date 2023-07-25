@@ -242,6 +242,59 @@ void HanoiTowers<size>::ExpandInSegment(int segment, uint32_t index, std::vector
 }
 
 template<int size>
+void HanoiTowers<size>::ExpandInSegmentWithoutSmallest(int segment, uint32_t index, std::vector<uint32_t>& children) {
+    int smallestDisk = index & 3;
+    FPState<size> state;
+    state.from_index(uint64_t(segment) << 32 | index);
+    bool noMovesBreakSymmetry =
+        __popcnt64(state.pegs[1]) >= 2 &&
+        __popcnt64(state.pegs[2]) >= 2 &&
+        __popcnt64(state.pegs[3]) >= 1;
+
+    static int disksWithoutSmallest[4][3] = {
+        {1, 2, 3},
+        {0, 2, 3},
+        {0, 1, 3},
+        {0, 1, 2}
+    };
+
+    if (noMovesBreakSymmetry) {
+        auto fnMove = [&](int peg1, int peg2) {
+            FPState<size> s2 = state;
+            s2.move(peg1, peg2);
+            uint64_t child = s2.to_index();
+            if ((child >> 32) == segment) {
+                children.push_back(uint32_t(child));
+            }
+        };
+
+        auto& dws = disksWithoutSmallest[smallestDisk];
+        fnMove(dws[0], dws[1]);
+        fnMove(dws[0], dws[2]);
+        fnMove(dws[1], dws[2]);
+    }
+    else {
+        auto fnMove = [&](int peg1, int peg2) {
+            FPState<size> s2 = state;
+            bool srcEmpty = s2.empty(peg1) || s2.empty(peg2);
+            s2.move(peg1, peg2);
+            bool dstEmpty = s2.empty(peg1) || s2.empty(peg2);
+            if (srcEmpty || dstEmpty) {
+                s2.restore_symmetry();
+            }
+            uint64_t child = s2.to_index();
+            if ((child >> 32) == segment) {
+                children.push_back(uint32_t(child));
+            }
+        };
+        auto& dws = disksWithoutSmallest[smallestDisk];
+        fnMove(dws[0], dws[1]);
+        fnMove(dws[0], dws[2]);
+        fnMove(dws[1], dws[2]);
+    }
+}
+
+template<int size>
 void HanoiTowers<size>::ExpandInSegmentNoSymmetry(int segment, uint32_t index, std::vector<uint32_t>& children) {
     FPState<size> state;
     state.from_index(uint64_t(segment) << 32 | index);
@@ -272,6 +325,13 @@ template<int size>
 void HanoiTowers<size>::ExpandInSegment(int segment, size_t count, const uint32_t* indexes, std::vector<uint32_t>& children) {
     for (size_t i = 0; i < count; i++) {
         ExpandInSegment(segment, indexes[i], children);
+    }
+}
+
+template<int size>
+void HanoiTowers<size>::ExpandInSegmentWithoutSmallest(int segment, size_t count, const uint32_t* indexes, std::vector<uint32_t>& children) {
+    for (size_t i = 0; i < count; i++) {
+        ExpandInSegmentWithoutSmallest(segment, indexes[i], children);
     }
 }
 

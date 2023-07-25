@@ -33,10 +33,10 @@ void TestSlidingTile() {
 }
 
 void TestDiskBasedHanoi() {
-    //FourPegHanoiSimple puzzle(20, true);
+    FourPegHanoiSimple puzzle(17, false);
     //FourPegHanoiGPU puzzle(19, true);
     //FourPegHanoiOptimized puzzle(19, true);
-    FourPegHanoiOptimizedGPU puzzle(17, false);
+    //FourPegHanoiOptimizedGPU puzzle(17, false);
     std::string initial = puzzle.ToString(0);
     
     PuzzleOptions opts;
@@ -44,7 +44,7 @@ void TestDiskBasedHanoi() {
     opts.storeOptions.directories = { "c:/PUZ", "d:/PUZ"};
     opts.segmentBits = 32;
     opts.threads = 4;
-    //opts.maxSteps = 140;
+    opts.maxSteps = 100;
     //DiskBasedClassicBFS(puzzle, initial, opts);
     //DiskBasedFrontierSearch(puzzle, initial, opts);
     //DiskBasedOptFrontierSearch(puzzle, initial, opts);

@@ -48,6 +48,16 @@ public:
         return insegChildren;
     }
 
+    std::vector<uint32_t>& ExpandInSegmentWithoutSmallest(int segment, size_t count, uint32_t* indexes) {
+        Timer expandTimer;
+        insegChildren.clear();
+        HanoiTowers<size>::ExpandInSegmentWithoutSmallest(segment, count, indexes, insegChildren);
+        m_StatExpandedTimes++;
+        m_StatExpandedNodes += count;
+        m_StatExpandedNanos += expandTimer.Elapsed();
+        return insegChildren;
+    }
+
     static void PrintStats() {
         std::cerr
             << "Expand in-seg: " << WithDecSep(m_StatExpandedTimes) << " times, "

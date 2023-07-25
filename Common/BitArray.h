@@ -82,6 +82,10 @@ public:
         m_Values[index / 64] |= (1ui64 << (index & 63));
     }
 
+    void SetNextFourBits(uint64_t index) {
+        m_Values[index / 64] |= (15ui64 << (index & 63));
+    }
+
     void Clear(uint64_t index) {
         m_Values[index / 64] &= ~(1ui64 << (index & 63));
     }
@@ -207,6 +211,11 @@ public:
 
     void Set(uint64_t index) {
         m_Array.Set(index);
+        m_Index.Set((index) / (64 * STEP));
+    }
+
+    void SetNextFourBits(uint64_t index) {
+        m_Array.SetNextFourBits(index);
         m_Index.Set((index) / (64 * STEP));
     }
 

@@ -2,7 +2,7 @@
 #include "../HanoiTowers/HanoiTowers.h"
 
 void HanoiSearch() {
-    HanoiTowers<17> towers;
+    HanoiTowers<22> towers;
     std::string initial = towers.ToString(0);
 
     SearchOptions opts;

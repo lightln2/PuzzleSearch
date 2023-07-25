@@ -26,6 +26,7 @@ public:
     static void Expand(const std::vector<uint64_t>& indexes, std::vector<uint64_t>& children);
 
     static void ExpandInSegment(int segment, size_t count, const uint32_t* indexes, std::vector<uint32_t>& children);
+    static void ExpandInSegmentWithoutSmallest(int segment, size_t count, const uint32_t* indexes, std::vector<uint32_t>& children);
 
     static void ExpandCrossSegment(int segment, const std::vector<uint32_t>& indexes, std::vector<uint64_t>& children);
 
@@ -58,5 +59,6 @@ private:
     static void ExpandCrossSegment(int segment, uint32_t index, std::vector<uint64_t>& children);
 
     static void ExpandInSegment(int segment, uint32_t index, std::vector<uint32_t>& children);
+    static void ExpandInSegmentWithoutSmallest(int segment, uint32_t index, std::vector<uint32_t>& children);
     static void ExpandInSegmentNoSymmetry(int segment, uint32_t index, std::vector<uint32_t>& children);
 };

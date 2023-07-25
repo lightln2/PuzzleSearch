@@ -71,6 +71,8 @@ public:
     std::pair<uint64_t, uint64_t> Expand(int segment) {
         bool hasData = false;
 
+        bool fullSymmetry = HanoiTowers<size>::PegsMult(segment) == 6;
+
         CrossSegmentReader.SetSegment(segment);
         OldFrontierReader.SetSegment(segment);
         CurFrontierReader.SetSegment(segment);
@@ -99,9 +101,21 @@ public:
             for (size_t i = 0; i < vect.Size(); i++) {
                 CurArray.Set(vect[i]);
             }
-            auto& expandedVect = Expander.ExpandInSegment(segment, vect.Size(), &vect[0]);
-            for (const auto child: expandedVect) {
-                NextArray.Set(child);
+            if (fullSymmetry) {
+                for (size_t i = 0; i < vect.Size(); i++) {
+                    uint32_t baseIndex = vect[i] & ~3;
+                    NextArray.SetNextFourBits(baseIndex);
+                }
+                auto& expandedVect = Expander.ExpandInSegmentWithoutSmallest(segment, vect.Size(), &vect[0]);
+                for (const auto child : expandedVect) {
+                    NextArray.Set(child);
+                }
+            }
+            else {
+                auto& expandedVect = Expander.ExpandInSegment(segment, vect.Size(), &vect[0]);
+                for (const auto child : expandedVect) {
+                    NextArray.Set(child);
+                }
             }
         }
 
@@ -129,7 +143,7 @@ public:
         uint64_t restoredCount = 0;
         uint64_t indexBase = (uint64_t)segment << 32;
 
-        if (HanoiTowers<size>::PegsMult(segment) == 6) {
+        if (fullSymmetry) {
             NextArray.ScanBitsAndClearWithExcl([&](uint64_t index) {
                 count++;
                 Expander.AddCrossSegment(segment, uint32_t(index));
