@@ -84,10 +84,12 @@ void MTFrontierSearch4x3() {
     MTFrontierSearch<4, 3>();
 }
 
+void HanoiSearch();
 
 void TestSlidingTile();
 void TestDiskBasedHanoi();
 void TestPancake();
+
 
 int main() {
     try {
@@ -96,9 +98,11 @@ int main() {
         //MTFrontierSearch4x3();
         //MTFrontierSearch();
 
+        HanoiSearch();
+
         //TestSlidingTile();
         //TestDiskBasedHanoi();
-        TestPancake();
+        //TestPancake();
     }
     catch (const std::exception& ex) {
         std::cerr << "Error: " << ex.what() << std::endl;
