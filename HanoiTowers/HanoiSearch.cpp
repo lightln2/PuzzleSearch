@@ -1,3 +1,4 @@
+#include "Expander.h"
 #include "HanoiSearch.h"
 #include "HanoiTowers.h"
 
@@ -21,102 +22,6 @@ static void PrintResult(const std::vector<uint64_t>& result) {
     }
     std::cerr << "\nTotal: " << WithDecSep(sum) << std::endl;
 }
-
-template<int size>
-class Expander {
-public:
-    static constexpr size_t MAX_INDEXES = 4 * 1024 * 1024;
-public:
-    Expander()
-    {
-        indexes.reserve(MAX_INDEXES);
-        //crosssegChildren.reserve(MAX_INDEXES * 6);
-        insegChildren.reserve(MAX_INDEXES * 6);
-    }
-
-    template<typename F>
-    void AddCrossSegment(int segment, uint32_t index, F func) {
-        indexes.push_back(index);
-        if (indexes.size() >= MAX_INDEXES) {
-            ExpandCrossSegment(segment, func);
-        }
-    }
-
-    template<typename F>
-    void FinishCrossSegment(int segment, F func) {
-        if (indexes.size() > 0) {
-            ExpandCrossSegment(segment, func);
-        }
-    }
-
-    std::vector<uint32_t>& ExpandInSegment(int segment, size_t count, uint32_t* indexes) {
-        Timer expandTimer;
-        insegChildren.clear();
-        HanoiTowers<size>::ExpandInSegment(segment, count, indexes, insegChildren);
-        m_StatExpandedTimes++;
-        m_StatExpandedNodes += count;
-        m_StatExpandedNanos += expandTimer.Elapsed();
-        return insegChildren;
-    }
-
-    static void PrintStats() {
-        std::cerr
-            << "Expand in-seg: " << WithDecSep(m_StatExpandedTimes) << " times, "
-            << WithDecSep(m_StatExpandedNodes) << " nodes in "
-            << WithTime(m_StatExpandedNanos)
-            << std::endl;
-        std::cerr
-            << "Expand x-seg: " << WithDecSep(m_StatXExpandedTimes) << " times, "
-            << WithDecSep(m_StatXExpandedNodes) << " nodes in "
-            << WithTime(m_StatXExpandedNanos)
-            << std::endl;
-    }
-
-private:
-    template<typename F>
-    void ExpandCrossSegment(int segment, F func) {
-        Timer expandTimer;
-
-        HanoiTowers<size>::ExpandCrossSegment(segment, indexes, crosssegChildren);
-
-        m_StatXExpandedTimes++;
-        m_StatXExpandedNodes += indexes.size();
-        m_StatXExpandedNanos += expandTimer.Elapsed();
-
-        for (auto child : crosssegChildren) {
-            func(child);
-        }
-
-        indexes.clear();
-        crosssegChildren.clear();
-    }
-
-private:
-    std::vector<uint32_t> indexes;
-    std::vector<uint64_t> crosssegChildren;
-    std::vector<uint32_t> insegChildren;
-
-private:
-    static std::atomic<uint64_t> m_StatExpandedNodes;
-    static std::atomic<uint64_t> m_StatExpandedNanos;
-    static std::atomic<uint64_t> m_StatExpandedTimes;
-    static std::atomic<uint64_t> m_StatXExpandedNodes;
-    static std::atomic<uint64_t> m_StatXExpandedNanos;
-    static std::atomic<uint64_t> m_StatXExpandedTimes;
-};
-
-template<int size>
-std::atomic<uint64_t> Expander<size>::m_StatExpandedNodes{ 0 };
-template<int size>
-std::atomic<uint64_t> Expander<size>::m_StatExpandedNanos{ 0 };
-template<int size>
-std::atomic<uint64_t> Expander<size>::m_StatExpandedTimes{ 0 };
-template<int size>
-std::atomic<uint64_t> Expander<size>::m_StatXExpandedNodes{ 0 };
-template<int size>
-std::atomic<uint64_t> Expander<size>::m_StatXExpandedNanos{ 0 };
-template<int size>
-std::atomic<uint64_t> Expander<size>::m_StatXExpandedTimes{ 0 };
 
 template<int size>
 class HanoiSolver {
@@ -151,8 +56,15 @@ public:
             Mult.Add(s, idx);
         };
 
-        Expander.AddCrossSegment(seg, idx, fnExpandCrossSegment);
-        Expander.FinishCrossSegment(seg, fnExpandCrossSegment);
+        Expander.AddCrossSegment(seg, idx);
+        auto& vect = Expander.ExpandCrossSegment(seg);
+        for (const uint64_t child : vect) {
+            auto [s, idx] = HanoiTowers<size>::SplitIndex(child);
+            if (s != seg) {
+                Mult.Add(s, idx);
+            }
+        }
+
         Mult.FlushAllSegments();
     }
 
@@ -164,6 +76,8 @@ public:
         CurFrontierReader.SetSegment(segment);
         FrontierWriter.SetSegment(segment);
 
+        Timer timerLoadXSeg;
+
         while (true) {
             auto& vect = CrossSegmentReader.Read();
             if (vect.IsEmpty()) break;
@@ -173,6 +87,10 @@ public:
                 NextArray.Set(idx);
             }
         }
+
+        m_StatLoadXSegNanos += timerLoadXSeg.Elapsed();
+
+        Timer timerExpandInSeg;
 
         while (true) {
             auto& vect = CurFrontierReader.Read();
@@ -189,6 +107,10 @@ public:
 
         if (!hasData) return 0;
 
+        m_StatExpandInSegNanos += timerExpandInSeg.Elapsed();
+
+        Timer timerLoadOldSeg;
+
         while (true) {
             auto& vect = OldFrontierReader.Read();
             if (vect.IsEmpty()) break;
@@ -199,11 +121,9 @@ public:
             }
         }
 
-        auto fnExpandCrossSegment = [&](uint64_t child) {
-            auto [seg, idx] = HanoiTowers<size>::SplitIndex(child);
-            if (seg == segment) return;
-            Mult.Add(seg, idx);
-        };
+        m_StatLoadOldSegNanos += timerLoadOldSeg.Elapsed();
+
+        Timer timerCollectSeg;
 
         uint64_t count = 0;
 
@@ -211,18 +131,35 @@ public:
 
         NextArray.ScanBitsAndClearWithExcl([&](uint64_t index) {
             count++;
-            Expander.AddCrossSegment(segment, uint32_t(index), fnExpandCrossSegment);
+            Expander.AddCrossSegment(segment, uint32_t(index));
             FrontierWriter.Add(uint32_t(index));
         }, CurArray);
         CurArray.Clear();
-        Expander.FinishCrossSegment(segment, fnExpandCrossSegment);
+        const auto& expandedXSeg = Expander.ExpandCrossSegment(segment);
+        for (const uint64_t child : expandedXSeg) {
+            auto [seg, idx] = HanoiTowers<size>::SplitIndex(child);
+            if (seg != segment) {
+                Mult.Add(seg, idx);
+            }
+        }
         FrontierWriter.Flush();
+
+        m_StatCollectNanos += timerCollectSeg.Elapsed();
 
         return count;
     }
 
     void FinishExpand() {
         Mult.FlushAllSegments();
+    }
+
+    static void PrintStats() {
+        std::cerr <<
+            "LoadXSeg:    " << WithTime(m_StatLoadXSegNanos) << "\n" <<
+            "ExpandInSeg: " << WithTime(m_StatExpandInSegNanos) << "\n" <<
+            "LoadOldSeg:  " << WithTime(m_StatLoadOldSegNanos) << "\n" <<
+            "Collect:     " << WithTime(m_StatCollectNanos) <<
+            std::endl;
     }
 
 private:
@@ -234,7 +171,21 @@ private:
     Expander<size> Expander;
     BitArray CurArray;
     IndexedBitArray NextArray;
+
+private:
+    static std::atomic<uint64_t> m_StatLoadXSegNanos;
+    static std::atomic<uint64_t> m_StatExpandInSegNanos;
+    static std::atomic<uint64_t> m_StatLoadOldSegNanos;
+    static std::atomic<uint64_t> m_StatCollectNanos;
 };
+template<int size>
+std::atomic<uint64_t> HanoiSolver<size>::m_StatLoadXSegNanos{ 0 };
+template<int size>
+std::atomic<uint64_t> HanoiSolver<size>::m_StatExpandInSegNanos{ 0 };
+template<int size>
+std::atomic<uint64_t> HanoiSolver<size>::m_StatLoadOldSegNanos{ 0 };
+template<int size>
+std::atomic<uint64_t> HanoiSolver<size>::m_StatCollectNanos{ 0 };
 
 template<int size>
 std::vector<uint64_t> HanoiSearch(std::string initialState, SearchOptions options) {
@@ -311,6 +262,7 @@ std::vector<uint64_t> HanoiSearch(std::string initialState, SearchOptions option
     Store::PrintStats();
     Expander<size>::PrintStats();
     StreamVInt::PrintStats();
+    HanoiSolver<size>::PrintStats();
     PrintResult(result);
     return result;
 }

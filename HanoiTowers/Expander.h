@@ -6,65 +6,71 @@
 #include <iostream>
 #include <vector>
 
+
 template<int size>
 class Expander {
 public:
     static constexpr size_t MAX_INDEXES = 4 * 1024 * 1024;
 public:
-    Expander() 
+    Expander()
     {
         indexes.reserve(MAX_INDEXES);
-        children.reserve(MAX_INDEXES * 6);
+        insegChildren.reserve(MAX_INDEXES * 6);
     }
 
-    template<typename F>
-    void Add(uint64_t index, F func) {
+    void AddCrossSegment(int segment, uint32_t index) {
+        if (HanoiTowers<size>::InSegmentOnly(index)) return;
         indexes.push_back(index);
-        if (indexes.size() >= MAX_INDEXES) {
-            Expand(func);
-        }
     }
 
-    template<typename F>
-    void Finish(F func) {
-        if (indexes.size() > 0) {
-            Expand(func);
-        }
+    std::vector<uint64_t>& ExpandCrossSegment(int segment) {
+        Timer expandTimer;
+
+        crosssegChildren.clear();
+        HanoiTowers<size>::ExpandCrossSegment(segment, indexes, crosssegChildren);
+        indexes.clear();
+
+        m_StatXExpandedTimes++;
+        m_StatXExpandedNodes += indexes.size();
+        m_StatXExpandedNanos += expandTimer.Elapsed();
+
+        return crosssegChildren;
+    }
+
+
+    std::vector<uint32_t>& ExpandInSegment(int segment, size_t count, uint32_t* indexes) {
+        Timer expandTimer;
+        insegChildren.clear();
+        HanoiTowers<size>::ExpandInSegment(segment, count, indexes, insegChildren);
+        m_StatExpandedTimes++;
+        m_StatExpandedNodes += count;
+        m_StatExpandedNanos += expandTimer.Elapsed();
+        return insegChildren;
     }
 
     static void PrintStats() {
         std::cerr
-            << "Expand: " << WithDecSep(m_StatExpandedTimes) << " times, "
+            << "Expand in-seg: " << WithDecSep(m_StatExpandedTimes) << " times, "
             << WithDecSep(m_StatExpandedNodes) << " nodes in "
             << WithTime(m_StatExpandedNanos)
+            << std::endl;
+        std::cerr
+            << "Expand x-seg: " << WithDecSep(m_StatXExpandedTimes) << " times, "
+            << WithDecSep(m_StatXExpandedNodes) << " nodes in "
+            << WithTime(m_StatXExpandedNanos)
             << std::endl;
     }
 
 private:
-    template<typename F>
-    void Expand(F func) {
-        Timer expandTimer;
-
-        HanoiTowers<size>::Expand(indexes, children);
-
-        m_StatExpandedTimes++;
-        m_StatExpandedNodes += indexes.size();
-        m_StatExpandedNanos += expandTimer.Elapsed();
-
-        for (auto child : children) {
-            func(child);
-        }
-
-        indexes.clear();
-        children.clear();
-    }
-
-private:
-    std::vector<uint64_t> indexes;
-    std::vector<uint64_t> children;
+    std::vector<uint32_t> indexes;
+    std::vector<uint64_t> crosssegChildren;
+    std::vector<uint32_t> insegChildren;
 
 private:
     static std::atomic<uint64_t> m_StatExpandedNodes;
     static std::atomic<uint64_t> m_StatExpandedNanos;
     static std::atomic<uint64_t> m_StatExpandedTimes;
+    static std::atomic<uint64_t> m_StatXExpandedNodes;
+    static std::atomic<uint64_t> m_StatXExpandedNanos;
+    static std::atomic<uint64_t> m_StatXExpandedTimes;
 };

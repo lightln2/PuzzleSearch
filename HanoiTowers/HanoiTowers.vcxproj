@@ -133,6 +133,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Expander.cpp" />
     <ClCompile Include="HanoiSearch.cpp" />
     <ClCompile Include="HanoiTowers.cpp" />
   </ItemGroup>
@@ -142,6 +143,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Expander.h" />
     <ClInclude Include="HanoiSearch.h" />
     <ClInclude Include="HanoiTowers.h" />
   </ItemGroup>

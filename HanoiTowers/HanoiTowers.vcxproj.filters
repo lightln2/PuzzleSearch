@@ -3,9 +3,11 @@
   <ItemGroup>
     <ClCompile Include="HanoiTowers.cpp" />
     <ClCompile Include="HanoiSearch.cpp" />
+    <ClCompile Include="Expander.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="HanoiTowers.h" />
     <ClInclude Include="HanoiSearch.h" />
+    <ClInclude Include="Expander.h" />
   </ItemGroup>
 </Project>
