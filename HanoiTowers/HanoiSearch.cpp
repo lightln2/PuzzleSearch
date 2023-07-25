@@ -68,7 +68,7 @@ public:
         Mult.FlushAllSegments();
     }
 
-    uint64_t Expand(int segment) {
+    std::pair<uint64_t, uint64_t> Expand(int segment) {
         bool hasData = false;
 
         CrossSegmentReader.SetSegment(segment);
@@ -105,7 +105,7 @@ public:
             }
         }
 
-        if (!hasData) return 0;
+        if (!hasData) return { 0, 0 };
 
         m_StatExpandInSegNanos += timerExpandInSeg.Elapsed();
 
@@ -126,29 +126,37 @@ public:
         Timer timerCollectSeg;
 
         uint64_t count = 0;
-
+        uint64_t restoredCount = 0;
         uint64_t indexBase = (uint64_t)segment << 32;
 
-        NextArray.ScanBitsAndClearWithExcl([&](uint64_t index) {
-            count++;
-            Expander.AddCrossSegment(segment, uint32_t(index));
-            FrontierWriter.Add(uint32_t(index));
-        }, CurArray);
+        if (HanoiTowers<size>::PegsMult(segment) == 6) {
+            NextArray.ScanBitsAndClearWithExcl([&](uint64_t index) {
+                count++;
+                Expander.AddCrossSegment(segment, uint32_t(index));
+                FrontierWriter.Add(uint32_t(index));
+            }, CurArray);
+            restoredCount = count * 6;
+        }
+        else {
+            NextArray.ScanBitsAndClearWithExcl([&](uint64_t index) {
+                count++;
+                restoredCount += HanoiTowers<size>::PegsMult(indexBase | index);
+                Expander.AddCrossSegment(segment, uint32_t(index));
+                FrontierWriter.Add(uint32_t(index));
+            }, CurArray);
+        }
 
         CurArray.Clear();
 
         const auto& expandedXSeg = Expander.ExpandCrossSegment(segment);
         for (const uint64_t child : expandedXSeg) {
             auto [seg, idx] = HanoiTowers<size>::SplitIndex(child);
-            if (seg != segment) {
-                Mult.Add(seg, idx);
-            }
+            Mult.Add(seg, idx);
         }
         FrontierWriter.Flush();
 
         m_StatCollectNanos += timerCollectSeg.Elapsed();
-
-        return count;
+        return { count, restoredCount };
     }
 
     void FinishExpand() {
@@ -238,9 +246,12 @@ std::vector<uint64_t> HanoiSearch(std::string initialState, SearchOptions option
         Timer stepTimer;
 
         std::atomic<uint64_t> totalCount{ 0 };
+        std::atomic<uint64_t> totalRestoredCount{ 0 };
 
         ParallelExec(options.threads, maxSegments, [&](int thread, int segment) {
-            totalCount += solvers[thread]->Expand(segment);
+            auto [count, restoredCount] = solvers[thread]->Expand(segment);
+            totalCount += count;
+            totalRestoredCount += restoredCount;
         });
 
         ParallelExec(options.threads, [&](int thread) {
@@ -248,11 +259,12 @@ std::vector<uint64_t> HanoiSearch(std::string initialState, SearchOptions option
         });
 
         if (totalCount == 0) break;
-        result.push_back(totalCount);
+        result.push_back(totalRestoredCount);
         fnSwapStores();
         std::cerr
             << "Step: " << result.size() - 1
             << "; count: " << WithDecSep(totalCount)
+            << " -> " << WithDecSep(totalRestoredCount)
             << " in " << stepTimer
             << "; size: old frontier=" << WithSize(oldFrontierStore.TotalLength())
             << "; size: frontier=" << WithSize(curFrontierStore.TotalLength())
@@ -270,6 +282,9 @@ std::vector<uint64_t> HanoiSearch(std::string initialState, SearchOptions option
 }
 
 
+template std::vector<uint64_t> HanoiSearch<14>(std::string initialState, SearchOptions options);
+template std::vector<uint64_t> HanoiSearch<15>(std::string initialState, SearchOptions options);
+template std::vector<uint64_t> HanoiSearch<16>(std::string initialState, SearchOptions options);
 template std::vector<uint64_t> HanoiSearch<17>(std::string initialState, SearchOptions options);
 template std::vector<uint64_t> HanoiSearch<18>(std::string initialState, SearchOptions options);
 template std::vector<uint64_t> HanoiSearch<19>(std::string initialState, SearchOptions options);

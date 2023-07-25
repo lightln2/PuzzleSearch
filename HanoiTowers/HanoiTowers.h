@@ -13,7 +13,7 @@ public:
 
     static uint64_t IndexesCount() { return 1ui64 << (size * 2); }
 
-    static int MaxSegments() { return int(IndexesCount() >> 32); }
+    static int MaxSegments() { return int((IndexesCount() + 0xFFFFFFFF) >> 32); }
 
     static std::string ToString(uint64_t index);
 
@@ -37,28 +37,25 @@ public:
         uint32_t p1 = index;
         uint32_t p0i = ~p0;
         uint32_t p1i = ~p1;
-        bool z0 = ((p0 & p1) & MASK) != 0;
-        bool z1 = ((p0 & p1i) & MASK) != 0;
-        bool z2 = ((p0i & p1) & MASK) != 0;
-        bool z3 = ((p0i & p1i) & MASK) != 0;
+        bool z0 = ((p0i & p1i) & MASK) != 0;
+        bool z1 = ((p0i & p1) & MASK) != 0;
+        bool z2 = ((p0 & p1i) & MASK) != 0;
+        bool z3 = ((p0 & p1) & MASK) != 0;
         return int(z0) + int(z1) + int(z2) + int(z3) >= 3;
     }
 
-    static __forceinline bool NoMovesBreakSymmetry(uint32_t index) {
-        static constexpr uint32_t MASK = 0x55555555ui32;
-        uint32_t p0 = index >> 1;
-        uint32_t p1 = index;
-        uint32_t p0i = ~p0;
-        uint32_t p1i = ~p1;
-        //uint32_t peg0 = ((p0 & p1) & MASK);
-        uint32_t peg1 = ((p0 & p1i) & MASK);
-        uint32_t peg2 = ((p0i & p1) & MASK);
-        uint32_t peg3 = ((p0i & p1i) & MASK);
-        return __popcnt(peg1) >= 2 && __popcnt(peg2) >= 2 && __popcnt(peg3) >= 1;
+    static __forceinline int PegsMult(uint64_t index) {
+        static constexpr uint64_t BIT_MASK = 0x5555555555555555ui64;
+        uint64_t p0 = index >> 1;
+        uint64_t p1 = index;
+        uint64_t pegs1 = (~p0 & p1) & BIT_MASK;
+        uint64_t pegs2 = (p0 & ~p1) & BIT_MASK;
+        return 6 - (int(pegs2 == 0) * 3) - int(pegs1 == 0);
     }
 
 private:
     static void Expand(uint64_t index, std::vector<uint64_t>& children);
+    static void ExpandCrossSegment(int segment, uint32_t index, std::vector<uint64_t>& children);
 
     static void ExpandInSegment(int segment, uint32_t index, std::vector<uint32_t>& children);
     static void ExpandInSegmentNoSymmetry(int segment, uint32_t index, std::vector<uint32_t>& children);

@@ -13,6 +13,9 @@ std::atomic<uint64_t> Expander<size>::m_StatXExpandedNanos{ 0 };
 template<int size>
 std::atomic<uint64_t> Expander<size>::m_StatXExpandedTimes{ 0 };
 
+template class Expander<14>;
+template class Expander<15>;
+template class Expander<16>;
 template class Expander<17>;
 template class Expander<18>;
 template class Expander<19>;

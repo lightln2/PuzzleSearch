@@ -167,6 +167,32 @@ void HanoiTowers<size>::Expand(uint64_t index, std::vector<uint64_t>& children) 
 }
 
 template<int size>
+void HanoiTowers<size>::ExpandCrossSegment(int segment, uint32_t index, std::vector<uint64_t>& children) {
+    FPState<size> state;
+    uint64_t segmentBase = uint64_t(segment) << 32;
+    state.from_index(segmentBase | index);
+    auto fnMove = [&](int peg1, int peg2) {
+        FPState<size> s2 = state;
+        bool srcEmpty = s2.empty(peg1) || s2.empty(peg2);
+        s2.move(peg1, peg2);
+        bool dstEmpty = s2.empty(peg1) || s2.empty(peg2);
+        if (srcEmpty || dstEmpty) {
+            s2.restore_symmetry();
+        }
+        uint64_t child = s2.to_index();
+        if ((child >> 32) != segment) {
+            children.push_back(child);
+        }
+    };
+    fnMove(0, 1);
+    fnMove(0, 2);
+    fnMove(0, 3);
+    fnMove(1, 2);
+    fnMove(1, 3);
+    fnMove(2, 3);
+}
+
+template<int size>
 void HanoiTowers<size>::ExpandInSegment(int segment, uint32_t index, std::vector<uint32_t>& children) {
     FPState<size> state;
     state.from_index(uint64_t(segment) << 32 | index);
@@ -246,14 +272,6 @@ template<int size>
 void HanoiTowers<size>::ExpandInSegment(int segment, size_t count, const uint32_t* indexes, std::vector<uint32_t>& children) {
     for (size_t i = 0; i < count; i++) {
         ExpandInSegment(segment, indexes[i], children);
-        /*
-        if (NoMovesBreakSymmetry(indexes[i])) {
-            ExpandInSegmentNoSymmetry(segment, indexes[i], children);
-        }
-        else {
-            ExpandInSegment(segment, indexes[i], children);
-        }
-        */
     }
 }
 
@@ -262,10 +280,13 @@ void HanoiTowers<size>::ExpandCrossSegment(int segment, const std::vector<uint32
     uint64_t segmentBase = uint64_t(segment) << 32;
 
     for (uint64_t index : indexes) {
-        Expand(segmentBase | index, children);
+        ExpandCrossSegment(segment, index, children);
     }
 }
 
+template class HanoiTowers<14>;
+template class HanoiTowers<15>;
+template class HanoiTowers<16>;
 template class HanoiTowers<17>;
 template class HanoiTowers<18>;
 template class HanoiTowers<19>;
