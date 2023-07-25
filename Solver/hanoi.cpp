@@ -8,7 +8,7 @@ void HanoiSearch() {
     SearchOptions opts;
     //opts.storeOptions.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ", "h:/PUZ2" };
     opts.directories = { "c:/PUZ", "d:/PUZ" };
-    opts.threads = 1;
+    //opts.threads = 6;
     opts.maxSteps = 200;
 
     HanoiSearch<towers.Size>(initial, opts);

@@ -1,7 +1,11 @@
 #include "HanoiTowers.h"
+#include "HanoiExpandGPU.h"
+
 #include "../Common/Util.h"
 
 #include <immintrin.h>
+
+static constexpr bool USE_GPU = true;
 
 template<int size>
 struct FPState {
@@ -323,23 +327,31 @@ void HanoiTowers<size>::Expand(const std::vector<uint64_t>& indexes, std::vector
 
 template<int size>
 void HanoiTowers<size>::ExpandInSegment(int segment, size_t count, const uint32_t* indexes, std::vector<uint32_t>& children) {
-    for (size_t i = 0; i < count; i++) {
-        ExpandInSegment(segment, indexes[i], children);
+    if (USE_GPU) {
+        GpuExpandInSegment<size>(segment, count, indexes, children);
+    }
+    else {
+        for (size_t i = 0; i < count; i++) {
+            ExpandInSegment(segment, indexes[i], children);
+        }
     }
 }
 
 template<int size>
 void HanoiTowers<size>::ExpandInSegmentWithoutSmallest(int segment, size_t count, const uint32_t* indexes, std::vector<uint32_t>& children) {
-    for (size_t i = 0; i < count; i++) {
-        ExpandInSegmentWithoutSmallest(segment, indexes[i], children);
+    if (USE_GPU) {
+        GpuExpandInSegmentWithoutSmallest<size>(segment, count, indexes, children);
+    }
+    else {
+        for (size_t i = 0; i < count; i++) {
+            ExpandInSegmentWithoutSmallest(segment, indexes[i], children);
+        }
     }
 }
 
 template<int size>
 void HanoiTowers<size>::ExpandCrossSegment(int segment, const std::vector<uint32_t>& indexes, std::vector<uint64_t>& children) {
-    uint64_t segmentBase = uint64_t(segment) << 32;
-
-    for (uint64_t index : indexes) {
+    for (uint32_t index : indexes) {
         ExpandCrossSegment(segment, index, children);
     }
 }

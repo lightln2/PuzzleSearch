@@ -9,5 +9,6 @@
     <ClInclude Include="HanoiTowers.h" />
     <ClInclude Include="HanoiSearch.h" />
     <ClInclude Include="Expander.h" />
+    <ClInclude Include="HanoiExpandGPU.h" />
   </ItemGroup>
 </Project>

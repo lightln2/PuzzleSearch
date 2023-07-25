@@ -62,3 +62,9 @@ private:
     static void ExpandInSegmentWithoutSmallest(int segment, uint32_t index, std::vector<uint32_t>& children);
     static void ExpandInSegmentNoSymmetry(int segment, uint32_t index, std::vector<uint32_t>& children);
 };
+
+template<int size>
+void GpuExpandInSegment(int segment, size_t count, const uint32_t* indexes, std::vector<uint32_t>& children);
+template<int size>
+void GpuExpandInSegmentWithoutSmallest(int segment, size_t count, const uint32_t* indexes, std::vector<uint32_t>& children);
+

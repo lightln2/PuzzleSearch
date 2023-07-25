@@ -47,8 +47,8 @@ public:
             m_AllObjects.emplace_back(std::make_unique<T>());
             m_FreeObjects.push_back(m_AllObjects.back().get());
         }
-        auto* object = m_AllObjects.back();
-        m_AllObjects.pop_back();
+        T* object = m_FreeObjects.back();
+        m_FreeObjects.pop_back();
         m_Mutex.unlock();
         return object;
     }

@@ -10,15 +10,18 @@ using CuStream = void*;
 void ERR(cudaError_t err);
 
 uint64_t* CreateGPUBuffer(int count);
+uint32_t* CreateGPUBuffer32(int count);
 void DestroyGPUBuffer(uint64_t* gpuBuffer);
+void DestroyGPUBuffer32(uint32_t* gpuBuffer);
+
 CuStream CreateCudaStream();
 void DestroyCudaStream(CuStream stream);
 
-void CopyToGpu(uint64_t* buffer, uint64_t* gpuBuffer, size_t count, CuStream stream);
-void CopyFromGpu(uint64_t* gpuBuffer, uint64_t* buffer, size_t count, CuStream stream);
+void CopyToGpu(const uint64_t* buffer, uint64_t* gpuBuffer, size_t count, CuStream stream);
+void CopyFromGpu(const uint64_t* gpuBuffer, uint64_t* buffer, size_t count, CuStream stream);
 
-void CopyToGpu(uint32_t* buffer, uint32_t* gpuBuffer, size_t count, CuStream stream);
-void CopyFromGpu(uint32_t* gpuBuffer, uint32_t* buffer, size_t count, CuStream stream);
+void CopyToGpu(const uint32_t* buffer, uint32_t* gpuBuffer, size_t count, CuStream stream);
+void CopyFromGpu(const uint32_t* gpuBuffer, uint32_t* buffer, size_t count, CuStream stream);
 
 __device__ void GpuPermutationCompact(int* arr, int size);
 
