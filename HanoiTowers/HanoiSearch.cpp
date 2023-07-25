@@ -134,7 +134,9 @@ public:
             Expander.AddCrossSegment(segment, uint32_t(index));
             FrontierWriter.Add(uint32_t(index));
         }, CurArray);
+
         CurArray.Clear();
+
         const auto& expandedXSeg = Expander.ExpandCrossSegment(segment);
         for (const uint64_t child : expandedXSeg) {
             auto [seg, idx] = HanoiTowers<size>::SplitIndex(child);

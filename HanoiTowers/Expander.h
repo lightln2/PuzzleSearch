@@ -28,12 +28,12 @@ public:
 
         crosssegChildren.clear();
         HanoiTowers<size>::ExpandCrossSegment(segment, indexes, crosssegChildren);
-        indexes.clear();
 
         m_StatXExpandedTimes++;
         m_StatXExpandedNodes += indexes.size();
         m_StatXExpandedNanos += expandTimer.Elapsed();
 
+        indexes.clear();
         return crosssegChildren;
     }
 
