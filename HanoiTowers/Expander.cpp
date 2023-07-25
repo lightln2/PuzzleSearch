@@ -7,6 +7,12 @@ std::atomic<uint64_t> Expander<size>::m_StatExpandedNanos{ 0 };
 template<int size>
 std::atomic<uint64_t> Expander<size>::m_StatExpandedTimes{ 0 };
 template<int size>
+std::atomic<uint64_t> Expander<size>::m_StatExpandedNodes2{ 0 };
+template<int size>
+std::atomic<uint64_t> Expander<size>::m_StatExpandedNanos2{ 0 };
+template<int size>
+std::atomic<uint64_t> Expander<size>::m_StatExpandedTimes2{ 0 };
+template<int size>
 std::atomic<uint64_t> Expander<size>::m_StatXExpandedNodes{ 0 };
 template<int size>
 std::atomic<uint64_t> Expander<size>::m_StatXExpandedNanos{ 0 };

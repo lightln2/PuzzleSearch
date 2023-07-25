@@ -52,9 +52,9 @@ public:
         Timer expandTimer;
         insegChildren.clear();
         HanoiTowers<size>::ExpandInSegmentWithoutSmallest(segment, count, indexes, insegChildren);
-        m_StatExpandedTimes++;
-        m_StatExpandedNodes += count;
-        m_StatExpandedNanos += expandTimer.Elapsed();
+        m_StatExpandedTimes2++;
+        m_StatExpandedNodes2 += count;
+        m_StatExpandedNanos2 += expandTimer.Elapsed();
         return insegChildren;
     }
 
@@ -63,6 +63,11 @@ public:
             << "Expand in-seg: " << WithDecSep(m_StatExpandedTimes) << " times, "
             << WithDecSep(m_StatExpandedNodes) << " nodes in "
             << WithTime(m_StatExpandedNanos)
+            << std::endl;
+        std::cerr
+            << "Expand in-seg (3/6): " << WithDecSep(m_StatExpandedTimes2) << " times, "
+            << WithDecSep(m_StatExpandedNodes2) << " nodes in "
+            << WithTime(m_StatExpandedNanos2)
             << std::endl;
         std::cerr
             << "Expand x-seg: " << WithDecSep(m_StatXExpandedTimes) << " times, "
@@ -80,6 +85,9 @@ private:
     static std::atomic<uint64_t> m_StatExpandedNodes;
     static std::atomic<uint64_t> m_StatExpandedNanos;
     static std::atomic<uint64_t> m_StatExpandedTimes;
+    static std::atomic<uint64_t> m_StatExpandedNodes2;
+    static std::atomic<uint64_t> m_StatExpandedNanos2;
+    static std::atomic<uint64_t> m_StatExpandedTimes2;
     static std::atomic<uint64_t> m_StatXExpandedNodes;
     static std::atomic<uint64_t> m_StatXExpandedNanos;
     static std::atomic<uint64_t> m_StatXExpandedTimes;
