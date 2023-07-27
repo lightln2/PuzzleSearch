@@ -36,6 +36,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="$(CUDAPropsPath)\CUDA 11.7.props" />
   <Import Project="$(CUDAPropsPath)\CUDA 11.7.targets" />
   <ImportGroup Label="ExtensionSettings">
@@ -101,9 +102,18 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Expander.h" />
+    <ClInclude Include="HanoiExpandGPU.h" />
+    <ClInclude Include="HanoiSearch.h" />
+    <ClInclude Include="HanoiTowers.h" />
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="Expander.cpp" />
     <ClCompile Include="HanoiSearch.cpp" />
     <ClCompile Include="HanoiTowers.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="HanoiExpandGpu.cu" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.vcxproj">
@@ -113,16 +123,6 @@
       <Project>{2d488571-c7dd-4445-bd84-d4cc6dc8f0a1}</Project>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Expander.h" />
-    <ClInclude Include="HanoiExpandGPU.h" />
-    <ClInclude Include="HanoiSearch.h" />
-    <ClInclude Include="HanoiTowers.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <CudaCompile Include="HanoiExpandGpu.cu" />
-  </ItemGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>

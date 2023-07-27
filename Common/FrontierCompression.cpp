@@ -26,42 +26,43 @@ namespace FrontierCompression {
     }
 
     size_t BitMapSize(int count, uint32_t* indexes) {
-        uint32_t first = indexes[0];
-        uint32_t last = indexes[count - 1];
+        uint64_t first = indexes[0];
+        uint64_t last = indexes[count - 1];
         if (last < first) return std::numeric_limits<size_t>::max();
         size_t bitmapSize = (last - first + 63) / 64;
         return bitmapSize * 8 + 8;
     }
 
     int EncodeBitMap(int count, uint32_t* indexes, uint8_t* buffer, int buffer_capacity) {
-        uint32_t first = indexes[0];
-        uint32_t last = indexes[count - 1];
-        int bitmapSize = (last - first + 63) / 64;
-        int bitmapSizeInBytes = bitmapSize * 8;
-        *(uint32_t*)buffer = bitmapSize | CODEC_MAP;
-        *(uint32_t*)(buffer + 4) = first;
+        uint64_t first = indexes[0];
+        uint64_t last = indexes[count - 1];
+        size_t bitmapSize = (last - first + 63) / 64;
+        size_t bitmapSizeInBytes = bitmapSize * 8;
+        ensure(bitmapSizeInBytes < 0xFFFFFFFF);
+        *(uint32_t*)buffer = uint32_t(bitmapSize | CODEC_MAP);
+        *(uint32_t*)(buffer + 4) = uint32_t(first);
         uint64_t* bitmap = (uint64_t*)(buffer + 8);
         memset(bitmap, 0, bitmapSizeInBytes);
         for (int i = 1; i < count; i++) {
-            uint32_t val = indexes[i] - first - 1;
+            uint64_t val = indexes[i] - first - 1;
             bitmap[val / 64] |= (1ui64 << (val % 64));
         }
         return 8 + bitmapSizeInBytes;
     }
 
     int EncodeBitMapWithCheck(int count, uint32_t* indexes, uint8_t* buffer, int buffer_capacity) {
-        uint32_t first = indexes[0];
-        uint32_t last = indexes[count - 1];
+        uint64_t first = indexes[0];
+        uint64_t last = indexes[count - 1];
         if (last < first) return -1;
-        uint32_t max = last - first - 1;
-        int bitmapSize = (last - first + 63) / 64;
-        int bitmapSizeInBytes = bitmapSize * 8;
-        *(uint32_t*)buffer = bitmapSize | CODEC_MAP;
-        *(uint32_t*)(buffer + 4) = first;
+        uint64_t max = last - first - 1;
+        size_t bitmapSize = (last - first + 63) / 64;
+        size_t bitmapSizeInBytes = bitmapSize * 8;
+        *(uint32_t*)buffer = uint32_t(bitmapSize | CODEC_MAP);
+        *(uint32_t*)(buffer + 4) = uint32_t(first);
         uint64_t* bitmap = (uint64_t*)(buffer + 8);
         memset(bitmap, 0, bitmapSizeInBytes);
         for (int i = 1; i < count; i++) {
-            uint32_t val = indexes[i] - first - 1;
+            uint64_t val = indexes[i] - first - 1;
             if (val > max) return -1;
             bitmap[val / 64] |= (1ui64 << (val % 64));
         }
