@@ -11,18 +11,18 @@ and new algorithms:
 
 All algorithms can be given an implementation of an abstract class `Puzzle`
 
-For some puzzles, an optimized version of corresponding algorithms is created,
-with more domain-specific optimizations.
-
 New algorithms incorporate various optimizations:
 - data compression
 - GPU acceleration
 - low-level bit tricks
 
+For some puzzles, an optimized version of corresponding algorithms is created,
+with more domain-specific optimizations.
+
 On my computer, running times are the following:
-Fifteen Sliding-Tile Puzzle: 40 hours
-Fifteen Pancakes Problem: 62 hours
-Four-Peg Towers of Hanoi with 24 disks: 163 hours
+- Fifteen Sliding-Tile Puzzle: 40 hours
+- Fifteen Pancakes Problem: 62 hours
+- Four-Peg Towers of Hanoi Puzzle with 24 disks: 163 hours
 
 Minimum requirements:
 - NVidia GPU card
