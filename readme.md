@@ -1,13 +1,18 @@
-# Complete Breadth-First Search solver of various puzzles
+# Complete Breadth-First Search Solver
 
-The solver implements several well known algorithms:
+The solver implements well known algorithms:
 - standard Breadth-First Search
 - Disk-Based Frontier Searh
 - Two-Bit Breadth-Frst Search
+
 and new algorithms:
 - Optimized Frontier Search
 - Three-Bit Breadth-First Search
-The puzzle can be plugged as an implementation of an interface, and used with all algoritms.
+
+All algorithms can be given an implementation of an abstract class `Puzzle`
+
+For some puzzles, an optimized version of corresponding algorithms is created,
+with more domain-specific optimizations.
 
 New algorithms incorporate various optimizations:
 - data compression
