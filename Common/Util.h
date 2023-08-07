@@ -38,6 +38,27 @@ struct Timer {
 
 std::ostream& operator<<(std::ostream& os, const Timer& timer);
 
+template<typename Func>
+void FilterInPlace(std::vector<uint64_t>& x, std::vector<int>& y, Func func) {
+    size_t src = 0, dst = 0;
+    while (dst < x.size()) {
+        if (!func(x[dst])) {
+            dst++;
+            continue;
+        }
+        else if (src != dst) {
+            x[src] = x[dst];
+            y[src] = y[dst];
+        }
+        src++;
+        dst++;
+    }
+    if (src != dst) {
+        x.resize(src);
+        y.resize(src);
+    }
+}
+
 template<typename T>
 class ObjectPool {
 public:

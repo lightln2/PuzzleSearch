@@ -332,6 +332,17 @@ TEST(SlidingTile_Optimized_GPU, Opt3BitBFS_5x2_7seg_4th) {
     EXPECT_EQ(ToString(result), ST5x2);
 }
 
+
+TEST(SlidingTile_Optimized_GPU, OptFrontierSearch_5x3_1th) {
+    SlidingTilePuzzleOptimized<5, 3> puzzle;
+    PuzzleOptions opts;
+    opts.segmentBits = 32;
+    opts.threads = 1;
+    opts.maxSteps = 25;
+    auto result = DiskBasedOptFrontierSearch(puzzle, "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14", opts);
+    EXPECT_EQ(ToString(result), "1 2 4 9 21 42 89 164 349 644 1349 2473 5109 9110 18489 32321 64962 112445 223153 378761 740095 1231589 2364342 3847629 7246578 11506172");
+}
+
 /////////// Hanoi CPU ////////////////
 
 TEST(HanoiTowers_CPU, ClassicBFS_10) {

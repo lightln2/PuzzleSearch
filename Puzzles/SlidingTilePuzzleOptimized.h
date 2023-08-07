@@ -27,6 +27,13 @@ public:
 
     virtual uint64_t Parse(std::string state);
 
+    virtual void Expand(
+        std::vector<uint64_t>& indexes,
+        std::vector<int>& usedOperatorBits,
+        std::vector<uint64_t>& expandedIndexes,
+        std::vector<int>& expandedOperators,
+        ExpandHint hint);
+
 private:
     bool CanMoveUp(uint32_t index) { return (index % 16) >= width; }
     static bool CanMoveDown(uint32_t index) { return (index % 16) < size - width; }

@@ -266,6 +266,7 @@ __global__ void kernel_sliding_tile_optimized(uint64_t* indexes, uint64_t* expan
         result = (exp << 4) | OP_LEFT;
     }
     expanded[i * 4 + 3] = result;
+
 }
 
 template<int width, int height>

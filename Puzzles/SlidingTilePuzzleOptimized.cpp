@@ -245,6 +245,46 @@ uint64_t SlidingTilePuzzleOptimized<width, height>::Parse(std::string stateStr) 
 }
 
 template<int width, int height>
+void SlidingTilePuzzleOptimized<width, height>::Expand(
+    std::vector<uint64_t>& indexes,
+    std::vector<int>& usedOperatorBits,
+    std::vector<uint64_t>& expandedIndexes,
+    std::vector<int>& expandedOperators,
+    ExpandHint hint)
+{
+    SetupOutputBuffers(expandedIndexes, expandedOperators);
+
+    auto bIsCrossSegment = hint.SegmentBits == 32 && width * height > 12 && hint.CrossSegment;
+
+    auto fbCrossSeg = [](uint64_t index) {
+        auto blank = index & 15;
+        return
+            blank == 13 || blank == 14 || blank == 15 ||
+            blank == 13 - width || blank == 14 - width || blank == 15 - width;
+    };
+    if (bIsCrossSegment) {
+        FilterInPlace(indexes, usedOperatorBits, fbCrossSeg);
+    }
+
+    if (indexes.size() == 0) return;
+
+    CombineIndexAndOpBits(indexes, usedOperatorBits);
+
+    auto* stream = AquireStream();
+
+    CopyToGpu(&indexes[0], stream->gpuSrc, indexes.size(), stream->stream);
+    
+    GpuSlidingTilePuzzleOptimizedExpand<width, height>(stream->gpuSrc, stream->gpuDst, indexes.size(), stream->stream);
+    expandedIndexes.resize(indexes.size() * 4);
+    expandedOperators.resize(indexes.size() * 4);
+    CopyFromGpu(stream->gpuDst, &expandedIndexes[0], expandedIndexes.size(), stream->stream);
+
+    ReleaseStream(stream);
+
+    SplitIndexAndOps(expandedIndexes, expandedOperators);
+}
+
+template<int width, int height>
 void SlidingTilePuzzleOptimized<width, height>::ExpandGpu(
     uint64_t* gpuIndexes,
     uint64_t* gpuExpanded,
