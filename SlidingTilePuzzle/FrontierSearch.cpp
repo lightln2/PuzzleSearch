@@ -84,7 +84,7 @@ private:
 };
 
 template<int width, int height>
-std::vector<uint64_t> FrontierSearch(SearchOptions options) {
+std::vector<uint64_t> FrontierSearch(STSearchOptions options) {
 	std::cerr << "single-tile metric, " << width << " x " << height << ", threads: " << options.Threads << '\n';
 	std::cerr << "max depth: " << options.MaxDepth << "; ini: " << options.InitialValue << '\n';
 	PrintVecor("Frontier1", options.FileFrontier1);
@@ -187,17 +187,17 @@ std::vector<uint64_t> FrontierSearch(SearchOptions options) {
 	return widths;
 }
 
-template std::vector<uint64_t> FrontierSearch<2, 2>(SearchOptions options);
-template std::vector<uint64_t> FrontierSearch<3, 2>(SearchOptions options);
-template std::vector<uint64_t> FrontierSearch<4, 2>(SearchOptions options);
-template std::vector<uint64_t> FrontierSearch<5, 2>(SearchOptions options);
-template std::vector<uint64_t> FrontierSearch<6, 2>(SearchOptions options);
-template std::vector<uint64_t> FrontierSearch<7, 2>(SearchOptions options);
-template std::vector<uint64_t> FrontierSearch<8, 2>(SearchOptions options);
+template std::vector<uint64_t> FrontierSearch<2, 2>(STSearchOptions options);
+template std::vector<uint64_t> FrontierSearch<3, 2>(STSearchOptions options);
+template std::vector<uint64_t> FrontierSearch<4, 2>(STSearchOptions options);
+template std::vector<uint64_t> FrontierSearch<5, 2>(STSearchOptions options);
+template std::vector<uint64_t> FrontierSearch<6, 2>(STSearchOptions options);
+template std::vector<uint64_t> FrontierSearch<7, 2>(STSearchOptions options);
+template std::vector<uint64_t> FrontierSearch<8, 2>(STSearchOptions options);
 
-template std::vector<uint64_t> FrontierSearch<3, 3>(SearchOptions options);
-template std::vector<uint64_t> FrontierSearch<4, 3>(SearchOptions options);
-template std::vector<uint64_t> FrontierSearch<5, 3>(SearchOptions options);
+template std::vector<uint64_t> FrontierSearch<3, 3>(STSearchOptions options);
+template std::vector<uint64_t> FrontierSearch<4, 3>(STSearchOptions options);
+template std::vector<uint64_t> FrontierSearch<5, 3>(STSearchOptions options);
 
-template std::vector<uint64_t> FrontierSearch<4, 4>(SearchOptions options);
+template std::vector<uint64_t> FrontierSearch<4, 4>(STSearchOptions options);
 

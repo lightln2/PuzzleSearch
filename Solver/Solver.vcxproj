@@ -87,6 +87,7 @@
   <ItemGroup>
     <ClCompile Include="hanoi.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="sliding.cpp" />
     <ClCompile Include="test.cpp" />
   </ItemGroup>
   <ItemGroup>

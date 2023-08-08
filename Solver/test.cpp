@@ -2,6 +2,7 @@
 #include "../Common/DiskBasedBFS.h"
 #include "../Common/InMemoryBFS.h"
 #include "../Common/Util.h"
+#include "../Common/FrontierCompression.h"
 
 #include "../Puzzles/PancakeOptimized.h"
 #include "../Puzzles/PancakeOptimizedGpu.h"
@@ -15,28 +16,28 @@
 #include "../Puzzles/FourPegHanoiGPU.h"
 
 void TestSlidingTile() {
-    SlidingTilePuzzleSimple puzzle(4, 4);
-    //SlidingTilePuzzleGpu puzzle(4, 4);
-    //SlidingTilePuzzleOptimized<5, 3> puzzle;
+    //SlidingTilePuzzleSimple puzzle(5, 3);
+    //SlidingTilePuzzleGpu puzzle(5, 3);
+    SlidingTilePuzzleOptimized<5, 3> puzzle;
     std::string initial = puzzle.ToString(0);
 
     PuzzleOptions opts;
     opts.storeOptions.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ", "h:/PUZ2"};
-    opts.storeOptions.filesPerPath = 0;
     //opts.storeOptions.directories = { "c:/PUZ", "d:/PUZ"};
-    opts.segmentBits = 28;
+    opts.storeOptions.filesPerPath = 1;
+    opts.segmentBits = 32;
     opts.threads = 4;
     //opts.maxSteps = 25;
-    DiskBasedFrontierSearch(puzzle, initial, opts);
-    //DiskBasedOptFrontierSearch(puzzle, initial, opts);
+    //DiskBasedFrontierSearch(puzzle, initial, opts);
+    DiskBasedOptFrontierSearch(puzzle, initial, opts);
     //DiskBasedOptThreeBitBFS(puzzle, initial, opts);
 }
 
 void TestDiskBasedHanoi() {
-    FourPegHanoiSimple puzzle(17, false);
-    //FourPegHanoiGPU puzzle(19, true);
-    //FourPegHanoiOptimized puzzle(19, true);
-    //FourPegHanoiOptimizedGPU puzzle(17, false);
+    //FourPegHanoiSimple puzzle(17, false);
+    //FourPegHanoiGPU puzzle(17, false);
+    //FourPegHanoiOptimized puzzle(17, false);
+    FourPegHanoiOptimizedGPU puzzle(17, false);
     std::string initial = puzzle.ToString(0);
     
     PuzzleOptions opts;
@@ -44,9 +45,7 @@ void TestDiskBasedHanoi() {
     opts.storeOptions.directories = { "c:/PUZ", "d:/PUZ"};
     opts.segmentBits = 32;
     opts.threads = 4;
-    opts.maxSteps = 100;
-    //DiskBasedClassicBFS(puzzle, initial, opts);
-    //DiskBasedFrontierSearch(puzzle, initial, opts);
+    //opts.maxSteps = 210;
     //DiskBasedOptFrontierSearch(puzzle, initial, opts);
     DiskBasedOptThreeBitBFS(puzzle, initial, opts);
 }
