@@ -13,8 +13,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{c1f5db59-e5d6-475e-955e-f3836db5d55e}</ProjectGuid>
-    <RootNamespace>Solver</RootNamespace>
+    <ProjectGuid>{69B8CA0F-0F6D-4E01-9FAC-609B097CD04C}</ProjectGuid>
+    <RootNamespace>SlidingTileSolver</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -85,19 +85,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="hanoi.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="test.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\HanoiTowers\HanoiTowers.vcxproj">
-      <Project>{51901994-7acf-485d-8a24-1b4bee6d513a}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\Puzzles\Puzzles.vcxproj">
-      <Project>{2d488571-c7dd-4445-bd84-d4cc6dc8f0a1}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\Common\Common.vcxproj">
-      <Project>{dab52854-a6a4-4125-8b4a-34082a93a9c8}</Project>
+    <ProjectReference Include="..\SlidingTilePuzzle\SlidingTilePuzzle.vcxproj">
+      <Project>{d11f425b-5a61-4ece-88dc-ba07ec45d61b}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

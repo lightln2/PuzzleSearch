@@ -22,32 +22,34 @@ void TestSlidingTile() {
     std::string initial = puzzle.ToString(0);
 
     PuzzleOptions opts;
-    opts.storeOptions.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ", "h:/PUZ2"};
-    //opts.storeOptions.directories = { "c:/PUZ", "d:/PUZ"};
+    //opts.storeOptions.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ", "h:/PUZ2"};
+    opts.storeOptions.directories = { "c:/PUZ", "d:/PUZ"};
     opts.storeOptions.filesPerPath = 1;
     opts.segmentBits = 32;
-    opts.threads = 4;
-    //opts.maxSteps = 25;
+    opts.threads = 1;
+    opts.maxSteps = 7;
     //DiskBasedFrontierSearch(puzzle, initial, opts);
     DiskBasedOptFrontierSearch(puzzle, initial, opts);
     //DiskBasedOptThreeBitBFS(puzzle, initial, opts);
 }
 
 void TestDiskBasedHanoi() {
-    //FourPegHanoiSimple puzzle(17, false);
-    //FourPegHanoiGPU puzzle(17, false);
-    //FourPegHanoiOptimized puzzle(17, false);
-    FourPegHanoiOptimizedGPU puzzle(17, false);
+    FourPegHanoiSimple puzzle(18, true);
+    //FourPegHanoiGPU puzzle(17, true);
+    //FourPegHanoiOptimized puzzle(17, true);
+    //FourPegHanoiOptimizedGPU puzzle(17, true);
     std::string initial = puzzle.ToString(0);
     
     PuzzleOptions opts;
-    //opts.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ", "h:/PUZ2" };
+    //opts.storeOptions.directories = { "e:/PUZ", "f:/PUZ", "g:/PUZ", "h:/PUZ", "h:/PUZ2" };
     opts.storeOptions.directories = { "c:/PUZ", "d:/PUZ"};
     opts.segmentBits = 32;
     opts.threads = 4;
-    //opts.maxSteps = 210;
+    opts.maxSteps = 50;
+    DiskBasedTwoBitBFS(puzzle, initial, opts);
+    //DiskBasedThreeBitBFS(puzzle, initial, opts);
     //DiskBasedOptFrontierSearch(puzzle, initial, opts);
-    DiskBasedOptThreeBitBFS(puzzle, initial, opts);
+    //DiskBasedOptThreeBitBFS(puzzle, initial, opts);
 }
 
 void TestPancake() {
