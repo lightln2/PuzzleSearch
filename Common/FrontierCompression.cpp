@@ -53,7 +53,9 @@ namespace FrontierCompression {
     int EncodeBitMapWithCheck(int count, uint32_t* indexes, uint8_t* buffer, int buffer_capacity) {
         uint64_t first = indexes[0];
         uint64_t last = indexes[count - 1];
-        if (last < first) return -1;
+        // if last == first, most probably they are not all equal,
+        // and cannot be map-encoded anyway
+        if (last <= first) return -1;
         uint64_t max = last - first - 1;
         size_t bitmapSize = (last - first + 63) / 64;
         size_t bitmapSizeInBytes = bitmapSize * 8;

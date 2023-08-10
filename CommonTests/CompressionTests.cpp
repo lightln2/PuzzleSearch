@@ -97,3 +97,17 @@ TEST(TestFrontierCompression, TectCompression_LargeRange) {
 	ensure(pos == orig.size());
 	for (int i = 0; i < pos; i++) EXPECT_EQ(orig[i], vect2[i]);
 }
+
+TEST(TestFrontierCompression, TectCompression_OutOfOrder) {
+	std::vector<uint32_t> vect{ 100, 10000, 2500, 2, 20000 };
+	std::vector<uint8_t> buffer(1024 * 1024);
+	int size = FrontierCompression::EncodeBitMapWithCheck(vect.size(), &vect[0], &buffer[0], buffer.size());
+	EXPECT_EQ(size, -1);
+}
+
+TEST(TestFrontierCompression, TectCompression_SameBeginningEnd) {
+	std::vector<uint32_t> vect{ 100, 10000, 2500, 2, 100 };
+	std::vector<uint8_t> buffer(1024 * 1024);
+	int size = FrontierCompression::EncodeBitMapWithCheck(vect.size(), &vect[0], &buffer[0], buffer.size());
+	EXPECT_EQ(size, -1);
+}
